@@ -1,7 +1,7 @@
 # ===============================
 # Thư viện cơ bản Flask & hỗ trợ
 # ===============================
-Flask==2.3.4
+Flask==2.3.3
 Werkzeug==2.3.7
 Flask-APScheduler==1.13.4
 Flask-SocketIO==6.3.2
