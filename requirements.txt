@@ -20,7 +20,7 @@ colorama==0.4.6
 cryptography==46.0.2
 decorator==5.2.1
 distro==1.9.0
-dlib==19.22.99
+dlib==19.24.0
 dnspython==2.8.0
 et_xmlfile==2.0.0
 eventlet==0.40.3
