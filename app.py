@@ -5,9 +5,10 @@ from flask import Flask, request, redirect, url_for, flash, session, render_temp
 import os
 from openpyxl.workbook import Workbook
 from werkzeug.utils import secure_filename
-import face_recognition
-import numpy as np
-from PIL import Image, ImageOps, ImageFile
+# ❌ Nặng - KHÔNG hỗ trợ trên Render (AI + Nhận diện khuôn mặt)
+# import face_recognition
+# import numpy as np
+# from PIL import Image, ImageOps, ImageFile
 import io
 from datetime import date, datetime
 import random
@@ -15,15 +16,20 @@ from werkzeug.security import check_password_hash, generate_password_hash
 import json
 from flask_apscheduler import APScheduler
 from flask_socketio import SocketIO, emit
-from ai import get_ai_response
-from google.genai import Client, types
+# ❌ Không dùng khi deploy (AI chatbot)
+# from ai import get_ai_response
+# from google.genai import Client, types
 from email.message import EmailMessage
 import smtplib
 from email.mime.text import MIMEText
 from flask_mail import Mail, Message
 from itsdangerous import URLSafeTimedSerializer
-ImageFile.LOAD_TRUNCATED_IMAGES = True
+# ❌ Nếu không có file .env thì cũng có thể bỏ qua
 from dotenv import load_dotenv
+
+# Nếu dùng PIL ở local, giữ lại dòng dưới:
+# ImageFile.LOAD_TRUNCATED_IMAGES = True
+
 load_dotenv()
 
 app = Flask(__name__)
