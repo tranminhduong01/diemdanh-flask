@@ -9,3 +9,6 @@ deepface==0.0.75
 eventlet==0.33.3
 Flask-SocketIO==5.5.1
 Flask-Mail==0.10.0
+setuptools
+wheel
+build
