@@ -20,7 +20,7 @@ colorama==0.4.6
 cryptography==46.0.2
 decorator==5.2.1
 distro==1.9.0
-dlib @ file:///C:/Users/LENOVO/Downloads/dlib-19.22.99-cp310-cp310-win_amd64.whl#sha256=f2181b6724669fb0147c9ebc326d72b94de41bced1812eff5df4b133b5d0b575
+dlib==19.22.99
 dnspython==2.8.0
 et_xmlfile==2.0.0
 eventlet==0.40.3
