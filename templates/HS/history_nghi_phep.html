@@ -1,0 +1,203 @@
+{% extends "Menu_SV.html" %}
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="card border-0 shadow-sm rounded-4">
+    <!-- Tiêu đề -->
+    <div class="card-header bg-white border-0 text-center py-4">
+      <h4 class="fw-bold mb-0 text-primary">
+        📋 LỊCH SỬ ĐƠN NGHỈ PHÉP
+      </h4>
+      <p class="text-muted small mb-0">
+        Tổng số: <strong>{{ requests|length }}</strong> đơn
+      </p>
+    </div>
+
+  <!-- Bọc toàn bộ trong form -->
+<form method="GET" action="/lich_su_nghi_phep">
+  <!-- Bộ lọc -->
+  <div class="card-body border-top border-bottom bg-light py-4">
+    <div class="row g-3">
+      <div class="col-xl-3 col-md-6">
+        <label class="form-label fw-semibold text-dark">
+          <i class="fas fa-calendar-month me-2"></i>Tháng
+        </label>
+        <select class="form-select form-select-sm rounded-3" id="month" name="month">
+          <option value="">Tất cả tháng</option>
+          {% for i in range(1, 13) %}
+          <option value="{{ i }}" {% if request.args.get('month')|int == i %}selected{% endif %}>Tháng {{ i }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-xl-3 col-md-6">
+        <label class="form-label fw-semibold text-dark">
+          <i class="fas fa-calendar-alt me-2"></i>Năm
+        </label>
+        <select class="form-select form-select-sm rounded-3" id="year" name="year">
+          <option value="">Tất cả năm</option>
+          {% for year in range(2020, 2031) %}
+          <option value="{{ year }}" {% if request.args.get('year')|int == year %}selected{% endif %}>Năm {{ year }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-xl-3 col-md-6">
+        <label class="form-label fw-semibold text-dark">
+          <i class="fas fa-info-circle me-2"></i>Trạng thái
+        </label>
+        <select class="form-select form-select-sm rounded-3" id="status" name="status">
+          <option value="">Tất cả trạng thái</option>
+          <option value="Pending" {% if request.args.get('status') == 'Pending' %}selected{% endif %}>Chờ duyệt</option>
+          <option value="Approved" {% if request.args.get('status') == 'Approved' %}selected{% endif %}>Đã duyệt</option>
+          <option value="Rejected" {% if request.args.get('status') == 'Rejected' %}selected{% endif %}>Từ chối</option>
+        </select>
+      </div>
+
+      <div class="col-xl-3 col-md-6 d-flex align-items-end">
+        <button type="submit" class="btn btn-primary w-100 fw-semibold rounded-3">
+          <i class="fas fa-filter me-2"></i>Áp dụng lọc
+        </button>
+      </div>
+    </div>
+  </div>
+</form>
+
+    <!-- Bảng -->
+    <div class="card-body p-0">
+      {% if requests %}
+      <div class="table-responsive">
+        <table class="table table-bordered align-middle text-center mb-0">
+          <thead class="table-light text-dark">
+            <tr>
+              <th>Mã đơn</th>
+              <th>Ngày gửi</th>
+              <th>Ngày nghỉ</th>
+              <th>Lý do</th>
+              <th>Minh chứng</th>
+              <th>Trạng thái</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in requests %}
+            <tr>
+              <td class="fw-semibold text-primary">{{ item.request_id }}</td>
+              <td>{{ item.request_date.strftime("%d/%m/%Y") }}</td>
+              <td>{{ item.session_date.strftime("%d/%m/%Y") }}</td>
+              <td class="text-start reason-text">{{ item.reason }}</td>
+              <td>
+                {% if item.proof_file %}
+                <a href="{{ url_for('static', filename='LUU_NGHI_HOC/' ~ item.proof_file) }}"
+                   target="_blank" class="btn btn-outline-primary btn-sm fw-semibold">
+                  <i class="fas fa-eye me-1"></i>Xem
+                </a>
+                {% else %}
+                <span class="text-muted fst-italic">Không có</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if item.status == 'Approved' %}
+                <span class="badge status-approved">Đã duyệt</span>
+                {% elif item.status == 'Rejected' %}
+                <span class="badge status-rejected">Từ chối</span>
+                {% else %}
+                <span class="badge status-pending">Chờ duyệt</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="text-center py-5">
+        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+        <h5 class="fw-bold text-muted">Không có dữ liệu</h5>
+        <p class="text-secondary small mb-4">Không tìm thấy đơn nghỉ phép nào phù hợp với bộ lọc</p>
+        <button class="btn btn-primary">
+          <i class="fas fa-redo me-2"></i>Thử lại
+        </button>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<style>
+/* Cấu trúc chung */
+.card {
+  border-radius: 15px;
+  background: #fff;
+}
+
+.card-header h4 {
+  font-size: 1.3rem;
+  letter-spacing: 0.3px;
+}
+
+/* Bảng */
+.table {
+  font-size: 0.95rem;
+}
+
+.table th {
+  background: #e8f0ff;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.table tbody tr:hover {
+  background-color: #f6f9ff;
+}
+
+/* Badge trạng thái */
+.badge {
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+
+.status-approved {
+  background-color: #d1fae5;
+  color: #166534;
+}
+
+.status-rejected {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.status-pending {
+  background-color: #fef9c3;
+  color: #854d0e;
+}
+
+/* Lý do */
+.reason-text {
+  max-width: 250px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Form + nút */
+.form-select {
+  border-radius: 8px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  transition: 0.3s ease;
+}
+
+.btn-primary:hover {
+  box-shadow: 0 5px 15px rgba(118, 75, 162, 0.3);
+  transform: translateY(-2px);
+}
+</style>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+{% endblock %}

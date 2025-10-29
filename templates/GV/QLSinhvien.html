@@ -1,0 +1,917 @@
+{% extends "menu_gv.html" %}
+
+{% block title %}Dashboard Giáo viên{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --primary: #4361ee;
+        --primary-light: #eef2ff;
+        --secondary: #6c757d;
+        --success: #28a745;
+        --danger: #dc3545;
+        --warning: #ffc107;
+        --info: #17a2b8;
+        --light: #f8f9fa;
+        --dark: #343a40;
+        --gray-100: #f8f9fa;
+        --gray-200: #e9ecef;
+        --gray-300: #dee2e6;
+        --gray-400: #ced4da;
+        --gray-500: #adb5bd;
+        --gray-600: #6c757d;
+        --gray-700: #495057;
+        --gray-800: #343a40;
+        --gray-900: #212529;
+        --border-radius: 8px;
+        --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        --transition: all 0.3s ease;
+    }
+
+    .teacher-dashboard {
+        padding: 20px;
+        background-color: var(--gray-100);
+        min-height: calc(100vh - 70px);
+    }
+
+    .teacher-dashboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        background: white;
+        padding: 20px;
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+    }
+
+    .teacher-page-title {
+        font-size: 24px;
+        font-weight: 600;
+        color: var(--gray-800);
+        margin: 0;
+    }
+
+    .teacher-header-actions {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .teacher-search-box {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .teacher-search-box i {
+        position: absolute;
+        left: 12px;
+        color: var(--gray-500);
+    }
+
+    .teacher-search-box input {
+        padding: 10px 16px 10px 40px;
+        border: 1px solid var(--gray-300);
+        border-radius: var(--border-radius);
+        width: 280px;
+        font-size: 14px;
+        transition: var(--transition);
+    }
+
+    .teacher-search-box input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+    }
+
+    .teacher-notification-btn, .teacher-user-menu-btn {
+        position: relative;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--gray-100);
+        border-radius: 50%;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+    .teacher-notification-btn:hover, .teacher-user-menu-btn:hover {
+        background: var(--gray-200);
+    }
+
+    .teacher-notification-badge {
+        position: absolute;
+        top: -2px;
+        right: -2px;
+        background: var(--danger);
+        color: white;
+        font-size: 10px;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .teacher-content-section {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+        margin-bottom: 24px;
+        overflow: hidden;
+    }
+
+    .teacher-section-header {
+        padding: 20px;
+        border-bottom: 1px solid var(--gray-200);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .teacher-section-title-group {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .teacher-btn-back {
+        width: 36px;
+        height: 36px;
+        border-radius: var(--border-radius);
+        border: 1px solid var(--gray-300);
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+    .teacher-btn-back:hover {
+        background: var(--gray-100);
+    }
+
+    .teacher-section-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--gray-800);
+    }
+
+    .teacher-section-actions {
+        display: flex;
+        gap: 12px;
+    }
+
+    /* Buttons */
+    .teacher-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 8px 16px;
+        border-radius: var(--border-radius);
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: var(--transition);
+        border: 1px solid transparent;
+    }
+
+    .teacher-btn-primary {
+        background: var(--primary);
+        color: white;
+    }
+
+    .teacher-btn-primary:hover {
+        background: #3651d4;
+    }
+
+    .teacher-btn-secondary {
+        background: white;
+        color: var(--gray-700);
+        border-color: var(--gray-300);
+    }
+
+    .teacher-btn-secondary:hover {
+        background: var(--gray-100);
+    }
+
+    .teacher-btn-filter {
+        background: white;
+        color: var(--gray-700);
+        border-color: var(--gray-300);
+    }
+
+    .teacher-btn-filter:hover {
+        background: var(--gray-100);
+    }
+
+    .teacher-class-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+        padding: 20px;
+    }
+
+    .teacher-class-card {
+        background: white;
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        transition: var(--transition);
+        border: 1px solid var(--gray-200);
+    }
+
+    .teacher-class-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--box-shadow);
+    }
+
+    .teacher-class-card-header {
+        padding: 16px;
+        background: var(--primary-light);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .teacher-class-code {
+        font-weight: 600;
+        color: var(--primary);
+        font-size: 14px;
+    }
+
+    .teacher-class-actions-menu {
+        color: var(--gray-500);
+        cursor: pointer;
+        padding: 4px;
+    }
+
+    .teacher-class-card-body {
+        padding: 16px;
+    }
+
+    .teacher-class-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--gray-800);
+        margin-bottom: 4px;
+    }
+
+    .teacher-class-teacher {
+        color: var(--gray-600);
+        font-size: 14px;
+        margin-bottom: 16px;
+    }
+
+    .teacher-class-details {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .teacher-class-detail-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--gray-600);
+        font-size: 14px;
+    }
+
+    .teacher-class-detail-item i {
+        width: 16px;
+        color: var(--gray-500);
+    }
+
+    .teacher-class-card-footer {
+        padding: 16px;
+        border-top: 1px solid var(--gray-200);
+    }
+
+    .teacher-view-class-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .teacher-table-container {
+        overflow-x: auto;
+        padding: 0 20px 20px;
+    }
+
+    .teacher-data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .teacher-data-table th {
+        background: var(--gray-100);
+        padding: 12px 16px;
+        text-align: left;
+        font-weight: 600;
+        color: var(--gray-700);
+        font-size: 14px;
+    }
+
+    .teacher-data-table td {
+        padding: 16px;
+        border-bottom: 1px solid var(--gray-200);
+        color: var(--gray-700);
+        font-size: 14px;
+    }
+
+    .teacher-data-table tr:hover {
+        background: var(--gray-100);
+    }
+
+    .teacher-student-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .teacher-student-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    .teacher-student-name {
+        font-weight: 500;
+        color: var(--gray-800);
+    }
+
+    .teacher-student-id {
+        font-size: 12px;
+        color: var(--gray-600);
+    }
+
+    .teacher-action-btn {
+        padding: 6px 12px;
+        background: var(--primary-light);
+        color: var(--primary);
+        border: none;
+        border-radius: 6px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+    .teacher-action-btn:hover {
+        background: #dfe7ff;
+    }
+
+    /* Modal */
+    .teacher-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+    }
+
+    .teacher-modal-dialog {
+        background: white;
+        border-radius: var(--border-radius);
+        width: 100%;
+        max-width: 600px;
+        overflow: hidden;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    .teacher-modal-header {
+        padding: 20px;
+        border-bottom: 1px solid var(--gray-200);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .teacher-modal-header h3 {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--gray-800);
+    }
+
+    .teacher-close-btn {
+        font-size: 24px;
+        cursor: pointer;
+        color: var(--gray-500);
+        transition: var(--transition);
+    }
+
+    .teacher-close-btn:hover {
+        color: var(--gray-700);
+    }
+
+    .teacher-modal-body {
+        padding: 20px;
+    }
+
+    .teacher-form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+
+    .teacher-form-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .teacher-form-group label {
+        font-size: 14px;
+        color: var(--gray-700);
+        margin-bottom: 8px;
+        font-weight: 500;
+    }
+
+    .teacher-form-group input {
+        padding: 10px 12px;
+        border: 1px solid var(--gray-300);
+        border-radius: var(--border-radius);
+        font-size: 14px;
+        transition: var(--transition);
+    }
+
+    .teacher-form-group input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+    }
+
+    .teacher-modal-footer {
+        padding: 20px;
+        border-top: 1px solid var(--gray-200);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .teacher-footer-actions {
+        display: flex;
+        gap: 12px;
+    }
+
+    .teacher-btn-danger {
+        padding: 8px 16px;
+        border: 1px solid var(--danger);
+        background: white;
+        color: var(--danger);
+        border-radius: var(--border-radius);
+        font-size: 14px;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+    .teacher-btn-danger:hover {
+        background: var(--danger);
+        color: white;
+    }
+
+    #teacherStudentSection {
+        display: none;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 992px) {
+        .teacher-dashboard-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .teacher-header-actions {
+            width: 100%;
+            justify-content: space-between;
+        }
+
+        .teacher-search-box input {
+            width: 100%;
+        }
+
+        .teacher-form-row {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .teacher-dashboard {
+            padding: 16px;
+        }
+
+        .teacher-class-grid {
+            grid-template-columns: 1fr;
+            padding: 16px;
+        }
+
+        .teacher-section-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .teacher-section-actions {
+            width: 100%;
+            flex-wrap: wrap;
+        }
+
+        .teacher-table-container {
+            padding: 0 16px 16px;
+        }
+
+        .teacher-modal-dialog {
+            margin: 16px;
+            width: calc(100% - 32px);
+        }
+    }
+
+    @media (max-width: 576px) {
+        .teacher-modal-footer {
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .teacher-footer-actions {
+            width: 100%;
+        }
+
+        .teacher-btn-danger {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="teacher-dashboard">
+    <div class="teacher-dashboard-header">
+        <h1 class="teacher-page-title">Chào mừng trở lại, {{ ten }}</h1>
+        <div class="teacher-header-actions">
+            <div class="teacher-search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Tìm kiếm lớp học, sinh viên...">
+            </div>
+            <div class="teacher-notification-btn">
+                <i class="fas fa-bell"></i>
+                <span class="teacher-notification-badge">3</span>
+            </div>
+            <div class="teacher-user-menu-btn">
+                <i class="fas fa-user"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Class List Section -->
+    <div class="teacher-content-section" id="teacherClassSection">
+        <div class="teacher-section-header">
+            <h2 class="teacher-section-title">Danh sách lớp học</h2>
+            <div class="teacher-section-actions">
+                <button class="teacher-btn teacher-btn-filter">
+                    <i class="fas fa-filter"></i> Lọc
+                </button>
+            </div>
+        </div>
+
+        <div id="teacherClassContainer" class="teacher-class-grid">
+            {% for c in classes %}
+            <div class="teacher-class-card" data-id="{{ c.id }}">
+                <div class="teacher-class-card-header">
+                    <div class="teacher-class-code">{{ c.class_code or 'N/A' }}</div>
+                    <div class="teacher-class-actions-menu">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </div>
+                </div>
+                <div class="teacher-class-card-body">
+                    <h3 class="teacher-class-title">{{ c.class_name }}</h3>
+                    <p class="teacher-class-teacher">{{ c.teacher_name }}</p>
+
+                    <div class="teacher-class-details">
+                        <div class="teacher-class-detail-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>{{ c.room or 'Chưa cập nhật' }}</span>
+                        </div>
+                        <div class="teacher-class-detail-item">
+                            <i class="fas fa-clock"></i>
+                            <span>
+                                {{ c.day_of_week or '' }}
+                                {% if c.start_time and c.end_time %}
+                                - {{ c.start_time }}–{{ c.end_time }}
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="teacher-class-detail-item">
+                            <i class="fas fa-users"></i>
+                            <span>{{ c.student_count or 0 }} sinh viên</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="teacher-class-card-footer">
+                    <button class="teacher-btn teacher-btn-primary teacher-view-class-btn">Xem chi tiết</button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Student List Section (Hidden by default) -->
+    <div class="teacher-content-section" id="teacherStudentSection">
+        <div class="teacher-section-header">
+            <div class="teacher-section-title-group">
+                <button class="teacher-btn-back" id="teacherBackToClassesBtn">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <h2 class="teacher-section-title">Danh sách sinh viên - <span id="teacherCurrentClassName"></span></h2>
+            </div>
+            <div class="teacher-section-actions">
+                <div style="margin-bottom: 10px;">
+                    <input type="text" id="filterMSSV" placeholder="Nhập MSSV..." />
+                    <input type="text" id="filterName" placeholder="Nhập tên..." />
+                    <button id="applyFilterBtn">Lọc</button>
+                    <button id="clearFilterBtn">Xóa lọc</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="teacher-table-container">
+            <table class="teacher-data-table teacher-student-table">
+                <thead>
+                    <tr>
+                        <th>Sinh viên</th>
+                        <th>Mã SV</th>
+                        <th>Email</th>
+                        <th>SĐT</th>
+                        <th>Chuyên ngành</th>
+                        <th>Lớp</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Student data will be loaded dynamically -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal chỉnh sửa sinh viên -->
+    <div class="teacher-modal" id="teacherEditStudentModal">
+        <div class="teacher-modal-dialog">
+            <div class="teacher-modal-header">
+                <h3>Thông tin sinh viên</h3>
+                <span class="teacher-close-btn" id="teacherCloseEditModal">&times;</span>
+            </div>
+            <div class="teacher-modal-body">
+                <form id="teacherEditStudentForm">
+                    <input type="hidden" id="teacherEditStudentId">
+
+                    <div class="teacher-form-row">
+                        <div class="teacher-form-group">
+                            <label>Họ tên</label>
+                            <input type="text" id="teacherEditFullName" required>
+                        </div>
+                        <div class="teacher-form-group">
+                            <label>Mã SV</label>
+                            <input type="text" id="teacherEditMSSV" required>
+                        </div>
+                    </div>
+
+                    <div class="teacher-form-row">
+                        <div class="teacher-form-group">
+                            <label>Email</label>
+                            <input type="email" id="teacherEditEmail">
+                        </div>
+                        <div class="teacher-form-group">
+                            <label>SĐT</label>
+                            <input type="text" id="teacherEditPhone">
+                        </div>
+                    </div>
+
+                    <div class="teacher-form-row">
+                        <div class="teacher-form-group">
+                            <label>Chuyên ngành</label>
+                            <input type="text" id="teacherEditChuyenNganh">
+                        </div>
+                        <div class="teacher-form-group">
+                            <label>Lớp</label>
+                            <input type="text" id="teacherEditLop">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="teacher-modal-footer">
+                <button class="teacher-btn teacher-btn-danger" id="teacherDeleteStudentBtn">Xóa sinh viên</button>
+                <div class="teacher-footer-actions">
+                    <button class="teacher-btn teacher-btn-secondary" id="teacherCancelEdit">Hủy</button>
+                    <button type="submit" form="teacherEditStudentForm" class="teacher-btn teacher-btn-primary">Lưu thay đổi</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const classContainer = document.getElementById("teacherClassContainer");
+        const classSection = document.getElementById("teacherClassSection");
+        const studentSection = document.getElementById("teacherStudentSection");
+        const backBtn = document.getElementById("teacherBackToClassesBtn");
+        const currentClassName = document.getElementById("teacherCurrentClassName");
+        const studentTableBody = studentSection.querySelector("tbody");
+
+        const editModal = document.getElementById("teacherEditStudentModal");
+        const closeEditModal = document.getElementById("teacherCloseEditModal");
+        const editForm = document.getElementById("teacherEditStudentForm");
+        const deleteBtn = document.getElementById("teacherDeleteStudentBtn");
+        const cancelEdit = document.getElementById("teacherCancelEdit");
+
+        let currentClassId = null;
+
+        // Ẩn student section mặc định
+        studentSection.style.display = "none";
+
+        // Helper: fetch JSON
+        async function fetchJSON(url, options) {
+            const res = await fetch(url, options);
+            const ct = res.headers.get("content-type") || "";
+            const text = await res.text();
+
+            if (!res.ok) throw new Error(`HTTP ${res.status}: ${text.slice(0, 200)}`);
+            if (!ct.includes("application/json")) throw new Error(`Expect JSON but got ${ct}`);
+            return JSON.parse(text);
+        }
+
+        // Hàm load lại danh sách sinh viên
+        async function loadStudents(classId, filters = {}) {
+            try {
+                let query = new URLSearchParams(filters).toString();
+                const url = query ? `/api/lop/${classId}/sinhvien?${query}` : `/api/lop/${classId}/sinhvien`;
+                const students = await fetchJSON(url);
+
+                studentTableBody.innerHTML = "";
+
+                if (!students || students.length === 0) {
+                    studentTableBody.innerHTML =
+                        `<tr><td colspan="7" class="text-center text-muted">Chưa có sinh viên nào</td></tr>`;
+                } else {
+                    students.forEach(sv => {
+                        const row = `
+                            <tr data-id="${sv.enrollment_id}">
+                                <td>
+                                    <div class="teacher-student-info">
+                                    <img src="${sv.face_image_url}" class="teacher-student-avatar">
+                                        <div>
+                                            <div class="teacher-student-name">${sv.full_name}</div>
+                                            <div class="teacher-student-id">${sv.mssv}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>${sv.mssv}</td>
+                                <td>${sv.email || '-'}</td>
+                                <td>${sv.phone || '-'}</td>
+                                <td>${sv.major || '-'}</td>
+                                <td>${sv.lop || '-'}</td>
+                                <td>
+                                    <button class="teacher-action-btn teacher-edit-btn-sm teacher-view-btn-sm"
+                                            data-student='${encodeURIComponent(JSON.stringify(sv))}'>
+                                        Chỉnh sửa
+                                    </button>
+                                </td>
+                            </tr>`;
+                        studentTableBody.insertAdjacentHTML("beforeend", row);
+                    });
+
+                    // Gắn lại sự kiện edit
+                    studentTableBody.querySelectorAll(".teacher-edit-btn-sm").forEach(btn => {
+                        btn.addEventListener("click", (e) => {
+                            const raw = e.currentTarget.getAttribute("data-student");
+                            const student = JSON.parse(decodeURIComponent(raw));
+
+                            document.getElementById("teacherEditStudentId").value = student.id;
+                            document.getElementById("teacherEditFullName").value = student.full_name || "";
+                            document.getElementById("teacherEditMSSV").value = student.mssv || "";
+                            document.getElementById("teacherEditEmail").value = student.email || "";
+                            document.getElementById("teacherEditPhone").value = student.phone || "";
+                            document.getElementById("teacherEditChuyenNganh").value = student.major || "";
+                            document.getElementById("teacherEditLop").value = student.lop || "";
+
+                            editModal.style.display = "flex";
+                        });
+                    });
+                }
+            } catch (err) {
+                alert(err.message);
+            }
+        }
+
+        // Khi click vào class -> load sinh viên
+        document.querySelectorAll(".teacher-view-class-btn").forEach((btn, index) => {
+            btn.addEventListener("click", async (e) => {
+                e.stopPropagation();
+                const card = btn.closest(".teacher-class-card");
+                currentClassId = card.dataset.id;
+                currentClassName.textContent = card.querySelector(".teacher-class-title").textContent;
+
+                await loadStudents(currentClassId);
+
+                classSection.style.display = "none";
+                studentSection.style.display = "block";
+            });
+        });
+
+        // Nút Lọc (✅ ĐÃ CHUYỂN VÀO TRONG)
+        document.getElementById("applyFilterBtn").addEventListener("click", async () => {
+            console.log("Nút lọc đã được bấm ✅");
+            const params = {
+                mssv: document.getElementById("filterMSSV").value.trim(),
+                name: document.getElementById("filterName").value.trim()
+            };
+            console.log("Filter gửi đi:", params);
+            await loadStudents(currentClassId, params);
+        });
+
+        // Nút Xóa lọc (✅ ĐÃ CHUYỂN VÀO TRONG)
+        document.getElementById("clearFilterBtn").addEventListener("click", async () => {
+            document.getElementById("filterMSSV").value = "";
+            document.getElementById("filterName").value = "";
+            await loadStudents(currentClassId);
+        });
+
+        // Đóng modal
+        const closeModal = () => {
+            editModal.style.display = "none";
+        };
+
+        closeEditModal.addEventListener("click", closeModal);
+        cancelEdit.addEventListener("click", closeModal);
+
+        // Lưu thay đổi (PUT)
+        editForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const id = document.getElementById("teacherEditStudentId").value;
+            const data = {
+                full_name: document.getElementById("teacherEditFullName").value,
+                mssv: document.getElementById("teacherEditMSSV").value,
+                email: document.getElementById("teacherEditEmail").value,
+                phone: document.getElementById("teacherEditPhone").value,
+                major: document.getElementById("teacherEditChuyenNganh").value,
+                lop: document.getElementById("teacherEditLop").value
+            };
+
+            try {
+                const result = await fetchJSON(`/api/enrollment/${id}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data)
+                });
+                if (!result.success) throw new Error(result.error || "Cập nhật thất bại");
+
+                alert("Cập nhật thành công!");
+                closeModal();
+                await loadStudents(currentClassId); // reload lại bảng
+            } catch (err) {
+                alert(err.message);
+            }
+        });
+
+        // Xóa enrollment (DELETE)
+        deleteBtn.addEventListener("click", async () => {
+            const id = document.getElementById("teacherEditStudentId").value;
+            if (!confirm("Bạn có chắc muốn xóa sinh viên này khỏi lớp?")) return;
+
+            try {
+                const result = await fetchJSON(`/api/enrollment/${id}`, { method: "DELETE" });
+                if (!result.success) throw new Error(result.error || "Xóa thất bại");
+
+                alert("Đã xóa!");
+                closeModal();
+                await loadStudents(currentClassId); // reload lại bảng
+            } catch (err) {
+                alert(err.message);
+            }
+        });
+
+        // Quay lại danh sách lớp
+        backBtn.addEventListener("click", () => {
+            studentSection.style.display = "none";
+            classSection.style.display = "block";
+        });
+
+        // Đóng modal khi click bên ngoài
+        window.addEventListener("click", (e) => {
+            if (e.target === editModal) {
+                closeModal();
+            }
+        });
+    });
+</script>
+
+{% endblock %}

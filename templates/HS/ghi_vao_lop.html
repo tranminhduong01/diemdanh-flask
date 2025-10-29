@@ -1,0 +1,235 @@
+{% extends "Menu_SV.html" %}
+
+{% block title %}Student Dashboard{% endblock %}
+
+{% block content %}
+
+  <!-- FORM GHI DANH ĐƯỢC THIẾT KẾ LẠI -->
+  <div class="container py-5">
+    <!-- Thêm nút trở về ở đây -->
+    <div class="page-header">
+      <h2 class="text-center mb-4 flex-grow-1">Ghi danh vào lớp: <span class="text-primary">{{ lop.class_name }}</span></h2>
+      <button type="button" class="btn btn-back" onclick="goBack()">
+        <i class="fas fa-arrow-left me-2"></i>Trở về
+      </button>
+    </div>
+
+    <div class="form-card">
+      <form method="POST" enctype="multipart/form-data" action="{{ url_for('luu_ghidanh', class_id=lop.id) }}">
+        <h4 class="section-title"><i class="fas fa-user-graduate me-2"></i>Thông tin cá nhân</h4>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label required-field">Họ và tên</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="fas fa-user"></i></span>
+              <input type="text" class="form-control" name="full_name" required placeholder="Nhập họ và tên đầy đủ">
+            </div>
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label class="form-label required-field">MSSV</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="fas fa-id-card"></i></span>
+              <input type="text" class="form-control" name="mssv" required placeholder="Nhập mã số sinh viên">
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label required-field">Lớp</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="fas fa-users"></i></span>
+              <input type="text" class="form-control" name="lop" required placeholder="Ví dụ: CTK44">
+            </div>
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label class="form-label required-field">Chuyên ngành</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="fas fa-graduation-cap"></i></span>
+              <input type="text" class="form-control" name="major" required placeholder="Ví dụ: Công nghệ thông tin">
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label required-field">Số điện thoại</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="fas fa-phone"></i></span>
+              <input type="tel" class="form-control" name="phone" required placeholder="Nhập số điện thoại">
+            </div>
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label class="form-label required-field">Email cá nhân</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+              <input type="email" class="form-control" name="email" required placeholder="example@email.com">
+            </div>
+          </div>
+        </div>
+
+        <h4 class="section-title mt-5"><i class="fas fa-camera me-2"></i>Đăng ký khuôn mặt</h4>
+
+        <div class="camera-container">
+          <p class="text-muted mb-3">Vui lòng cung cấp ảnh khuôn mặt rõ ràng để sử dụng cho điểm danh</p>
+
+          <div class="mb-3">
+            <label class="form-label">Tải lên ảnh chân dung</label>
+            <input type="file" class="form-control" name="face_image" accept="image/*">
+          </div>
+
+          <p class="text-center text-muted my-3">Hoặc</p>
+
+          <div class="text-center">
+            <button type="button" class="btn btn-primary" onclick="openCamera()">
+              <i class="fas fa-camera me-2"></i>Chụp ảnh bằng camera
+            </button>
+          </div>
+
+          <div class="text-center mt-4">
+            <video id="video" width="100%" height="300" autoplay style="display:none;"></video>
+            <canvas id="canvas" style="display:none;"></canvas>
+            <div id="camera-preview" class="d-none">
+              <img id="photo" alt="Ảnh chụp" class="img-fluid rounded shadow" />
+              <div class="camera-actions justify-content-center mt-3">
+                <button type="button" class="btn btn-success" onclick="capturePhoto()">
+                  <i class="fas fa-camera me-1"></i> Chụp ảnh
+                </button>
+                <button type="button" class="btn btn-outline-secondary" onclick="retakePhoto()">
+                  <i class="fas fa-redo me-1"></i> Chụp lại
+                </button>
+              </div>
+            </div>
+            <input type="hidden" name="face_capture" id="face_capture">
+          </div>
+        </div>
+
+        <div class="form-check mt-4 mb-4">
+          <input class="form-check-input" type="checkbox" id="termsCheck" required>
+          <label class="form-check-label" for="termsCheck">
+            Tôi xác nhận thông tin trên là chính xác và đồng ý với các điều khoản sử dụng
+          </label>
+        </div>
+
+
+        <div class="d-flex gap-3">
+          <button type="button" class="btn btn-back flex-grow-1" onclick="goBack()">
+            <i class="fas fa-arrow-left me-2"></i>Trở về
+          </button>
+          <button type="submit" class="btn btn-success flex-grow-1 py-3">
+            <i class="fas fa-paper-plane me-2"></i>Xác nhận ghi danh
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    let video = document.getElementById("video");
+    let canvas = document.getElementById("canvas");
+    let photo = document.getElementById("photo");
+    let faceCapture = document.getElementById("face_capture");
+    let cameraPreview = document.getElementById("camera-preview");
+    let stream = null;
+
+    // Hàm quay lại trang trước
+    function goBack() {
+      window.history.back();
+    }
+
+    function openCamera() {
+      // Ẩn nút mở camera và hiện giao diện camera
+      document.querySelector('[onclick="openCamera()"]').classList.add('d-none');
+      video.style.display = "block";
+      cameraPreview.classList.remove('d-none');
+
+      navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+        .then(function(s) {
+          stream = s;
+          video.srcObject = stream;
+        })
+        .catch(function(err) {
+          alert("Không thể mở camera: " + err);
+          resetCameraUI();
+        });
+    }
+
+    function capturePhoto() {
+      // ✅ resize ảnh nhỏ hơn (300px) thay vì giữ nguyên 1280x720
+      let scale = 300;
+      let ratio = video.videoWidth / video.videoHeight;
+      canvas.width = scale;
+      canvas.height = scale / ratio;
+
+      let ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      // ✅ dùng JPEG + nén để giảm dung lượng
+      let dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+
+      photo.src = dataUrl;
+      faceCapture.value = dataUrl;
+
+      // Dừng stream camera sau khi chụp
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+
+      // Ẩn video và hiện ảnh đã chụp
+      video.style.display = "none";
+    }
+
+    function retakePhoto() {
+      // Xóa ảnh đã chụp và bật camera lại
+      faceCapture.value = "";
+      photo.src = "";
+      video.style.display = "block";
+
+      // Mở lại camera
+      navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+        .then(function(s) {
+          stream = s;
+          video.srcObject = stream;
+        })
+        .catch(function(err) {
+          alert("Không thể mở camera: " + err);
+          resetCameraUI();
+        });
+    }
+
+    function resetCameraUI() {
+      document.querySelector('[onclick="openCamera()"]').classList.remove('d-none');
+      video.style.display = "none";
+      cameraPreview.classList.add('d-none');
+    }
+
+    // Đảm bảo dừng camera khi rời trang
+    window.addEventListener('beforeunload', function() {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+    });
+  </script>
+  {% if da_ghi_danh %}
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    Swal.fire({
+      icon: 'info',
+      title: 'Thông báo',
+      text: 'Bạn đã ghi danh vào lớp này rồi!',
+      confirmButtonText: 'OK'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        window.history.back(); // quay lại trang trước
+      }
+    });
+  });
+</script>
+{% endif %}
+
+<{% endblock %}

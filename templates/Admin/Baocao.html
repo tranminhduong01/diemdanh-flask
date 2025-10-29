@@ -1,0 +1,450 @@
+{% extends "menu_admin.html" %}
+
+{% block title %}Bảng điều khiển | Quản trị hệ thống{% endblock %}
+
+{% block content %}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background-color: #ffffff;
+      color: var(--text-primary);
+      line-height: 1.6;
+    }
+
+    /* Sidebar styling */
+    .sidebar {
+      width: var(--sidebar-width);
+      background-color: #ffffff;
+      height: 100vh;
+      position: fixed;
+      top: 0;
+      left: 0;
+      padding: 0;
+      z-index: 1000;
+      border-right: 1px solid var(--border-color);
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.03);
+    }
+
+    .sidebar-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--border-color);
+      height: var(--header-height);
+      display: flex;
+      align-items: center;
+    }
+
+    .sidebar-brand {
+      display: flex;
+      align-items: center;
+      color: var(--text-primary);
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 1.2rem;
+    }
+
+    .sidebar-brand i {
+      color: var(--primary);
+      font-size: 1.5rem;
+      margin-right: 10px;
+    }
+
+    .sidebar-nav {
+      padding: 15px 0;
+    }
+
+    .nav-item {
+      position: relative;
+      margin: 5px 15px;
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      padding: 12px 15px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+
+    .nav-link:hover, .nav-link.active {
+      background-color: #f8fafc;
+      color: var(--primary);
+    }
+
+    .nav-link i {
+      margin-right: 12px;
+      font-size: 18px;
+    }
+
+    /* Main content */
+    .main-content {
+      margin-left: var(--sidebar-width);
+      transition: all 0.3s ease;
+      min-height: 100vh;
+      background-color: #f8fafc;
+    }
+
+    /* Header */
+    .header {
+      height: var(--header-height);
+      background: white;
+      padding: 0 25px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .toggle-sidebar {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .user-menu {
+      display: flex;
+      align-items: center;
+    }
+
+    .user-info {
+      margin-right: 15px;
+      text-align: right;
+    }
+
+    .user-name {
+      font-weight: 600;
+      margin-bottom: 0;
+      font-size: 0.9rem;
+    }
+
+    .user-role {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--border-color);
+    }
+
+    /* Content area */
+    .content {
+      padding: 25px;
+    }
+
+    .page-title {
+      margin-bottom: 25px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    /* Card styling */
+    .stats-card {
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      background: white;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+      transition: all 0.2s;
+      height: 100%;
+    }
+
+    .stats-card:hover {
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .card-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 15px;
+      background-color: #f1f5f9;
+      color: var(--primary);
+    }
+
+    .card-value {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 0;
+      color: var(--text-primary);
+    }
+
+    .card-label {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    /* Chart container */
+    .chart-container {
+      background: white;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      padding: 20px;
+      height: 100%;
+    }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+      .sidebar {
+        transform: translateX(-100%);
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .sidebar.show {
+        transform: translateX(0);
+      }
+
+      .main-content {
+        margin-left: 0;
+      }
+
+      .sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.3);
+        z-index: 999;
+        display: none;
+      }
+
+      .sidebar-overlay.show {
+        display: block;
+      }
+    }
+  </style>
+
+      <!-- Content -->
+      <div class="container-fluid py-3">
+
+        <!-- Bộ lọc -->
+        <div class="row mb-4 align-items-end">
+          <div class="col-auto">
+            <label for="filterSelect" class="form-label">Chọn khoảng</label>
+            <select id="filterSelect" class="form-select">
+              <option value="day">Theo ngày</option>
+              <option value="week">Theo tuần</option>
+              <option value="month">Theo tháng</option>
+            </select>
+          </div>
+          <div class="col-auto">
+            <label for="dateInput" class="form-label">Ngày</label>
+            <input type="date" id="dateInput" class="form-control">
+          </div>
+          <div class="col-auto">
+            <button id="applyFilter" class="btn btn-primary">Xem</button>
+          </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="row g-3">
+          <!-- Người dùng -->
+          <div class="col-md-3 col-sm-6">
+            <div class="stats-card p-4 text-center">
+              <div class="card-icon mb-2">
+                <i class="bi bi-people fs-2"></i>
+              </div>
+              <h3 class="card-value" id="totalUsers">0</h3>
+              <p class="card-label">Người dùng</p>
+            </div>
+          </div>
+
+          <!-- Lớp học -->
+          <div class="col-md-3 col-sm-6">
+            <div class="stats-card p-4 text-center">
+              <div class="card-icon mb-2">
+                <i class="bi bi-journal-bookmark fs-2"></i>
+              </div>
+              <h3 class="card-value" id="totalClasses">0</h3>
+              <p class="card-label">Lớp học</p>
+            </div>
+          </div>
+
+          <!-- Buổi học -->
+          <div class="col-md-3 col-sm-6">
+            <div class="stats-card p-4 text-center">
+              <div class="card-icon mb-2">
+                <i class="bi bi-calendar-event fs-2"></i>
+              </div>
+              <h3 class="card-value" id="totalSessions">0</h3>
+              <p class="card-label">Buổi học</p>
+            </div>
+          </div>
+
+          <!-- Điểm danh -->
+          <div class="col-md-3 col-sm-6">
+            <div class="stats-card p-4 text-center">
+              <div class="card-icon mb-2">
+                <i class="bi bi-check2-circle fs-2"></i>
+              </div>
+              <h3 class="card-value" id="totalAttendance">0</h3>
+              <p class="card-label">Điểm danh</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="row mt-4">
+          <div class="col-lg-6 col-md-12 mb-4">
+            <div class="chart-container p-3 bg-white rounded shadow-sm">
+              <h5 class="mb-3">Điểm danh 7 ngày qua</h5>
+              <canvas id="attendanceChart" style="max-height: 300px;"></canvas>
+            </div>
+          </div>
+          <div class="col-lg-6 col-md-12 mb-4">
+            <div class="chart-container p-3 bg-white rounded shadow-sm">
+              <h5 class="mb-3">Số lớp theo tháng</h5>
+              <canvas id="classChart" style="max-height: 300px;"></canvas>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <script>
+      let attendanceChartInstance = null;
+      let classChartInstance = null;
+
+      // Vẽ biểu đồ điểm danh
+      function renderAttendanceChart(labels, data) {
+        const ctx = document.getElementById('attendanceChart');
+        if (!ctx) return;
+
+        if (attendanceChartInstance) attendanceChartInstance.destroy();
+
+        attendanceChartInstance = new Chart(ctx.getContext('2d'), {
+          type: 'line',
+          data: {
+            labels: labels || ['T2','T3','T4','T5','T6','T7','CN'],
+            datasets: [{
+              label: 'Điểm danh',
+              data: data || [0,0,0,0,0,0,0],
+              borderColor: '#4a6cf7',
+              backgroundColor: 'rgba(74, 108, 247, 0.1)',
+              fill: true,
+              tension: 0.3
+            }]
+          },
+          options: {
+            plugins: {
+              legend: {
+                display: true,
+                position: 'top'
+              }
+            }
+          }
+        });
+      }
+
+      // Vẽ biểu đồ số lớp
+      function renderClassChart(labels, data) {
+        const ctx = document.getElementById('classChart');
+        if (!ctx) return;
+
+        if (classChartInstance) classChartInstance.destroy();
+
+        classChartInstance = new Chart(ctx.getContext('2d'), {
+          type: 'bar',
+          data: {
+            labels: labels || [],
+            datasets: [{
+              label: 'Số lớp',
+              data: data || [],
+              backgroundColor: 'rgba(74, 108, 247, 0.5)'
+            }]
+          },
+          options: {
+            plugins: {
+              legend: {
+                display: true,
+                position: 'top'
+              }
+            }
+          }
+        });
+      }
+
+      // Lấy dữ liệu động từ API
+      function loadReport(filter='week', date=null) {
+        let url = '/admin/baocao?filter=' + filter;
+        if (date) url += '&date=' + date;
+
+        fetch(url, {
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => res.ok ? res.json() : Promise.reject(res.status))
+        .then(data => {
+          // Vẽ biểu đồ
+          renderAttendanceChart(data.attendanceChartLabels, data.attendanceChartData);
+          renderClassChart(data.classChartLabels, data.classChartData);
+
+          // Gán số liệu vào card
+          document.getElementById('totalUsers').textContent = data.totalUsers;
+          document.getElementById('totalClasses').textContent = data.totalClasses;
+          document.getElementById('totalSessions').textContent = data.totalSessions;
+          document.getElementById('totalAttendance').textContent = data.totalAttendance;
+        })
+        .catch(err => {
+          console.warn('Không lấy được dữ liệu API', err);
+        });
+      }
+
+      // Dropdown filter
+      const reportRangeSelect = document.getElementById('reportRange');
+      if (reportRangeSelect) {
+        reportRangeSelect.addEventListener('change', function() {
+          loadReport(this.value);
+        });
+      }
+
+      // Nút áp dụng filter theo ngày
+      const applyFilterBtn = document.getElementById('applyFilter');
+      if (applyFilterBtn) {
+        applyFilterBtn.addEventListener('click', function() {
+          const filter = document.getElementById('filterSelect').value;
+          const date = document.getElementById('dateInput').value;
+          loadReport(filter, date);
+        });
+      }
+
+      // Gọi lần đầu khi load trang
+      loadReport(reportRangeSelect ? reportRangeSelect.value : 'week');
+
+      // Toggle sidebar mobile
+      const toggleBtn = document.getElementById('toggleSidebar');
+      const sidebar = document.querySelector('.sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+
+      if (toggleBtn && sidebar && overlay) {
+        toggleBtn.addEventListener('click', function() {
+          sidebar.classList.toggle('show');
+          overlay.classList.toggle('show');
+        });
+
+        overlay.addEventListener('click', function() {
+          sidebar.classList.remove('show');
+          overlay.classList.remove('show');
+        });
+      }
+    </script>
+{% endblock %}

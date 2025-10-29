@@ -1,0 +1,107 @@
+{% extends "Menu_SV.html" %}
+{% block content %}
+<div class="container mt-5">
+    <h3 class="text-center mb-4">
+        🧾 Lịch sử điểm danh
+    </h3>
+
+    <!-- Bọc toàn bộ trong form -->
+<form method="GET" action="/lich_su_diem_danh">
+  <div class="row g-3">
+
+    <!-- Tháng -->
+    <div class="col-xl-3 col-md-6">
+      <label class="form-label">Tháng</label>
+      <select name="month" class="form-select form-select-sm">
+        <option value="">Tất cả tháng</option>
+        {% for i in range(1, 13) %}
+        <option value="{{ i }}" {% if request.args.get('month')|int == i %}selected{% endif %}>
+          Tháng {{ i }}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- Năm -->
+    <div class="col-xl-3 col-md-6">
+      <label class="form-label">Năm</label>
+      <select name="year" class="form-select form-select-sm">
+        <option value="">Tất cả năm</option>
+        {% for y in range(2020, 2031) %}
+        <option value="{{ y }}" {% if request.args.get('year')|int == y %}selected{% endif %}>
+          {{ y }}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- Trạng thái -->
+    <div class="col-xl-3 col-md-6">
+      <label class="form-label">Trạng thái</label>
+      <select name="status" class="form-select form-select-sm">
+        <option value="">Tất cả</option>
+        <option value="present" {% if request.args.get('status') == 'present' %}selected{% endif %}>Có mặt</option>
+        <option value="late" {% if request.args.get('status') == 'late' %}selected{% endif %}>Đi trễ</option>
+        <option value="absent_excused" {% if request.args.get('status') == 'absent_excused' %}selected{% endif %}>Vắng có phép</option>
+        <option value="absent_unexcused" {% if request.args.get('status') == 'absent_unexcused' %}selected{% endif %}>Vắng không phép</option>
+      </select>
+    </div>
+
+    <!-- Nút lọc -->
+    <div class="col-xl-3 col-md-6 d-flex align-items-end">
+      <button class="btn btn-primary w-100" type="submit">
+        <i class="fas fa-filter me-2"></i>Lọc
+      </button>
+    </div>
+
+  </div>
+</form>
+
+
+
+    <div class="table-responsive">
+        <table class="table table-hover table-bordered shadow-sm">
+            <thead class="table-primary text-center">
+                <tr>
+                    <th>Mã</th>
+                    <th>Lớp học</th>
+                    <th>Buổi học</th>
+                    <th>Ngày</th>
+                    <th>Giờ vào</th>
+                    <th>Giờ ra</th>
+                    <th>Trạng thái</th>
+                    <th>Điểm</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in attendance_list %}
+                <tr class="text-center">
+                    <td>{{ item.id }}</td>
+                    <td>{{ item.class_name }}</td>
+                    <td>{{ item.session_name }}</td>
+                    <td>{{ item.date.strftime("%d/%m/%Y") }}</td>
+                    <td>{{ item.time_in or "-" }}</td>
+                    <td>{{ item.time_out or "-" }}</td>
+                    <td>
+                        {% if item.status_in == "present" %}
+                            <span class="badge bg-success">Có mặt</span>
+                        {% elif item.status_in == "late" %}
+                            <span class="badge bg-warning text-dark">Đi trễ</span>
+                        {% else %}
+                            <span class="badge bg-danger">Vắng</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ "%.1f"|format(item.score) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if attendance_list|length == 0 %}
+    <div class="alert alert-info text-center mt-4">
+        Bạn chưa có dữ liệu điểm danh nào.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

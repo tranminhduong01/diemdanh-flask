@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chi tiết lớp</title>
+</head>
+<body>
+    <h2>Lớp: {{ class_info[1] }} (Mã: {{ class_info[0] }})</h2>
+
+    <h3>Danh sách sinh viên đã ghi danh</h3>
+    <ul>
+        {% if students %}
+            {% for s in students %}
+                <li>{{ s[0] }} - Ngày ghi danh: {{ s[1] }}</li>
+            {% endfor %}
+        {% else %}
+            <li>Chưa có sinh viên nào ghi danh.</li>
+        {% endif %}
+    </ul>
+
+    <a href="{{ url_for('list_classes') }}">⬅ Quay lại danh sách lớp</a>
+</body>
+</html>

@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="vi" data-bs-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Student Portal{% endblock %}</title>
+
+  <!-- Fonts & Libs -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+  <style>
+    :root {
+      --sp-primary: #1a56db;
+      --sp-primary-2: #1e429f;
+      --sp-secondary: #059669;
+      --sp-accent: #7c3aed;
+      --sp-bg: #f8fafc;
+      --sp-card: #ffffff;
+      --sp-text: #1e293b;
+      --sp-muted: #64748b;
+      --sp-border: #e2e8f0;
+      --sp-radius: 12px;
+      --sp-shadow: 0 4px 16px rgba(2,6,23,0.06);
+      --sp-shadow-hover: 0 8px 24px rgba(2,6,23,0.1);
+    }
+
+    html[data-bs-theme="dark"] {
+      --sp-primary: #3b82f6;
+      --sp-primary-2: #60a5fa;
+      --sp-secondary: #10b981;
+      --sp-accent: #8b5cf6;
+      --sp-bg: #0f172a;
+      --sp-card: #1e293b;
+      --sp-text: #f1f5f9;
+      --sp-muted: #94a3b8;
+      --sp-border: #334155;
+      --sp-shadow: 0 4px 16px rgba(0,0,0,0.3);
+      --sp-shadow-hover: 0 8px 24px rgba(0,0,0,0.4);
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--sp-bg);
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: var(--sp-bg);
+      color: var(--sp-text);
+      line-height: 1.6;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh; /* luôn cao bằng chiều cao màn hình */
+    }
+
+    /* Navbar */
+    .sp-navbar {
+      background: linear-gradient(135deg, var(--sp-primary), var(--sp-primary-2));
+      backdrop-filter: blur(12px);
+      box-shadow: var(--sp-shadow);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .sp-navbrand {
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      color: white !important;
+      text-decoration: none;
+    }
+
+    .sp-navlink {
+      color: rgba(255,255,255,0.9) !important;
+      border-radius: 8px;
+      padding: 0.5rem 0.75rem !important;
+      transition: all 0.2s ease;
+      font-weight: 500;
+      margin: 0 0.1rem;
+      font-size: 0.9rem;
+    }
+
+    .sp-navlink:hover,
+    .sp-navlink.active {
+      background: rgba(255,255,255,0.15);
+      color: #fff !important;
+    }
+
+    /* Container spacing */
+    main .container {
+      padding-top: 1.5rem;
+      padding-bottom: 2rem;
+    }
+    main {
+      flex: 1; /* đẩy footer xuống đáy */
+    }
+
+    /* Card helpers */
+    .sp-card {
+      background: var(--sp-card);
+      border: 1px solid var(--sp-border);
+      border-radius: var(--sp-radius);
+      box-shadow: var(--sp-shadow);
+      transition: all 0.3s ease;
+    }
+
+    /* Footer */
+    footer.sp-footer {
+      background: transparent;
+      color: var(--sp-muted);
+      border-top: 1px solid var(--sp-border);
+      padding: 1.5rem 0;
+      margin-top: auto; /* quan trọng nhất */
+    }
+
+    /* Avatar */
+    .sp-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid rgba(255,255,255,0.8);
+    }
+
+    /* Flash Toasts container */
+    .toast-container {
+      position: fixed;
+      top: 80px;
+      right: 16px;
+      z-index: 1080;
+    }
+
+    /* Badge styles */
+    .sp-badge {
+      background: var(--sp-secondary);
+      color: white;
+      padding: 0.2rem 0.5rem;
+      border-radius: 6px;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+
+    /* Buttons */
+    .btn-primary {
+      background: linear-gradient(135deg, var(--sp-primary), var(--sp-primary-2));
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      padding: 0.6rem 1.2rem;
+      font-size: 0.9rem;
+    }
+
+    /* Improved dropdown menu */
+    .dropdown-menu {
+      border: 1px solid var(--sp-border);
+      border-radius: var(--sp-radius);
+      box-shadow: var(--sp-shadow-hover);
+      padding: 0.5rem;
+      min-width: 220px;
+      margin-top: 0.5rem;
+    }
+
+    .dropdown-item {
+      border-radius: 6px;
+      padding: 0.6rem 0.8rem;
+      font-weight: 500;
+      font-size: 0.875rem;
+      margin: 0.1rem 0;
+      transition: all 0.2s ease;
+    }
+
+    .dropdown-item:hover {
+      background-color: var(--sp-primary);
+      color: white;
+    }
+
+    .dropdown-divider {
+      margin: 0.4rem 0;
+    }
+
+    /* Theme toggle button */
+    .btn-theme {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: white;
+      border-radius: 8px;
+      padding: 0.4rem 0.8rem;
+      font-size: 0.85rem;
+    }
+
+    /* Enhanced user info in dropdown */
+    .user-dropdown-header {
+      padding: 0.75rem 0.8rem;
+      border-bottom: 1px solid var(--sp-border);
+      margin-bottom: 0.5rem;
+    }
+
+    .user-info-compact {
+      font-size: 0.8rem;
+    }
+
+    .user-name {
+      font-weight: 600;
+      color: var(--sp-text);
+    }
+
+    .user-role {
+      color: var(--sp-muted);
+      font-size: 0.75rem;
+    }
+
+    /* Reduce focus ring */
+    .form-control, .btn, .dropdown-menu, .nav-link, .navbar-toggler {
+      outline: none !important;
+    }
+
+    /* Smooth transitions */
+    * {
+      transition: background-color 0.2s ease,
+                  color 0.2s ease,
+                  border-color 0.2s ease;
+    }
+
+    /* Compact navbar items */
+    .navbar-nav .nav-item {
+      margin: 0 0.1rem;
+    }
+
+    .navbar-toggler {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.9rem;
+    }
+
+    /* Mobile menu improvements */
+    @media (max-width: 991.98px) {
+      .navbar-collapse {
+        margin-top: 1rem;
+        padding: 1rem 0;
+      }
+
+      .navbar-nav .nav-item {
+        margin: 0.2rem 0;
+      }
+
+      .dropdown-menu {
+        border: none;
+        box-shadow: none;
+        background: transparent;
+        padding-left: 1rem;
+      }
+
+      .dropdown-item {
+        padding-left: 0;
+        color: rgba(255,255,255,0.9);
+      }
+    }
+  </style>
+  <style>
+  .menu-content {
+      max-width: 1200px;
+      margin: 0 auto; /* căn giữa toàn bộ nội dung */
+  }
+  </style>
+
+</head>
+<body>
+
+  <!-- NAVBAR -->
+    <!-- NAVBAR -->
+  <nav class="navbar navbar-expand-lg navbar-dark sp-navbar sticky-top">
+    <div class="container py-1">
+      <a class="navbar-brand d-flex align-items-center sp-navbrand" href="{{ url_for('student_dashboard') }}">
+        <i class="bi bi-mortarboard-fill me-2 fs-5"></i>
+        <span class="fw-bold">STUDENT PORTAL</span>
+      </a>
+
+      <div class="d-flex align-items-center gap-2">
+        <!-- Theme toggle -->
+        <button id="themeToggle" class="btn btn-theme d-none d-lg-inline-flex align-items-center">
+          <i class="bi bi-moon-stars me-1"></i>
+          <span class="d-none d-xl-inline">Dark</span>
+        </button>
+
+        <button class="navbar-toggler border-0 px-2" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+      </div>
+
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-0">
+          <!-- Menu chính -->
+          <li class="nav-item">
+            <a class="nav-link sp-navlink {% if active=='home' %}active{% endif %}" href="{{ url_for('student_dashboard') }}">
+              <i class="bi bi-house-door me-1"></i>Trang chủ
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link sp-navlink {% if active=='gioithieu' %}active{% endif %}" href="{{ url_for('gioithieu') }}">
+              <i class="bi bi-info-circle me-1"></i>Giới thiệu
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link sp-navlink {% if active=='tintuc' %}active{% endif %}" href="{{url_for('tintuc') }}">
+              <i class="bi bi-newspaper me-1"></i>Tin tức
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link sp-navlink {% if active=='chat' %}active{% endif %}" href="{{ url_for('chat_sinh_vien') }}">
+              <i class="bi bi-chat-dots me-1"></i>Chat
+              <span class="sp-badge ms-1">Mới</span>
+            </a>
+          </li>
+
+          <!-- 🔔 Icon thông báo -->
+          <li class="nav-item dropdown position-relative me-2">
+            <a class="nav-link sp-navlink" href="#" id="notifBtn" role="button">
+              <i class="bi bi-bell-fill fs-5"></i>
+              <span id="notif-count"
+                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                style="font-size: 0.6rem; display: none;">
+              </span>
+            </a>
+            <div id="notif-dropdown"
+              class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3 p-0"
+              style="width: 300px; max-height: 320px; overflow-y: auto; display: none;">
+              <div id="notif-items"></div>
+            </div>
+          </li>
+
+          <!-- User dropdown -->
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle d-flex align-items-center sp-navlink" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              {% if user and user.avatar %}
+                <img src="{{ url_for('static', filename=user.avatar) }}" alt="Avatar" class="sp-avatar me-2">
+              {% else %}
+                <i class="bi bi-person-circle me-1"></i>
+              {% endif %}
+              <span class="d-none d-lg-inline">Học tập</span>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3 p-2">
+              <li class="user-dropdown-header">
+                <div class="user-info-compact">
+                  <div class="user-name">{{ user.name if user else 'Sinh viên' }}</div>
+                  <div class="user-role">Tài khoản sinh viên</div>
+                </div>
+              </li>
+
+              <li>
+                <a class="dropdown-item d-flex align-items-center" href="{{ url_for('ghidanh') }}">
+                  <i class="bi bi-pencil-square me-2 text-primary"></i>Ghi danh
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item d-flex align-items-center" href="{{ url_for('thoikhoabieu') }}">
+                  <i class="bi bi-calendar-event me-2 text-primary"></i>Thời khóa biểu
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item d-flex align-items-center" href="{{ url_for('lich_su_nghi_phep') }}">
+                  <i class="bi bi-credit-card me-2 text-primary"></i>Lịch sử nghỉ phép
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item d-flex align-items-center" href="{{ url_for('lich_su_diem_danh') }}">
+                  <i class="bi bi-credit-card me-2 text-primary"></i>Lịch sử điểm danh
+                </a>
+              </li>
+
+              <li><hr class="dropdown-divider my-2"></li>
+
+              <li>
+                <a class="dropdown-item d-flex align-items-center" href="{{ url_for('info_canhan') }}">
+                  <i class="bi bi-person me-2 text-success"></i>Thông tin cá nhân
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item d-flex align-items-center" href="{{ url_for('don_nghi_hoc') }}">
+                  <i class="bi bi-envelope me-2 text-success"></i>Xin nghỉ phép
+                </a>
+              </li>
+
+              <li><hr class="dropdown-divider my-2"></li>
+
+              <li>
+                <a class="dropdown-item d-flex align-items-center" href="#">
+                  <i class="bi bi-gear me-2 text-muted"></i>Cài đặt
+                </a>
+              </li>
+
+              <li><hr class="dropdown-divider my-2"></li>
+
+              <li>
+                <a class="dropdown-item d-flex align-items-center text-warning" href="{{ url_for('logout') }}">
+                  <i class="bi bi-box-arrow-right me-2"></i>Đăng xuất
+                </a>
+              </li>
+            </ul>
+          </li>
+
+          <!-- Theme toggle (mobile) -->
+          <li class="nav-item d-lg-none mt-2 pt-2 border-top">
+            <button id="themeToggleMobile" class="btn btn-theme w-100 d-flex align-items-center justify-content-center">
+              <i class="bi bi-moon-stars me-2"></i>Chuyển Dark/Light
+            </button>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+
+  <!-- TOAST FLASH MESSAGES -->
+  <div class="toast-container" id="flashToasts">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="toast align-items-center text-bg-{{ 'success' if category=='success' else ('danger' if category=='danger' else category) }} border-0 mb-2" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="4200">
+            <div class="d-flex">
+              <div class="toast-body d-flex align-items-center">
+                <i class="bi bi-{{ 'check-circle' if category=='success' else ('exclamation-triangle' if category=='danger' else 'info-circle') }} me-2"></i>
+                {{ message }}
+              </div>
+              <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+  </div>
+
+  <!-- PAGE HEADER -->
+  {% if page_title %}
+  <header class="pt-3">
+    <div class="container">
+      <div class="sp-card p-3">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+          <div>
+            <h1 class="h5 mb-1 fw-bold text-primary">{{ page_title }}</h1>
+            {% if page_subtitle %}
+              <p class="mb-0 text-muted small">{{ page_subtitle }}</p>
+            {% endif %}
+          </div>
+          {% if page_actions %}
+            <div class="d-flex gap-2">
+              {{ page_actions|safe }}
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </header>
+  {% endif %}
+
+  <!-- CONTENT -->
+  <main>
+  <div class="menu-content container px-4 px-md-5">
+      {% block content %}
+      <div class="sp-card p-4">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+          <div>
+            <h2 class="h6 mb-2 fw-semibold">Xin chào, {{ user.name if user else 'Sinh viên' }}! 👋</h2>
+            <p class="mb-0 text-muted small">Chào mừng bạn đến với Hệ thống quản lý học tập.</p>
+          </div>
+          <a class="btn btn-primary btn-sm d-flex align-items-center" href="{{ url_for('student_dashboard') }}">
+            <i class="bi bi-speedometer2 me-1"></i>Bảng điều khiển
+          </a>
+        </div>
+      </div>
+      {% endblock %}
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="sp-footer">
+    <div class="container text-center">
+      <div class="text-muted small mb-2">&copy; 2025 Student Portal · All Rights Reserved</div>
+      <div class="small">
+        <a href="#" class="text-muted text-decoration-none me-3">Điều khoản</a>
+        <a href="#" class="text-muted text-decoration-none me-3">Bảo mật</a>
+        <a href="#" class="text-muted text-decoration-none">Hỗ trợ</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Initialize toasts for flash messages
+    document.querySelectorAll('#flashToasts .toast').forEach(t => new bootstrap.Toast(t).show());
+
+    // Theme toggle with localStorage
+    const htmlEl = document.documentElement;
+    const THEME_KEY = 'sp-theme';
+
+    function setTheme(mode) {
+      htmlEl.setAttribute('data-bs-theme', mode);
+      localStorage.setItem(THEME_KEY, mode);
+
+      const labelDesktop = document.querySelector('#themeToggle span');
+      const iconDesktop = document.querySelector('#themeToggle i');
+      const labelMobile = document.querySelector('#themeToggleMobile');
+      const isDark = mode === 'dark';
+
+      if (labelDesktop) labelDesktop.textContent = isDark ? 'Light' : 'Dark';
+      if (iconDesktop) iconDesktop.className = isDark ? 'bi bi-sun me-1' : 'bi bi-moon-stars me-1';
+      if (labelMobile) labelMobile.innerHTML = isDark
+        ? '<i class="bi bi-sun me-2"></i>Chuyển Light'
+        : '<i class="bi bi-moon-stars me-2"></i>Chuyển Dark';
+    }
+
+    // Load saved theme
+    (function() {
+      const saved = localStorage.getItem(THEME_KEY);
+      if (saved) setTheme(saved);
+      else setTheme('light');
+    })();
+
+    // Theme toggle events
+    document.getElementById('themeToggle')?.addEventListener('click', () => {
+      setTheme(htmlEl.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark');
+    });
+
+    document.getElementById('themeToggleMobile')?.addEventListener('click', () => {
+      setTheme(htmlEl.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark');
+    });
+  </script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const notifBtn = document.getElementById("notifBtn");
+  const notifDropdown = document.getElementById("notif-dropdown");
+  const notifItems = document.getElementById("notif-items");
+  const notifCount = document.getElementById("notif-count");
+
+  // 🧩 Hàm tải danh sách thông báo
+  async function loadNotifications() {
+    try {
+      const res = await fetch("/api/notifications");
+      if (!res.ok) throw new Error("Lỗi khi tải danh sách thông báo");
+      const data = await res.json();
+
+      notifItems.innerHTML = "";
+      let unread = 0;
+
+      if (!Array.isArray(data) || data.length === 0) {
+        notifItems.innerHTML = `
+          <div class="p-3 text-center text-muted small">
+            Không có thông báo nào
+          </div>`;
+      } else {
+        data.forEach(n => {
+          if (!n.is_read) unread++;
+          notifItems.innerHTML += `
+            <div class="p-3 border-bottom small notif-item ${!n.is_read ? 'bg-light' : ''}"
+                 data-id="${n.id}" style="cursor:pointer;">
+              <div class="fw-semibold text-primary">${n.title}</div>
+              <div>${n.message}</div>
+              <div class="text-muted mt-1" style="font-size: 0.75rem;">
+                ${new Date(n.created_at).toLocaleString()}
+              </div>
+            </div>`;
+        });
+      }
+
+      notifCount.textContent = unread;
+      notifCount.style.display = unread > 0 ? "inline-block" : "none";
+
+      // Khi click vào từng thông báo → đánh dấu đã đọc
+      document.querySelectorAll(".notif-item").forEach(item => {
+        item.addEventListener("click", async function () {
+          const id = this.getAttribute("data-id");
+          await markAsRead(id);
+          await loadNotifications();
+        });
+      });
+
+    } catch (err) {
+      console.error("❌ Lỗi tải thông báo:", err);
+      notifItems.innerHTML = `<div class="p-3 text-danger small">Không thể tải thông báo</div>`;
+    }
+  }
+
+  // 🧩 API đánh dấu thông báo đã đọc
+  async function markAsRead(id) {
+    try {
+      await fetch(`/api/notifications/mark_read/${id}`, {
+        method: "POST"
+      });
+    } catch (err) {
+      console.error("❌ Lỗi khi đánh dấu đã đọc:", err);
+    }
+  }
+
+  // 🧩 Cập nhật số lượng thông báo chưa đọc
+  async function updateUnreadCount() {
+    try {
+      const res = await fetch("/api/notifications/unread_count");
+      if (!res.ok) return;
+      const data = await res.json();
+      const count = data.unread_count || 0;
+
+      notifCount.textContent = count;
+      notifCount.style.display = count > 0 ? "inline-block" : "none";
+    } catch (err) {
+      console.error("❌ Lỗi khi cập nhật số lượng thông báo:", err);
+    }
+  }
+
+  // 🧩 Khi click vào chuông → bật/tắt dropdown
+  notifBtn.addEventListener("click", function (e) {
+    e.preventDefault();
+    const isVisible = notifDropdown.style.display === "block";
+    notifDropdown.style.display = isVisible ? "none" : "block";
+
+    if (!isVisible) {
+      loadNotifications(); // Chỉ tải khi mở dropdown
+    }
+  });
+
+  // 🧩 Click ra ngoài → ẩn dropdown
+  document.addEventListener("click", function (e) {
+    if (!notifDropdown.contains(e.target) && !notifBtn.contains(e.target)) {
+      notifDropdown.style.display = "none";
+    }
+  });
+
+  // 🧩 Cập nhật badge tự động mỗi 15 giây
+  updateUnreadCount();
+  setInterval(updateUnreadCount, 15000);
+});
+</script>
+
+
+</body>
+</html>

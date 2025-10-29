@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tạo lớp học</title>
+</head>
+<body>
+    <h2>Xin chào {{ ten }} - Tạo lớp học mới</h2>
+    <form method="POST">
+        <label>Tên lớp học:</label>
+        <input type="text" name="class_name" required>
+        <button type="submit">Tạo lớp</button>
+    </form>
+    <a href="{{ url_for('list_classes') }}">Xem danh sách lớp</a>
+</body>
+</html>

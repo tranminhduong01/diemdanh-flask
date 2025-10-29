@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ thống điểm danh bằng nhận diện khuôn mặt</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 25px 20px;
+            background: linear-gradient(135deg, #4b6cb7 0%, #182848 100%);
+            color: white;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1.8fr;
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .camera-panel {
+            height: fit-content;
+        }
+
+        .students-panel {
+            max-height: 75vh;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            margin-bottom: 18px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #4b6cb7;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .video-container {
+            position: relative;
+            width: 100%;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        #video {
+            width: 100%;
+            height: auto;
+            background: #000;
+            transform: scaleX(-1);
+            display: block;
+        }
+
+        #canvas {
+            display: none;
+        }
+
+        #recognition-status {
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: center;
+            font-weight: bold;
+            background-color: #3498db;
+            color: white;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-waiting {
+            background-color: #f39c12 !important;
+        }
+
+        .status-recognizing {
+            background-color: #3498db !important;
+        }
+
+        .status-success {
+            background-color: #2ecc71 !important;
+        }
+
+        .status-error {
+            background-color: #e74c3c !important;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 15px 0;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 15px 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-value {
+            font-size: 1.6rem;
+            color: #4b6cb7;
+            font-weight: 700;
+        }
+
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 0.85rem;
+            margin-top: 5px;
+        }
+
+        .mode-controls {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 12px 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        #checkin-btn {
+            background-color: #2ecc71;
+            color: white;
+        }
+
+        #checkin-btn:hover {
+            background-color: #27ae60;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        #checkout-btn {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        #checkout-btn:hover {
+            background-color: #c0392b;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        #mode-status {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+            padding: 10px;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .students-table-container {
+            overflow-x: auto;
+            max-height: 500px;
+            overflow-y: auto;
+            border-radius: 8px;
+            flex-grow: 1;
+            border: 1px solid #e0e0e0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 900px;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        tr:hover {
+            background-color: #f5f7fa;
+        }
+
+        .status-absent {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        .status-present {
+            color: #2ecc71;
+            font-weight: bold;
+        }
+
+        .status-late {
+            color: #f39c12;
+            font-weight: bold;
+        }
+
+        .footer-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        .action-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        #back-btn {
+            background-color: #7f8c8d;
+            color: white;
+        }
+
+        #back-btn:hover {
+            background-color: #636e72;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        #save-attendance {
+            background-color: #3498db;
+            color: white;
+        }
+
+        #save-attendance:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 15px;
+            color: #7f8c8d;
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 1024px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+
+            .students-panel {
+                max-height: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .footer-actions {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .action-btn {
+                width: 100%;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Hệ thống điểm danh bằng nhận diện khuôn mặt</h1>
+            <p class="subtitle">Công nghệ AI nhận diện khuôn mặt tự động điểm danh</p>
+        </header>
+
+        <div class="dashboard">
+            <!-- Phần camera và điều khiển -->
+            <div class="panel camera-panel">
+                <h2 class="section-title">Camera</h2>
+                <div class="video-container">
+                    <video id="video" autoplay playsinline></video>
+                    <canvas id="canvas"></canvas>
+                </div>
+
+                <div id="recognition-status">Đang khởi động hệ thống...</div>
+
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="total-students">0</div>
+                        <div class="stat-label">Tổng SV</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="present-count">0</div>
+                        <div class="stat-label">Có mặt</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="absent-count">0</div>
+                        <div class="stat-label">Vắng mặt</div>
+                    </div>
+                </div>
+
+                <div class="mode-controls">
+                    <button id="checkin-btn" class="mode-btn">✅ Điểm danh vào</button>
+                    <button id="checkout-btn" class="mode-btn">🚪 Điểm danh ra</button>
+                </div>
+
+                <p id="mode-status">Chế độ hiện tại: Điểm danh vào</p>
+            </div>
+
+            <!-- Phần danh sách sinh viên -->
+            <div class="panel students-panel">
+                <h2 class="section-title">Danh sách sinh viên</h2>
+                <div class="students-table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>MSSV</th>
+                                <th>Họ tên</th>
+                                <th>Giờ vào</th>
+                                <th>Trạng thái vào</th>
+                                <th>Giờ ra</th>
+                                <th>Trạng thái ra</th>
+                                <th>Điểm</th>
+                            </tr>
+                        </thead>
+                        <tbody id="students-table-body">
+                            <!-- Dữ liệu sẽ được render bằng JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-actions">
+            <button id="back-btn" class="action-btn">⬅️ Trở về</button>
+            <button id="save-attendance" class="action-btn">💾 Lưu điểm danh</button>
+        </div>
+
+        <footer>
+            <p>Hệ thống điểm danh tự động - Bản quyền © 2023</p>
+        </footer>
+    </div>
+
+    <script>
+        const video = document.getElementById("video");
+        const canvas = document.getElementById("canvas");
+        const statusText = document.getElementById("recognition-status");
+        const studentsTableBody = document.getElementById("students-table-body");
+        const totalStudentsEl = document.getElementById("total-students");
+        const presentCountEl = document.getElementById("present-count");
+        const absentCountEl = document.getElementById("absent-count");
+        const modeStatus = document.getElementById("mode-status");
+
+        // 👉 Dữ liệu từ Flask - GIỮ NGUYÊN
+        const sessionId = {{ buoi_hoc.session_id }};
+        const students = {{ students | tojson }};
+
+        let mode = "in"; // chế độ điểm danh
+
+        // Render danh sách sinh viên - GIỮ NGUYÊN HÀM CỦA BẠN
+        function renderStudents() {
+            studentsTableBody.innerHTML = "";
+            students.forEach(s => {
+                const row = document.createElement("tr");
+
+                row.innerHTML = `
+                    <td>${s.mssv}</td>
+                    <td>${s.full_name}</td>
+                    <td>${formatDate(s.time_in)}</td>
+                    <td>
+                        ${getStatusInHTML(s.status_in)}
+                    </td>
+                    <td>${formatDate(s.time_out)}</td>
+                    <td>
+                        ${getStatusOutHTML(s.status_out)}
+                    </td>
+                    <td>${s.score}</td>
+                `;
+                studentsTableBody.appendChild(row);
+            });
+
+            updateStats();
+        }
+
+        function formatDate(datetime) {
+            if (!datetime) return '-';
+            const d = new Date(datetime);
+            return d.toLocaleString('vi-VN', { hour12: false });
+        }
+
+
+        // Tạo HTML cho trạng thái vào
+        function getStatusInHTML(status) {
+            switch(status) {
+                case 'present':
+                    return '<span class="status-present">✅ Có mặt</span>';
+                case 'late':
+                    return '<span class="status-late">⏰ Trễ</span>';
+                case 'absent_excused':
+                    return '<span class="status-absent">🟡 Nghỉ có phép</span>';
+                case 'absent_unexcused':
+                    return '<span class="status-absent">🔴 Nghỉ không phép</span>';
+                default:
+                    return '<span class="status-absent">❌ Chưa điểm danh</span>';
+            }
+        }
+
+        // Tạo HTML cho trạng thái ra
+        function getStatusOutHTML(status) {
+            switch(status) {
+                case 'checked_out':
+                    return '<span class="status-present">🚪 Đã ra</span>';
+                default:
+                    return '<span class="status-absent">⏳ Chưa ra</span>';
+            }
+        }
+
+        // Cập nhật thống kê - GIỮ NGUYÊN LOGIC CỦA BẠN
+        function updateStats() {
+            const total = students.length;
+            const present = students.filter(s =>
+                s.status_in === 'present' || s.status_in === 'late' ||
+                s.status_out === 'checked_out'
+            ).length;
+            const absent = total - present;
+
+            totalStudentsEl.textContent = total;
+            presentCountEl.textContent = present;
+            absentCountEl.textContent = absent;
+        }
+
+        // Bật camera - GIỮ NGUYÊN
+        async function initCamera() {
+            try {
+                statusText.textContent = "Đang khởi động camera...";
+                statusText.className = "status-waiting";
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+                statusText.textContent = "Camera đã bật, đang nhận diện...";
+                statusText.className = "status-recognizing";
+                startAutoCapture();
+            } catch (err) {
+                console.error("Camera error:", err);
+                statusText.textContent = "Không thể mở camera: " + err.message;
+                statusText.className = "status-error";
+            }
+        }
+
+        // Chụp frame - GIỮ NGUYÊN
+        function captureFrame() {
+            const ctx = canvas.getContext("2d");
+            if (video.videoWidth === 0 || video.videoHeight === 0) return null;
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            return new Promise(resolve => {
+                canvas.toBlob(blob => {
+                    if (!blob || blob.size < 5000) resolve(null);
+                    else resolve(blob);
+                }, "image/jpeg", 0.9);
+            });
+        }
+
+        // Gửi frame nhận diện - GIỮ NGUYÊN
+        async function sendFrameToServer() {
+            const blob = await captureFrame();
+            if (!blob) return;
+
+            const formData = new FormData();
+            formData.append("image", blob);
+            formData.append("mode", mode);
+
+            try {
+                const res = await fetch(`/api/diemdanh/${sessionId}/${mode}`, {
+                    method: "POST",
+                    body: formData
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    statusText.textContent = data.message;
+                    statusText.className = "status-success";
+                    updateStudentStatus(data.student.enrollment_id, "present", data.student.full_name);
+                } else {
+                    statusText.textContent = "❌ " + (data.message || "Lỗi điểm danh");
+                    statusText.className = "status-error";
+                }
+            } catch (err) {
+                console.error("API error:", err);
+                statusText.textContent = "Không thể kết nối server.";
+            }
+        }
+
+        // Cập nhật trạng thái sinh viên sau khi nhận diện - GIỮ NGUYÊN
+        function updateStudentStatus(enrollmentId, status, name) {
+            // Tìm và cập nhật sinh viên trong danh sách
+            const student = students.find(s => s.enrollment_id === enrollmentId);
+            if (student) {
+                if (mode === "in") {
+                    student.status_in = "present";
+                    student.time_in = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+                } else {
+                    student.status_out = "checked_out";
+                    student.time_out = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+                }
+                renderStudents();
+            }
+        }
+
+        function startAutoCapture() {
+            setInterval(sendFrameToServer, 4000);
+        }
+
+        // Xử lý nút - GIỮ NGUYÊN
+        document.getElementById("checkin-btn").addEventListener("click", () => {
+            mode = "in";
+            modeStatus.textContent = "Chế độ hiện tại: Điểm danh vào";
+            modeStatus.style.color = "#2ecc71";
+        });
+
+        document.getElementById("checkout-btn").addEventListener("click", () => {
+            mode = "out";
+            modeStatus.textContent = "Chế độ hiện tại: Điểm danh ra";
+            modeStatus.style.color = "#e74c3c";
+        });
+
+        document.getElementById("back-btn").addEventListener("click", () => {
+            window.history.back();
+        });
+
+        document.getElementById("save-attendance").addEventListener("click", () => {
+            alert("Đã lưu điểm danh thành công!");
+        });
+
+        // Khởi tạo
+        // Khởi tạo
+        renderStudents();
+        initCamera();
+        // 🔁 Tự động cập nhật danh sách sinh viên mỗi 5s (không reload trang)
+        setInterval(async () => {
+            try {
+                const res = await fetch(`/api/attendance_data/${sessionId}`);
+                const newData = await res.json();
+
+                // Cập nhật dữ liệu mới vào biến students
+                students.splice(0, students.length, ...newData);
+                renderStudents();
+            } catch (err) {
+                console.error("Lỗi khi tải lại danh sách:", err);
+            }
+        }, 5000);
+
+    </script>
+</body>
+</html>

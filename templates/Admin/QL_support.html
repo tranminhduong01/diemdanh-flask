@@ -1,0 +1,56 @@
+{% extends "menu_admin.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h3 class="mb-3">🎫 Quản lý Ticket hỗ trợ giảng viên</h3>
+
+  <table class="table table-hover table-bordered align-middle">
+    <thead class="table-dark text-center">
+      <tr>
+        <th>ID</th>
+        <th>Tên giảng viên</th>
+        <th>Email</th>
+        <th>Tiêu đề</th>
+        <th>Mô tả</th>
+        <th>Trạng thái</th>
+        <th>Ngày tạo</th>
+        <th>Hành động</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for t in tickets %}
+      <tr>
+        <td class="text-center">{{ t.id }}</td>
+        <td>{{ t.teacher_name }}</td>
+        <td>{{ t.email }}</td>
+        <td>{{ t.title }}</td>
+        <td style="white-space: pre-wrap;">{{ t.description }}</td>
+        <td width="150px">
+          <form method="post" action="{{ url_for('admin_update_ticket', id=t.id) }}">
+            <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+              <option value="open" {% if t.status == 'open' %}selected{% endif %}>Open</option>
+              <option value="in_progress" {% if t.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+              <option value="closed" {% if t.status == 'closed' %}selected{% endif %}>Closed</option>
+            </select>
+          </form>
+        </td>
+        <td class="text-center">
+          {{ t.created_at.strftime("%H:%M %d/%m/%Y ") if t.created_at else '' }}
+        </td>
+        <td class="text-center">
+          <form action="{{ url_for('admin_delete_ticket', id=t.id) }}" method="post"
+                onsubmit="return confirm('Bạn có chắc muốn xóa ticket này không?')">
+            <button class="btn btn-danger btn-sm">Xóa</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% if tickets|length == 0 %}
+    <div class="alert alert-info text-center mt-4">
+      Hiện chưa có yêu cầu hỗ trợ nào.
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

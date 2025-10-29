@@ -1,0 +1,40 @@
+{% extends "Menu_SV.html" %}
+
+{% block title %}Student Dashboard{% endblock %}
+
+{% block content %}
+{% include "chat_bot.html" %}
+
+  <!-- HERO BANNER -->
+  <section class="hero">
+    <div class="hero-content text-center text-white p-5" style="background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1200&q=80') center/cover; height: 380px;">
+      <h1>Chào mừng, {{ ten }}</h1>
+      <p class="lead">Quản lý hành trình học tập của bạn với bảng điều khiển sinh viên toàn diện</p>
+      <a href="#" class="btn btn-primary btn-lg">Xem khóa học</a>
+    </div>
+  </section>
+
+  <!-- FEATURED COURSES -->
+  <div class="container py-5">
+    <h2 class="section-heading">Các lớp học nổi bật</h2>
+    <div class="row g-4">
+      {% for cl in classes %}
+        <div class="col-md-4">
+          <div class="course-card card">
+            <div class="card-body">
+              <h5 class="card-title">{{ cl.class_name }}</h5>
+              <p class="card-text">
+                <strong>Giảng viên:</strong> {{ cl.teacher_name }} <br>
+                <strong>Phòng:</strong> {{ cl.room }} <br>
+                <strong>Thời gian:</strong> {{ cl.day_of_week }} | {{ cl.start_time }} - {{ cl.end_time }} <br>
+                <strong>Số sinh viên:</strong> {{ cl.student_count }}
+              </p>
+              <a href="/ghi_vao_lop/{{ cl.id }}" class="btn btn-success">Ghi danh vào lớp</a>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+{% endblock %}

@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng Ký Tài Khoản | Hệ Thống Giáo Dục</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap">
+    <style>
+        :root {
+            --primary-color: #4e54c8;
+            --primary-dark: #3a3eb1;
+            --secondary-color: #8f94fb;
+            --accent-color: #ff7a7a;
+            --success-color: #4caf50;
+            --warning-color: #ff9800;
+            --dark-color: #2d3436;
+            --light-color: #f8f9fa;
+            --gray-light: #eef2f7;
+            --border-radius: 16px;
+            --box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', 'Montserrat', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: var(--dark-color);
+            overflow: hidden;
+        }
+
+        .register-wrapper {
+            display: flex;
+            max-width: 1100px;
+            width: 100%;
+            max-height: 95vh;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+        }
+
+        .illustration-section {
+            flex: 1;
+            background: linear-gradient(135deg, rgba(78, 84, 200, 0.85) 0%, rgba(143, 148, 251, 0.85) 100%);
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            display: none; /* Ẩn trên mobile */
+        }
+
+        .illustration-section::before {
+            content: '';
+            position: absolute;
+            width: 150%;
+            height: 150%;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%23ffffff' fill-opacity='0.1' d='M0,128L48,117.3C96,107,192,85,288,112C384,139,480,213,576,218.7C672,224,768,160,864,138.7C960,117,1056,139,1152,149.3C1248,160,1344,160,1392,160L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E");
+            background-size: cover;
+            opacity: 0.2;
+            z-index: 0;
+        }
+
+        .illustration-content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+        }
+
+        .illustration-content h2 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .illustration-content p {
+            font-size: 1rem;
+            margin-bottom: 20px;
+            opacity: 0.9;
+        }
+
+        .illustration-img {
+            max-width: 90%;
+            margin: 15px 0;
+            filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.2));
+        }
+
+        .features-list {
+            text-align: left;
+            margin-top: 20px;
+            padding-left: 20px;
+        }
+
+        .features-list li {
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+
+        .features-list i {
+            margin-right: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+        }
+
+        .register-container {
+            flex: 1;
+            background: white;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow-y: hidden;
+        }
+
+        .register-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .register-header h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 8px;
+        }
+
+        .register-header p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .logo {
+            margin-bottom: 15px;
+            display: inline-block;
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--primary-color);
+        }
+
+        .logo span {
+            color: var(--accent-color);
+        }
+
+        .register-form {
+            width: 100%;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+            position: relative;
+        }
+
+        .form-label {
+            font-weight: 500;
+            margin-bottom: 6px;
+            display: block;
+            color: #444;
+            font-size: 0.9rem;
+        }
+
+        .input-with-icon {
+            position: relative;
+        }
+
+        .input-with-icon i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #777;
+            transition: var(--transition);
+            font-size: 0.9rem;
+        }
+
+        .form-control {
+            padding: 12px 12px 12px 40px;
+            border: 2px solid var(--gray-light);
+            border-radius: 10px;
+            font-size: 0.9rem;
+            transition: var(--transition);
+            height: 46px;
+            width: 100%;
+            font-weight: 400;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(78, 84, 200, 0.15);
+        }
+
+        .form-control:focus + i {
+            color: var(--primary-color);
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #999;
+            transition: var(--transition);
+            background: none;
+            border: none;
+            outline: none;
+            z-index: 2;
+            font-size: 0.9rem;
+        }
+
+        .password-toggle:hover {
+            color: var(--primary-color);
+        }
+
+        .form-select {
+            padding: 12px 14px;
+            border: 2px solid var(--gray-light);
+            border-radius: 10px;
+            font-size: 0.9rem;
+            height: 46px;
+            width: 100%;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='%23444' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            background-size: 14px;
+            padding-right: 36px;
+        }
+
+        .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(78, 84, 200, 0.15);
+        }
+
+        .terms-check {
+            display: flex;
+            align-items: flex-start;
+            margin: 20px 0;
+        }
+
+        .terms-check input {
+            margin-top: 3px;
+            margin-right: 10px;
+            accent-color: var(--primary-color);
+        }
+
+        .terms-check label {
+            font-size: 0.85rem;
+            line-height: 1.4;
+            color: #555;
+        }
+
+        .terms-check a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .terms-check a:hover {
+            color: var(--primary-dark);
+            text-decoration: underline;
+        }
+
+        .register-btn {
+            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            width: 100%;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 4px 12px rgba(106, 17, 203, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .register-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: 0.5s;
+        }
+
+        .register-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(106, 17, 203, 0.3);
+        }
+
+        .register-btn:hover::before {
+            left: 100%;
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .login-link a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .login-link a:hover {
+            color: var(--primary-dark);
+            text-decoration: underline;
+        }
+
+        .alert {
+            border-radius: 10px;
+            margin-bottom: 18px;
+            padding: 12px;
+            border: none;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+            font-size: 0.9rem;
+        }
+
+        .alert-danger {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+
+        .alert-success {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .password-strength {
+            height: 5px;
+            margin-top: 6px;
+            border-radius: 3px;
+            background: #eee;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .password-strength-bar {
+            height: 100%;
+            width: 0;
+            border-radius: 3px;
+            transition: var(--transition);
+        }
+
+        .password-strength-weak {
+            background-color: #ff4757;
+            width: 33%;
+        }
+
+        .password-strength-medium {
+            background-color: #ffa502;
+            width: 66%;
+        }
+
+        .password-strength-strong {
+            background-color: #2ed573;
+            width: 100%;
+        }
+
+        .password-feedback {
+            font-size: 0.75rem;
+            margin-top: 5px;
+            color: #777;
+            min-height: 18px;
+        }
+
+        .invalid-feedback {
+            font-size: 0.75rem;
+            margin-top: 4px;
+            color: #c62828;
+            display: none;
+        }
+
+        .is-invalid {
+            border-color: #c62828 !important;
+        }
+
+        .is-invalid + i {
+            color: #c62828 !important;
+        }
+
+        /* Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+            20%, 40%, 60%, 80% { transform: translateX(4px); }
+        }
+
+        .animated {
+            animation: fadeIn 0.6s ease forwards;
+        }
+
+        .shake {
+            animation: shake 0.4s ease;
+        }
+
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.2s; }
+        .delay-3 { animation-delay: 0.3s; }
+
+        /* Responsive */
+        @media (min-width: 992px) {
+            .illustration-section {
+                display: flex;
+            }
+        }
+
+        @media (max-width: 991px) {
+            .register-container {
+                border-radius: var(--border-radius);
+            }
+
+            .register-wrapper {
+                max-width: 500px;
+                max-height: none;
+            }
+        }
+
+        @media (max-width: 576px) {
+            body {
+                padding: 15px;
+                align-items: flex-start;
+            }
+
+            .register-wrapper {
+                max-height: none;
+                height: auto;
+            }
+
+            .register-container {
+                padding: 20px 15px;
+            }
+
+            .register-header h1 {
+                font-size: 1.6rem;
+            }
+
+            .form-control, .form-select {
+                height: 44px;
+                padding-left: 38px;
+            }
+
+            .terms-check {
+                margin: 15px 0;
+            }
+
+            .register-btn {
+                padding: 12px;
+                font-size: 0.95rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="register-wrapper">
+        <div class="illustration-section">
+            <div class="illustration-content">
+                <div class="logo">Edu<span>System</span></div>
+                <h2>Tham gia cộng đồng giáo dục của chúng tôi</h2>
+                <p>Kết nối, học hỏi và phát triển cùng hàng ngàn thành viên</p>
+
+                <svg class="illustration-img" width="200" height="160" viewBox="0 0 500 400" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M250,100 C350,50 450,150 250,300 C50,150 150,50 250,100 Z" fill="#ffffff" opacity="0.2"/>
+                    <circle cx="250" cy="200" r="120" fill="#ffffff" opacity="0.3"/>
+                    <path d="M200,180 L240,220 L320,140" stroke="#ffffff" stroke-width="10" fill="none" stroke-linecap="round"/>
+                    <circle cx="150" cy="100" r="20" fill="#ffffff" opacity="0.5"/>
+                    <circle cx="350" cy="80" r="15" fill="#ffffff" opacity="0.4"/>
+                    <circle cx="380" cy="300" r="25" fill="#ffffff" opacity="0.4"/>
+                    <circle cx="100" cy="280" r="18" fill="#ffffff" opacity="0.5"/>
+                </svg>
+
+                <ul class="features-list">
+                    <li><i class="fas fa-check-circle"></i> Học tập mọi lúc, mọi nơi</li>
+                    <li><i class="fas fa-check-circle"></i> Tài liệu học tập phong phú</li>
+                    <li><i class="fas fa-check-circle"></i> Kết nối với giảng viên hàng đầu</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="register-container">
+            <div class="register-header">
+                <h1>Đăng Ký Tài Khoản</h1>
+            </div>
+
+            <div class="register-form">
+                <!-- Hiển thị flash messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'danger' if category == 'danger' else 'success' }} alert-dismissible fade show animated" role="alert">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas {{ 'fa-exclamation-circle' if category == 'danger' else 'fa-check-circle' }} me-2"></i>
+                                    <div>{{ message }}</div>
+                                </div>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <form method="POST" action="{{ url_for('register') }}" id="registrationForm">
+                    <div class="form-group animated">
+                       <label for="name" class="form-label">Họ và Tên</label>
+                       <div class="input-with-icon">
+                          <i class="fas fa-user"></i>
+                          <input type="text" class="form-control" id="name" name="name" placeholder="Nhập họ và tên đầy đủ" required>
+                        </div>
+                        <div class="invalid-feedback">Vui lòng nhập họ và tên hợp lệ</div>
+                    </div>
+
+                    <div class="form-group animated">
+                        <label for="username" class="form-label">Tên đăng nhập</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-at"></i>
+                            <input type="text" class="form-control" id="username" name="username" placeholder="Nhập tên đăng nhập" required>
+                        </div>
+                        <div class="invalid-feedback">Tên đăng nhập phải có ít nhất 4 ký tự</div>
+                    </div>
+
+                    <div class="form-group animated delay-1">
+                        <label for="password" class="form-label">Mật khẩu</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" class="form-control" id="password" name="password" placeholder="Tạo mật khẩu mạnh" required>
+                            <button type="button" class="password-toggle" aria-label="Hiển thị mật khẩu">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <div class="password-strength">
+                            <div class="password-strength-bar" id="passwordStrengthBar"></div>
+                        </div>
+                        <div class="password-feedback" id="passwordFeedback"></div>
+                        <div class="invalid-feedback">Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường và số</div>
+                    </div>
+
+                    <div class="form-group animated delay-1">
+                        <label for="confirm_password" class="form-label">Xác nhận mật khẩu</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" class="form-control" id="confirm_password" name="confirm_password" placeholder="Nhập lại mật khẩu" required>
+                            <button type="button" class="password-toggle" aria-label="Hiển thị mật khẩu">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <div class="invalid-feedback">Mật khẩu xác nhận không khớp</div>
+                    </div>
+
+                    <div class="form-group animated delay-2">
+                        <label for="role" class="form-label">Vai trò</label>
+                        <select class="form-select" id="role" name="role">
+                            <option value="student">Học sinh</option>
+                            <option value="teacher">Giáo viên</option>
+                            <option value="admin">Quản trị viên</option>
+                        </select>
+                    </div>
+
+                    <div class="terms-check animated delay-2">
+                        <input type="checkbox" id="agreeTerms" required>
+                        <label for="agreeTerms">Tôi đồng ý với <a href="#">Điều khoản dịch vụ</a> và <a href="#">Chính sách bảo mật</a></label>
+                    </div>
+
+                    <div class="form-group animated delay-3">
+                        <button type="submit" class="register-btn">
+                            <span class="btn-text">ĐĂNG KÝ</span>
+                            <span class="btn-loading" style="display: none;">
+                                <i class="fas fa-spinner fa-spin"></i> Đang xử lý...
+                            </span>
+                        </button>
+                    </div>
+                </form>
+
+                <div class="login-link animated delay-3">
+                    <p>Đã có tài khoản? <a href="{{ url_for('login') }}">Đăng nhập ngay</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS and Popper.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Hiển thị/ẩn mật khẩu
+            const passwordToggles = document.querySelectorAll('.password-toggle');
+            passwordToggles.forEach(toggle => {
+                toggle.addEventListener('click', function() {
+                    const input = this.parentElement.querySelector('input');
+                    const icon = this.querySelector('i');
+
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        icon.classList.remove('fa-eye');
+                        icon.classList.add('fa-eye-slash');
+                    } else {
+                        input.type = 'password';
+                        icon.classList.remove('fa-eye-slash');
+                        icon.classList.add('fa-eye');
+                    }
+                });
+            });
+
+            // Kiểm tra độ mạnh mật khẩu
+            const passwordInput = document.getElementById('password');
+            const strengthBar = document.getElementById('passwordStrengthBar');
+            const feedbackEl = document.getElementById('passwordFeedback');
+
+            passwordInput.addEventListener('input', function() {
+                const password = this.value;
+                let strength = 0;
+                let feedback = '';
+
+                if (password.length > 0) {
+                    // Kiểm tra độ dài
+                    if (password.length < 6) {
+                        feedback = 'Mật khẩu quá ngắn';
+                    } else if (password.length >= 8) {
+                        strength += 20;
+                    }
+
+                    // Kiểm tra chữ thường
+                    if (/[a-z]/.test(password)) {
+                        strength += 20;
+                    }
+
+                    // Kiểm tra chữ hoa
+                    if (/[A-Z]/.test(password)) {
+                        strength += 20;
+                    }
+
+                    // Kiểm tra số
+                    if (/[0-9]/.test(password)) {
+                        strength += 20;
+                    }
+
+                    // Kiểm tra ký tự đặc biệt
+                    if (/[^A-Za-z0-9]/.test(password)) {
+                        strength += 20;
+                    }
+
+                    // Cập nhật feedback
+                    if (strength < 40) {
+                        feedback = 'Mật khẩu yếu';
+                        strengthBar.className = 'password-strength-bar password-strength-weak';
+                    } else if (strength < 80) {
+                        feedback = 'Mật khẩu trung bình';
+                        strengthBar.className = 'password-strength-bar password-strength-medium';
+                    } else {
+                        feedback = 'Mật khẩu mạnh';
+                        strengthBar.className = 'password-strength-bar password-strength-strong';
+                    }
+
+                    // Hiển thị độ dài mật khẩu
+                    feedback += ` (${password.length} ký tự)`;
+                } else {
+                    strengthBar.className = 'password-strength-bar';
+                    feedback = '';
+                }
+
+                // Cập nhật thanh sức mạnh
+                strengthBar.style.width = strength + '%';
+                feedbackEl.textContent = feedback;
+            });
+
+            // Xác thực form
+            const form = document.getElementById('registrationForm');
+            const confirmPasswordInput = document.getElementById('confirm_password');
+
+            form.addEventListener('submit', function(e) {
+                let isValid = true;
+
+                // Kiểm tra mật khẩu khớp
+                if (passwordInput.value !== confirmPasswordInput.value) {
+                    confirmPasswordInput.classList.add('is-invalid');
+                    confirmPasswordInput.classList.add('shake');
+                    document.querySelector('#confirm_password + .invalid-feedback').style.display = 'block';
+                    setTimeout(() => confirmPasswordInput.classList.remove('shake'), 500);
+                    isValid = false;
+                } else {
+                    confirmPasswordInput.classList.remove('is-invalid');
+                    document.querySelector('#confirm_password + .invalid-feedback').style.display = 'none';
+                }
+
+                // Kiểm tra độ dài mật khẩu
+                if (passwordInput.value.length < 8) {
+                    passwordInput.classList.add('is-invalid');
+                    passwordInput.classList.add('shake');
+                    document.querySelector('#password + .invalid-feedback').style.display = 'block';
+                    setTimeout(() => passwordInput.classList.remove('shake'), 500);
+                    isValid = false;
+                } else {
+                    passwordInput.classList.remove('is-invalid');
+                    document.querySelector('#password + .invalid-feedback').style.display = 'none';
+                }
+
+                // Kiểm tra username
+                const usernameInput = document.getElementById('username');
+                if (usernameInput.value.length < 4) {
+                    usernameInput.classList.add('is-invalid');
+                    usernameInput.classList.add('shake');
+                    document.querySelector('#username + .invalid-feedback').style.display = 'block';
+                    setTimeout(() => usernameInput.classList.remove('shake'), 500);
+                    isValid = false;
+                } else {
+                    usernameInput.classList.remove('is-invalid');
+                    document.querySelector('#username + .invalid-feedback').style.display = 'none';
+                }
+
+                // Kiểm tra tên
+                const nameInput = document.getElementById('name');
+                if (nameInput.value.trim().length < 3) {
+                    nameInput.classList.add('is-invalid');
+                    nameInput.classList.add('shake');
+                    document.querySelector('#name + .invalid-feedback').style.display = 'block';
+                    setTimeout(() => nameInput.classList.remove('shake'), 500);
+                    isValid = false;
+                } else {
+                    nameInput.classList.remove('is-invalid');
+                    document.querySelector('#name + .invalid-feedback').style.display = 'none';
+                }
+
+                if (!isValid) {
+                    e.preventDefault();
+                    return;
+                }
+
+                // Hiệu ứng loading
+                const btnText = document.querySelector('.btn-text');
+                const btnLoading = document.querySelector('.btn-loading');
+                const btn = document.querySelector('.register-btn');
+
+                btnText.style.display = 'none';
+                btnLoading.style.display = 'inline';
+                btn.disabled = true;
+            });
+
+            // Tự động ẩn alerts sau 5 giây
+            setTimeout(function() {
+                const alerts = document.querySelectorAll('.alert');
+                alerts.forEach(function(alert) {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                });
+            }, 5000);
+        });
+    </script>
+</body>
+</html>

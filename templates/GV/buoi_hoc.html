@@ -1,0 +1,25 @@
+<h2>Thông tin lớp</h2>
+<p><b>Tên lớp:</b> {{ class_info.class_name }}</p>
+<p><b>Phòng:</b> {{ class_info.room }}</p>
+<p><b>Ngày bắt đầu:</b> {{ class_info.start_date }}</p>
+<p><b>Số tuần học:</b> {{ class_info.weeks }}</p>
+
+<h3>Danh sách buổi học</h3>
+<table border="1" cellpadding="5">
+  <tr>
+    <th>Buổi</th>
+    <th>Ngày học</th>
+    <th>Thời gian</th>
+    <th>Hành động</th>
+  </tr>
+  {% for s in sessions %}
+  <tr>
+    <td>Buổi {{ s.session_number }}</td>
+    <td>{{ s.date }}</td>
+    <td>{{ s.start_time }} - {{ s.end_time }}</td>
+    <td>
+      <a href="{{ url_for('diemdanh', session_id=s.id) }}">Điểm danh</a>
+    </td>
+  </tr>
+  {% endfor %}
+</table>

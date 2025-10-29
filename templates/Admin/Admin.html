@@ -1,0 +1,172 @@
+{% extends "menu_admin.html" %}
+
+{% block title %}Bảng điều khiển | Quản trị hệ thống{% endblock %}
+
+{% block content %}
+<div class="p-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold text-primary">📊 Bảng điều khiển</h2>
+    <span class="text-muted small">Ngày: {{ current_date }}</span>
+  </div>
+
+  <!-- ========== Cards ========== -->
+  <div class="row g-4 mb-4">
+    <div class="col-xl-3 col-md-6">
+      <div class="card shadow-sm border-0 rounded-4 p-4">
+        <div class="d-flex align-items-center">
+          <div class="icon-circle bg-primary bg-opacity-10 text-primary me-3">
+            <i class="bi bi-people fs-3"></i>
+          </div>
+          <div>
+            <h5 class="mb-0 fw-bold">{{ user_count }}</h5>
+            <small class="text-secondary">Người dùng</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+      <div class="card shadow-sm border-0 rounded-4 p-4">
+        <div class="d-flex align-items-center">
+          <div class="icon-circle bg-success bg-opacity-10 text-success me-3">
+            <i class="bi bi-journals fs-3"></i>
+          </div>
+          <div>
+            <h5 class="mb-0 fw-bold">{{ class_count }}</h5>
+            <small class="text-secondary">Lớp học</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+      <div class="card shadow-sm border-0 rounded-4 p-4">
+        <div class="d-flex align-items-center">
+          <div class="icon-circle bg-info bg-opacity-10 text-info me-3">
+            <i class="bi bi-clipboard-check fs-3"></i>
+          </div>
+          <div>
+            <h5 class="mb-0 fw-bold">{{ attendance_rate }}%</h5>
+            <small class="text-secondary">Tỷ lệ điểm danh</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+      <div class="card shadow-sm border-0 rounded-4 p-4">
+        <div class="d-flex align-items-center">
+          <div class="icon-circle bg-warning bg-opacity-10 text-warning me-3">
+            <i class="bi bi-calendar-event fs-3"></i>
+          </div>
+          <div>
+            <h5 class="mb-0 fw-bold">5</h5>
+            <small class="text-secondary">Sự kiện sắp tới</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== Charts & Activity ========== -->
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="card shadow-sm border-0 rounded-4 p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="fw-semibold mb-0">📈 Thống kê điểm danh</h5>
+          <div>
+            <button class="btn btn-sm btn-outline-primary active">Tháng</button>
+            <button class="btn btn-sm btn-outline-secondary">Tuần</button>
+            <button class="btn btn-sm btn-outline-secondary">Năm</button>
+          </div>
+        </div>
+        <canvas id="attendanceChart" height="280"></canvas>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card shadow-sm border-0 rounded-4 p-4 h-100">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="fw-semibold mb-0">🕒 Hoạt động gần đây</h5>
+          <a href="#" class="text-primary small">Xem tất cả</a>
+        </div>
+        {% for act in activities %}
+        <div class="d-flex align-items-start mb-3 border-bottom pb-2">
+          <div class="icon-circle-sm bg-primary bg-opacity-10 text-primary me-3">
+            <i class="bi {{ act.icon }}"></i>
+          </div>
+          <div>
+            <p class="mb-1 fw-semibold">{{ act.title }}</p>
+            <small class="text-secondary d-block">{{ act.desc }}</small>
+            <small class="text-muted">{{ act.time }}</small>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .icon-circle {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .icon-circle-sm {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .card {
+    transition: 0.3s;
+  }
+  .card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+  }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const labels = {{ labels|tojson }};
+  const dataPoints = {{ data_chart|tojson }};
+
+  const data = {
+    labels: labels,
+    datasets: [{
+      label: 'Số lượt điểm danh',
+      data: dataPoints,
+      borderColor: '#4361ee',
+      backgroundColor: 'rgba(67,97,238,0.1)',
+      fill: true,
+      tension: 0.3,
+      pointBackgroundColor: '#4361ee',
+      pointRadius: 5,
+    }]
+  };
+
+  const config = {
+    type: 'line',
+    data: data,
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+      },
+      scales: {
+        y: { beginAtZero: true },
+        x: { grid: { display: false } }
+      }
+    }
+  };
+
+  new Chart(document.getElementById('attendanceChart'), config);
+</script>
+{% endblock %}

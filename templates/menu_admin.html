@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Hệ Thống Quản Trị | Dashboard{% endblock %}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <style>
+    :root {
+      --adm-primary: #4a6cf7;
+      --adm-text-primary: #2d3748;
+      --adm-text-secondary: #718096;
+      --adm-border-color: #e2e8f0;
+      --adm-sidebar-width: 15%;
+      --adm-content-width: 85%;
+      --adm-header-height: 70px;
+      --adm-white: #ffffff;
+      --adm-light-bg: #f8fafc;
+      --adm-hover-bg: #f1f5f9;
+      --adm-danger: #e74c3c;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    .adm-body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background-color: var(--adm-white);
+      color: var(--adm-text-primary);
+      line-height: 1.6;
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Sidebar styling - 20% width */
+    .adm-sidebar {
+      width: var(--adm-sidebar-width);
+      background-color: var(--adm-white);
+      height: 100vh;
+      position: fixed;
+      top: 0;
+      left: 0;
+      padding: 0;
+      z-index: 1000;
+      border-right: 1px solid var(--adm-border-color);
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.03);
+      transition: all 0.3s ease;
+      overflow-y: auto;
+    }
+
+    .adm-sidebar-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--adm-border-color);
+      height: var(--adm-header-height);
+      display: flex;
+      align-items: center;
+      background: var(--adm-white);
+      position: sticky;
+      top: 0;
+      z-index: 1001;
+    }
+
+    .adm-sidebar-brand {
+      display: flex;
+      align-items: center;
+      color: var(--adm-text-primary);
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 1.2rem;
+    }
+
+    .adm-sidebar-brand i {
+      color: var(--adm-primary);
+      font-size: 1.5rem;
+      margin-right: 10px;
+    }
+
+    .adm-sidebar-nav {
+      padding: 15px 0;
+      background: var(--adm-white);
+    }
+
+    .adm-nav-item {
+      position: relative;
+      margin: 5px 15px;
+    }
+
+    .adm-nav-link {
+      display: flex;
+      align-items: center;
+      padding: 12px 15px;
+      color: var(--adm-text-secondary);
+      text-decoration: none;
+      border-radius: 8px;
+      transition: all 0.2s;
+      background: var(--adm-white);
+    }
+
+    .adm-nav-link:hover, .adm-nav-link.adm-active {
+      background-color: var(--adm-hover-bg);
+      color: var(--adm-primary);
+    }
+
+    .adm-nav-link i {
+      margin-right: 12px;
+      font-size: 18px;
+    }
+
+    /* Logout button styling */
+    .adm-logout-section {
+      margin-top: auto;
+      padding: 15px;
+      border-top: 1px solid var(--adm-border-color);
+      position: sticky;
+      bottom: 0;
+      background: var(--adm-white);
+    }
+
+    .adm-logout-btn {
+      display: flex;
+      align-items: center;
+      padding: 12px 15px;
+      color: var(--adm-danger);
+      text-decoration: none;
+      border-radius: 8px;
+      transition: all 0.2s;
+      background: var(--adm-white);
+      border: 1px solid var(--adm-border-color);
+      width: 100%;
+      font-weight: 500;
+    }
+
+    .adm-logout-btn:hover {
+      background-color: var(--adm-danger);
+      color: var(--adm-white);
+      border-color: var(--adm-danger);
+    }
+
+    .adm-logout-btn i {
+      margin-right: 12px;
+      font-size: 18px;
+    }
+
+    /* Main content - 80% width */
+    .tp-content {
+      width: var(--adm-content-width);
+      margin-left: var(--adm-sidebar-width);
+      min-height: 100vh;
+      background-color: var(--adm-light-bg);
+      transition: all 0.3s ease;
+    }
+
+    .tp-main-content {
+      width: 100%;
+      background: var(--adm-white);
+    }
+
+    /* Header */
+    .adm-header {
+      height: var(--adm-header-height);
+      background: var(--adm-white);
+      padding: 0 25px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--adm-border-color);
+    }
+
+    .adm-toggle-sidebar {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: var(--adm-text-secondary);
+      cursor: pointer;
+      background: var(--adm-white);
+      display: none;
+    }
+
+    .adm-user-menu {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .adm-user-info {
+      text-align: right;
+    }
+
+    .adm-user-name {
+      font-weight: 600;
+      margin-bottom: 0;
+      font-size: 0.9rem;
+      color: var(--adm-text-primary);
+    }
+
+    .adm-user-role {
+      font-size: 0.8rem;
+      color: var(--adm-text-secondary);
+    }
+
+    .adm-user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--adm-border-color);
+      background: var(--adm-white);
+    }
+
+    /* Header logout button */
+    .adm-header-logout {
+      background: none;
+      border: none;
+      color: var(--adm-text-secondary);
+      cursor: pointer;
+      padding: 8px 12px;
+      border-radius: 6px;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .adm-header-logout:hover {
+      background-color: var(--adm-hover-bg);
+      color: var(--adm-danger);
+    }
+
+    /* Content area */
+    .adm-content {
+      padding: 25px;
+      background: var(--adm-white);
+    }
+
+    .adm-page-title {
+      margin-bottom: 25px;
+      font-weight: 600;
+      color: var(--adm-text-primary);
+    }
+
+    /* Card styling */
+    .adm-stats-card {
+      border-radius: 12px;
+      border: 1px solid var(--adm-border-color);
+      background: var(--adm-white);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+      transition: all 0.2s;
+      height: 100%;
+    }
+
+    .adm-stats-card:hover {
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .adm-card-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 15px;
+      background-color: var(--adm-hover-bg);
+      color: var(--adm-primary);
+    }
+
+    .adm-card-value {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 0;
+      color: var(--adm-text-primary);
+    }
+
+    .adm-card-label {
+      color: var(--adm-text-secondary);
+      font-size: 0.9rem;
+    }
+
+    /* Recent activity */
+    .adm-activity-item {
+      display: flex;
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .adm-activity-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 15px;
+      flex-shrink: 0;
+      background-color: var(--adm-hover-bg);
+      color: var(--adm-primary);
+    }
+
+    .adm-activity-content {
+      flex-grow: 1;
+    }
+
+    .adm-activity-title {
+      font-weight: 600;
+      margin-bottom: 5px;
+      color: var(--adm-text-primary);
+    }
+
+    .adm-activity-desc {
+      color: var(--adm-text-secondary);
+      font-size: 0.9rem;
+      margin-bottom: 5px;
+    }
+
+    .adm-activity-time {
+      font-size: 0.8rem;
+      color: var(--adm-text-secondary);
+    }
+
+    /* Chart container */
+    .adm-chart-container {
+      background: var(--adm-white);
+      border-radius: 12px;
+      border: 1px solid var(--adm-border-color);
+      padding: 20px;
+      height: 100%;
+    }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+      :root {
+        --adm-sidebar-width: 280px;
+        --adm-content-width: 100%;
+      }
+
+      .adm-sidebar {
+        transform: translateX(-100%);
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        width: var(--adm-sidebar-width);
+      }
+
+      .adm-sidebar.adm-show {
+        transform: translateX(0);
+      }
+
+      .tp-content {
+        margin-left: 0;
+        width: 100%;
+      }
+
+      .adm-toggle-sidebar {
+        display: block;
+      }
+
+      .adm-sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.3);
+        z-index: 999;
+        display: none;
+      }
+
+      .adm-sidebar-overlay.adm-show {
+        display: block;
+      }
+
+      .adm-header-logout span {
+        display: none;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .adm-content {
+        padding: 15px;
+      }
+
+      .adm-sidebar {
+        width: 100%;
+      }
+
+      .adm-user-info {
+        display: none;
+      }
+    }
+
+    /* Custom scrollbar */
+    .adm-sidebar::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .adm-sidebar::-webkit-scrollbar-track {
+      background: var(--adm-white);
+    }
+
+    .adm-sidebar::-webkit-scrollbar-thumb {
+      background: var(--adm-border-color);
+      border-radius: 3px;
+    }
+
+    .adm-sidebar::-webkit-scrollbar-thumb:hover {
+      background: var(--adm-text-secondary);
+    }
+  </style>
+</head>
+<body class="adm-body">
+  <!-- Sidebar Overlay for Mobile -->
+  <div class="adm-sidebar-overlay" id="admSidebarOverlay"></div>
+
+  <!-- Sidebar Menu - 20% width -->
+  <div class="adm-sidebar">
+    <div class="adm-sidebar-header">
+      <a href="#" class="adm-sidebar-brand">
+        <i class="bi bi-columns-gap"></i>
+        <span>EduAdmin</span>
+      </a>
+    </div>
+
+    <div class="adm-sidebar-nav">
+      <div class="adm-nav-item">
+        <a href="/admin" class="adm-nav-link {% if request.path == '/admin' %}adm-active{% endif %}">
+          <i class="bi bi-grid"></i>
+          <span>Dashboard</span>
+        </a>
+      </div>
+      <div class="adm-nav-item">
+        <a href="/admin/users" class="adm-nav-link {% if request.path == '/admin/users' %}adm-active{% endif %}">
+          <i class="bi bi-people"></i>
+          <span>Quản lý Users</span>
+        </a>
+      </div>
+      <div class="adm-nav-item">
+        <a href="/admin/classes" class="adm-nav-link {% if request.path == '/admin/classes' %}adm-active{% endif %}">
+          <i class="bi bi-journals"></i>
+          <span>Quản lý Lớp học</span>
+        </a>
+      </div>
+      <div class="adm-nav-item">
+        <a href="/admin/news" class="adm-nav-link {% if request.path == '/admin/news' %}adm-active{% endif %}">
+          <i class="bi bi-newspaper"></i>
+          <span>Quản lý tin tức</span>
+        </a>
+      </div>
+      <div class="adm-nav-item">
+        <a href="/admin/support" class="adm-nav-link {% if request.path == '/admin/support' %}adm-active{% endif %}">
+          <i class="bi bi-headset"></i>
+          <span>Quản lý support</span>
+        </a>
+      </div>
+      <div class="adm-nav-item">
+        <a href="/admin/faq" class="adm-nav-link {% if request.path == '/admin/faq' %}adm-active{% endif %}">
+          <i class="bi bi-robot"></i>
+          <span>Quản lý chat bot</span>
+        </a>
+      </div>
+      <div class="adm-nav-item">
+        <a href="/admin/baocao" class="adm-nav-link {% if request.path == '/admin/baocao' %}adm-active{% endif %}">
+          <i class="bi bi-graph-up"></i>
+          <span>Báo cáo</span>
+        </a>
+      </div>
+      <div class="adm-nav-item">
+        <a href="/admin/caidat" class="adm-nav-link {% if request.path == '/admin/caidat' %}adm-active{% endif %}">
+          <i class="bi bi-gear"></i>
+          <span>Cài đặt</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Logout Section -->
+    <div class="adm-logout-section">
+      <button class="adm-logout-btn" onclick="logout()">
+        <i class="bi bi-box-arrow-right"></i>
+        <span>Đăng xuất</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Content - 80% width -->
+  <div class="tp-content" id="tpMainContent">
+    <!-- Header -->
+    <div class="adm-header">
+      <button class="adm-toggle-sidebar" id="admToggleSidebar">
+        <i class="bi bi-list"></i>
+      </button>
+      <div class="adm-user-menu">
+        <div class="adm-user-info">
+          <div class="adm-user-name">Admin User</div>
+          <div class="adm-user-role">Quản trị viên</div>
+        </div>
+        <img src="https://tse1.mm.bing.net/th/id/OIP.Y3yEndSig0QVaLVcOcjHiQHaHa?pid=Api&P=0&h=180" alt="Avatar" class="adm-user-avatar">
+        <button class="adm-header-logout" onclick="logout()" title="Đăng xuất">
+          <i class="bi bi-box-arrow-right"></i>
+          <span>Đăng xuất</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Content Block -->
+    <div class="tp-main-content">
+      {% block content %}
+      <!-- Nội dung của bạn sẽ được chèn vào đây -->
+      <div class="adm-content">
+        <h2 class="adm-page-title">Dashboard</h2>
+        <p>Nội dung của bạn sẽ hiển thị ở đây mà không bị menu che.</p>
+      </div>
+      {% endblock %}
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    // Toggle sidebar on mobile
+    document.getElementById('admToggleSidebar').addEventListener('click', function() {
+      document.querySelector('.adm-sidebar').classList.toggle('adm-show');
+      document.getElementById('admSidebarOverlay').classList.toggle('adm-show');
+    });
+
+    // Close sidebar when clicking overlay
+    document.getElementById('admSidebarOverlay').addEventListener('click', function() {
+      document.querySelector('.adm-sidebar').classList.remove('adm-show');
+      this.classList.remove('adm-show');
+    });
+
+    // Auto-close sidebar on mobile when clicking nav links
+    document.querySelectorAll('.adm-nav-link').forEach(link => {
+      link.addEventListener('click', function() {
+        if (window.innerWidth < 992) {
+          document.querySelector('.adm-sidebar').classList.remove('adm-show');
+          document.getElementById('admSidebarOverlay').classList.remove('adm-show');
+        }
+      });
+    });
+
+    // Adjust content margin on resize
+    window.addEventListener('resize', function() {
+      const sidebar = document.querySelector('.adm-sidebar');
+      const content = document.querySelector('.tp-content');
+
+      if (window.innerWidth >= 992) {
+        content.style.marginLeft = sidebar.offsetWidth + 'px';
+        content.style.width = 'calc(100% - ' + sidebar.offsetWidth + 'px)';
+      } else {
+        content.style.marginLeft = '0';
+        content.style.width = '100%';
+      }
+    });
+
+    // Logout function
+    function logout() {
+      if (confirm('Bạn có chắc muốn đăng xuất?')) {
+        // Thực hiện đăng xuất - thay đổi URL này theo route đăng xuất của bạn
+        window.location.href = '/logout';
+      }
+    }
+  </script>
+
+</body>
+</html>

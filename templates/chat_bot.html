@@ -1,0 +1,90 @@
+<!-- Chatbot Widget -->
+<button id="chat-button">💬 Chat với AI</button>
+
+<div id="chat-box">
+  <div id="chat-messages"></div>
+  <div id="chat-input">
+    <input id="msg" type="text" placeholder="Nhập tin nhắn...">
+    <button onclick="sendMessage()">Gửi</button>
+  </div>
+</div>
+
+<style>
+  #chat-button {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #d00000;
+    color: white;
+    border: none;
+    border-radius: 30px;
+    padding: 12px 18px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    z-index: 9999;
+  }
+  #chat-box {
+    position: fixed;
+    bottom: 70px;
+    right: 20px;
+    width: 300px;
+    height: 400px;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 9999;
+  }
+  #chat-messages {
+    flex: 1;
+    padding: 10px;
+    overflow-y: auto;
+    font-size: 14px;
+  }
+  #chat-input {
+    display: flex;
+    border-top: 1px solid #ccc;
+  }
+  #chat-input input {
+    flex: 1;
+    border: none;
+    padding: 10px;
+  }
+  #chat-input button {
+    background: #d00000;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+  }
+</style>
+
+<script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+<script>
+  const socket = io();
+
+  document.getElementById("chat-button").addEventListener("click", () => {
+    const box = document.getElementById("chat-box");
+    box.style.display = (box.style.display === "flex") ? "none" : "flex";
+    box.style.flexDirection = "column";
+  });
+
+  socket.on("receive_message", function(data) {
+    document.getElementById("chat-messages").innerHTML +=
+      `<p><b>${data.user}:</b> ${data.message}<br><b>AI:</b> ${data.response}</p>`;
+    document.getElementById("chat-messages").scrollTop = document.getElementById("chat-messages").scrollHeight;
+  });
+
+  function sendMessage() {
+    const msg = document.getElementById("msg").value;
+    if (msg.trim() === "") return;
+    socket.emit("send_message", {user: "Sinh viên", message: msg});
+    document.getElementById("msg").value = "";
+  }
+</script>

@@ -1,0 +1,122 @@
+{% extends "Menu_SV.html" %}
+{% block content %}
+<style>
+    .news-detail-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .news-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #222;
+        line-height: 1.3;
+    }
+
+    .news-meta {
+        color: #777;
+        font-size: 0.95rem;
+        margin-bottom: 1rem;
+    }
+
+    .news-image {
+        max-height: 420px;
+        width: 100%;
+        object-fit: cover;
+        border-radius: 12px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+
+    .news-image:hover {
+        transform: scale(1.01);
+        opacity: 0.95;
+    }
+
+    .news-content {
+        text-align: justify;
+        line-height: 1.8;
+        font-size: 1.05rem;
+        color: #333;
+        margin-top: 1.5rem;
+        white-space: pre-line;
+    }
+
+    .news-short-desc {
+        font-style: italic;
+        color: #555;
+        border-left: 3px solid #0d6efd;
+        padding-left: 12px;
+        margin-top: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .news-source {
+        font-size: 0.9rem;
+        color: #888;
+        text-align: right;
+        margin-top: 2rem;
+    }
+
+    .back-btn {
+        transition: all 0.2s ease;
+    }
+
+    .back-btn:hover {
+        background-color: #0d6efd;
+        color: white !important;
+    }
+
+    /* Hiệu ứng fade-in khi trang load */
+    .fade-in {
+        animation: fadeIn 0.6s ease-in;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(15px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+
+<div class="news-detail-container fade-in">
+    <a href="{{ url_for('tintuc') }}" class="btn btn-outline-secondary mb-3 back-btn">
+        <i class="fas fa-arrow-left"></i> Quay lại danh sách tin tức
+    </a>
+
+    <div class="card border-0 shadow-sm p-4">
+        <h2 class="news-title mb-3">{{ news.title }}</h2>
+
+        <div class="news-meta mb-3">
+            <i class="fas fa-user"></i> {{ news.author }}
+            &nbsp;•&nbsp;
+            <i class="fas fa-calendar-alt"></i> {{ news.created_at.strftime("%d/%m/%Y") }}
+            {% if news.category %}
+            &nbsp;•&nbsp;
+            <i class="fas fa-tag"></i> {{ news.category }}
+            {% endif %}
+        </div>
+
+        {% if news.image %}
+        <div class="text-center mb-4">
+            <img src="{{ url_for('static', filename='news/' ~ news.image) }}"
+                 class="news-image"
+                 alt="{{ news.title }}"
+                 loading="lazy">
+        </div>
+        {% endif %}
+
+        {% if news.short_description %}
+        <p class="news-short-desc">{{ news.short_description }}</p>
+        {% endif %}
+
+        <div class="news-content">
+            {{ news.content | safe }}
+        </div>
+
+        {% if news.source %}
+        <p class="news-source"><strong>Nguồn:</strong> <em>{{ news.source }}</em></p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

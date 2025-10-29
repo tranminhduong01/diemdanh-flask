@@ -1,0 +1,775 @@
+{% extends "menu_gv.html" %}
+
+{% block title %}Dashboard Giáo viên - Tin nhắn{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --primary: #4361ee;
+        --primary-light: #eef2ff;
+        --secondary: #6c757d;
+        --success: #28a745;
+        --danger: #dc3545;
+        --warning: #ffc107;
+        --info: #17a2b8;
+        --light: #f8f9fa;
+        --dark: #343a40;
+        --gray-100: #f8f9fa;
+        --gray-200: #e9ecef;
+        --gray-300: #dee2e6;
+        --gray-400: #ced4da;
+        --gray-500: #adb5bd;
+        --gray-600: #6c757d;
+        --gray-700: #495057;
+        --gray-800: #343a40;
+        --gray-900: #212529;
+        --border-radius: 8px;
+        --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        --transition: all 0.3s ease;
+    }
+
+    .chat-container-wrapper {
+        display: flex;
+        height: calc(100vh - 140px);
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+        overflow: hidden;
+        margin: 20px;
+    }
+
+    /* Sidebar: danh sách sinh viên */
+    .chat-sidebar {
+        width: 350px;
+        border-right: 1px solid var(--gray-200);
+        display: flex;
+        flex-direction: column;
+        background: var(--gray-100);
+    }
+
+    .sidebar-header {
+        padding: 20px;
+        border-bottom: 1px solid var(--gray-200);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: white;
+    }
+
+    .sidebar-header h2 {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--gray-800);
+        margin: 0;
+    }
+
+    .sidebar-header button {
+        background: none;
+        border: none;
+        color: var(--gray-500);
+        cursor: pointer;
+        padding: 8px;
+        border-radius: var(--border-radius);
+        transition: var(--transition);
+    }
+
+    .sidebar-header button:hover {
+        background: var(--gray-200);
+    }
+
+    .search-container {
+        padding: 16px;
+        background: white;
+        border-bottom: 1px solid var(--gray-200);
+    }
+
+    .search-box {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .search-box i {
+        position: absolute;
+        left: 12px;
+        color: var(--gray-500);
+    }
+
+    .search-box input {
+        padding: 10px 12px 10px 40px;
+        border: 1px solid var(--gray-300);
+        border-radius: var(--border-radius);
+        width: 100%;
+        font-size: 14px;
+        transition: var(--transition);
+    }
+
+    .search-box input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+    }
+
+    .students-list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 0;
+    }
+
+    .student {
+        display: flex;
+        align-items: center;
+        padding: 16px;
+        cursor: pointer;
+        transition: var(--transition);
+        border-bottom: 1px solid var(--gray-200);
+        background: white;
+    }
+
+    .student:hover {
+        background: var(--gray-100);
+    }
+
+    .student.active {
+        background: var(--primary-light);
+        border-left: 4px solid var(--primary);
+    }
+
+    .student-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: var(--primary);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 18px;
+        margin-right: 12px;
+        flex-shrink: 0;
+    }
+
+    .student-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .student-name {
+        font-weight: 500;
+        color: var(--gray-800);
+        margin-bottom: 4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .student-lastmsg {
+        font-size: 13px;
+        color: var(--gray-600);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .student-meta {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        margin-left: 12px;
+        flex-shrink: 0;
+    }
+
+    .student-time {
+        font-size: 12px;
+        color: var(--gray-500);
+        margin-bottom: 4px;
+    }
+    .student-unread .badge {
+      background: red;
+      color: white;
+      border-radius: 50%;
+      padding: 3px 7px;
+      font-size: 12px;
+      display: inline-block;
+    }
+
+
+    .student-unread {
+        background: var(--primary);
+        color: white;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: 600;
+    }
+
+    .no-students {
+        padding: 40px 20px;
+        text-align: center;
+        color: var(--gray-500);
+    }
+
+    /* Chat container */
+    .chat-main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: white;
+    }
+
+    .chat-header {
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--gray-200);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: white;
+    }
+
+    .current-student {
+        display: flex;
+        align-items: center;
+    }
+
+    .current-student-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: var(--primary);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 18px;
+        margin-right: 12px;
+    }
+
+    .current-student-info h3 {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--gray-800);
+        margin: 0 0 4px 0;
+    }
+
+    .current-student-info p {
+        font-size: 13px;
+        color: var(--gray-600);
+        margin: 0;
+    }
+
+    .chat-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .chat-actions button {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border: 1px solid var(--gray-300);
+        background: white;
+        color: var(--gray-600);
+        cursor: pointer;
+        transition: var(--transition);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .chat-actions button:hover {
+        background: var(--gray-100);
+        color: var(--primary);
+    }
+
+    .chat-messages {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+        background: var(--gray-100);
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .no-chat-selected {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: var(--gray-500);
+        text-align: center;
+    }
+
+    .no-chat-selected i {
+        font-size: 48px;
+        margin-bottom: 16px;
+        color: var(--gray-300);
+    }
+
+    .no-chat-selected h3 {
+        font-size: 18px;
+        margin-bottom: 8px;
+        color: var(--gray-600);
+    }
+
+    .no-chat-selected p {
+        font-size: 14px;
+        max-width: 300px;
+    }
+
+    .message {
+        display: flex;
+        margin-bottom: 16px;
+        max-width: 70%;
+    }
+
+    .message.sent {
+        align-self: flex-end;
+        flex-direction: row-reverse;
+    }
+
+    .message.received {
+        align-self: flex-start;
+    }
+
+    .message-bubble {
+        padding: 12px 16px;
+        border-radius: 18px;
+        font-size: 14px;
+        line-height: 1.4;
+        position: relative;
+    }
+
+    .message.sent .message-bubble {
+        background: var(--primary);
+        color: white;
+        border-bottom-right-radius: 4px;
+    }
+
+    .message.received .message-bubble {
+        background: white;
+        color: var(--gray-800);
+        border: 1px solid var(--gray-200);
+        border-bottom-left-radius: 4px;
+    }
+
+    .message-time {
+        font-size: 11px;
+        color: var(--gray-500);
+        margin-top: 4px;
+        align-self: flex-end;
+        padding: 0 8px;
+    }
+
+    .chat-input-container {
+        padding: 16px 20px;
+        border-top: 1px solid var(--gray-200);
+        background: white;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .chat-input {
+        flex: 1;
+        position: relative;
+        display: flex;
+        align-items: center;
+        background: var(--gray-100);
+        border-radius: var(--border-radius);
+        padding: 0 12px;
+    }
+
+    .chat-input input {
+        flex: 1;
+        padding: 12px 0;
+        border: none;
+        background: transparent;
+        font-size: 14px;
+    }
+
+    .chat-input input:focus {
+        outline: none;
+    }
+
+    .input-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .input-actions button {
+        background: none;
+        border: none;
+        color: var(--gray-500);
+        cursor: pointer;
+        padding: 8px;
+        border-radius: var(--border-radius);
+        transition: var(--transition);
+    }
+
+    .input-actions button:hover {
+        color: var(--primary);
+        background: var(--gray-200);
+    }
+
+    .send-button {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        border: none;
+        background: var(--primary);
+        color: white;
+        cursor: pointer;
+        transition: var(--transition);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .send-button:hover {
+        background: #3651d4;
+        transform: scale(1.05);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 992px) {
+        .chat-container-wrapper {
+            flex-direction: column;
+            height: auto;
+            min-height: calc(100vh - 140px);
+        }
+
+        .chat-sidebar {
+            width: 100%;
+            height: 300px;
+            border-right: none;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .chat-main {
+            height: calc(100vh - 440px);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .chat-container-wrapper {
+            margin: 16px;
+        }
+
+        .sidebar-header, .search-container, .chat-header, .chat-input-container {
+            padding: 12px 16px;
+        }
+
+        .student {
+            padding: 12px 16px;
+        }
+
+        .chat-messages {
+            padding: 16px;
+        }
+
+        .message {
+            max-width: 85%;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .chat-container-wrapper {
+            margin: 0;
+            border-radius: 0;
+        }
+
+        .student-avatar, .current-student-avatar {
+            width: 40px;
+            height: 40px;
+            font-size: 16px;
+        }
+
+        .chat-actions {
+            display: none;
+        }
+
+        .message {
+            max-width: 90%;
+        }
+    }
+</style>
+
+<div class="chat-container-wrapper">
+    <!-- Sidebar: danh sách sinh viên -->
+    <div class="chat-sidebar">
+        <div class="sidebar-header">
+            <h2>Danh sách sinh viên</h2>
+            <button><i class="fas fa-ellipsis-v"></i></button>
+        </div>
+
+        <div class="search-container">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Tìm kiếm sinh viên...">
+            </div>
+        </div>
+
+        <div class="students-list">
+            {% for sv in danh_sach_sinh_vien %}
+                <div class="student" onclick="chonSinhVien({{ sv.id }}, '{{ sv.name }}', event)">
+                    <div class="student-avatar">{{ sv.name[0]|upper }}</div>
+                    <div class="student-info">
+                        <div class="student-name">{{ sv.name }}</div>
+                        <div class="student-lastmsg">Tin nhắn cuối...</div>
+                    </div>
+                    <div id="conversation-list">
+                    <div class="student-meta">
+                      <div class="student-time"></div>
+                      <div class="student-unread"></div>
+                    </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="no-students">Chưa có sinh viên nào nhắn tin</div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Chat container -->
+    <div class="chat-main">
+        <div class="chat-header">
+            <div class="current-student">
+                <div class="current-student-avatar" id="currentStudentAvatar">S</div>
+                <div class="current-student-info">
+                    <h3 id="chatHeader">Chọn sinh viên để chat</h3>
+                    <p id="studentStatus">Trạng thái</p>
+                </div>
+            </div>
+            <div class="chat-actions">
+                <button><i class="fas fa-phone"></i></button>
+                <button><i class="fas fa-video"></i></button>
+                <button><i class="fas fa-info-circle"></i></button>
+            </div>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <div class="no-chat-selected">
+                <i class="fas fa-comments"></i>
+                <h3>Chưa chọn sinh viên</h3>
+                <p>Vui lòng chọn một sinh viên từ danh sách bên trái để bắt đầu trò chuyện</p>
+            </div>
+        </div>
+
+        <div class="chat-input-container">
+            <div class="chat-input">
+                <input type="text" id="noiDung" placeholder="Nhập tin nhắn...">
+                <div class="input-actions">
+                    <button><i class="far fa-smile"></i></button>
+                    <button><i class="fas fa-paperclip"></i></button>
+                </div>
+            </div>
+            <button class="send-button" onclick="guiTinNhan()">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+async function loadConversations(userId) {
+  try {
+    const res = await fetch(`/api/conversations/${userId}`);
+    const data = await res.json();
+
+    const listEl = document.getElementById("conversation-list");
+    if (!listEl) {
+      console.error("Không tìm thấy #conversation-list trong HTML");
+      return;
+    }
+    listEl.innerHTML = "";
+
+    data.forEach(conv => {
+      const item = document.createElement("div");
+      item.className = "student-item";
+
+      item.innerHTML = `
+        <div class="student-avatar">${conv.name[0].toUpperCase()}</div>
+        <div class="student-info">
+          <div class="student-name">${conv.name}</div>
+          <div class="student-last">${conv.last_message || ""}</div>
+        </div>
+        <div class="student-meta">
+          <div class="student-time">
+            ${conv.last_time ? new Date(conv.last_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : ""}
+          </div>
+          <div class="student-unread">
+            ${conv.unread_count > 0 ? `<span class="badge">${conv.unread_count}</span>` : ""}
+          </div>
+        </div>
+      `;
+      listEl.appendChild(item);
+    });
+  } catch (err) {
+    console.error("Lỗi khi load cuộc trò chuyện:", err);
+  }
+}
+
+// load lần đầu
+loadConversations(1);
+
+// auto refresh 5 giây 1 lần
+setInterval(() => {
+  loadConversations(1);
+}, 5000);
+</script>
+
+
+<script>
+  const currentUserId = {{ user_id }}; // user đang đăng nhập
+  let sinhVienDangChon = null;
+
+  // Cập nhật thông tin meta (giờ tin cuối + số tin chưa đọc)
+  function loadStudentMeta(userId) {
+    fetch(`/api/message_info/${userId}`)
+      .then(res => res.json())
+      .then(data => {
+        // Xử lý thời gian tin nhắn cuối cùng
+        if (data.last_time) {
+          const dt = new Date(data.last_time);
+          const hh = dt.getHours().toString().padStart(2, "0");
+          const mm = dt.getMinutes().toString().padStart(2, "0");
+          document.querySelector(".student-time").textContent = `${hh}:${mm}`;
+        } else {
+          document.querySelector(".student-time").textContent = "";
+        }
+
+        // Số tin chưa đọc
+        document.querySelector(".student-unread").textContent =
+          data.unread_count > 0 ? data.unread_count : "";
+      });
+  }
+
+  // Đánh dấu đã đọc
+  function markMessagesRead(userId) {
+    fetch(`/api/mark_read/${userId}`, { method: "POST" })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          loadStudentMeta(userId);
+        }
+      });
+  }
+
+  // Khi chọn sinh viên
+  function chonSinhVien(id, ten) {
+    document.querySelectorAll(".student").forEach(el => el.classList.remove("active"));
+    event.currentTarget.classList.add("active");
+
+    sinhVienDangChon = id;
+    document.getElementById("chatHeader").innerText = ten;
+    document.getElementById("currentStudentAvatar").innerText = ten.charAt(0).toUpperCase();
+    document.querySelector(".no-chat-selected")?.remove();
+
+    // Tải tin nhắn
+    taiTinNhan();
+
+    // Đánh dấu đã đọc khi mở chat
+    markMessagesRead(id);
+  }
+
+  // Tải danh sách tin nhắn
+  function taiTinNhan() {
+    if (!sinhVienDangChon) return;
+
+    fetch(`/tin_nhan/${sinhVienDangChon}`)
+      .then(res => res.json())
+      .then(data => {
+        let box = document.getElementById("chatMessages");
+        box.innerHTML = "";
+
+        if (Array.isArray(data) && data.length > 0) {
+          data.forEach(msg => {
+            let messageDiv = document.createElement("div");
+            messageDiv.classList.add("message");
+
+            let bubbleDiv = document.createElement("div");
+            bubbleDiv.classList.add("message-bubble");
+            bubbleDiv.innerText = msg.noi_dung;
+
+            let timeDiv = document.createElement("div");
+            timeDiv.classList.add("message-time");
+            timeDiv.innerText = msg.thoi_gian || "";
+
+            messageDiv.appendChild(bubbleDiv);
+            messageDiv.appendChild(timeDiv);
+
+            // Xác định ai gửi
+            if (msg.nguoi_gui_id === currentUserId) {
+              messageDiv.classList.add("sent");
+            } else {
+              messageDiv.classList.add("received");
+            }
+
+            box.appendChild(messageDiv);
+          });
+        } else {
+          box.innerHTML = '<div class="no-chat-selected"><p>Chưa có tin nhắn nào</p></div>';
+        }
+
+        box.scrollTop = box.scrollHeight;
+      })
+      .catch(error => console.error("Lỗi tải tin nhắn:", error));
+  }
+
+  // Gửi tin nhắn
+  function guiTinNhan() {
+    let noiDung = document.getElementById("noiDung").value.trim();
+    if (!noiDung || !sinhVienDangChon) return;
+
+    fetch("/gui_tin_nhan", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        nguoi_nhan_id: sinhVienDangChon,
+        noi_dung: noiDung
+      })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          document.getElementById("noiDung").value = "";
+          taiTinNhan(); // Tải lại tin nhắn
+          loadStudentMeta(sinhVienDangChon); // cập nhật meta
+        }
+      })
+      .catch(error => {
+        console.error("Lỗi gửi tin nhắn:", error);
+        alert("Không thể gửi tin nhắn. Vui lòng thử lại!");
+      });
+  }
+
+  // Enter để gửi tin nhắn
+  document.getElementById("noiDung").addEventListener("keypress", function(e) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      guiTinNhan();
+    }
+  });
+
+  // Auto refresh mỗi 3 giây
+  setInterval(() => {
+    taiTinNhan();
+    if (sinhVienDangChon) {
+      loadStudentMeta(sinhVienDangChon);
+    }
+  }, 3000);
+
+  // Load meta ban đầu (ví dụ cho user_id = 5)
+  loadStudentMeta(5);
+</script>
+
+
+{% endblock %}

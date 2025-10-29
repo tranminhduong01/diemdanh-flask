@@ -1,0 +1,701 @@
+{% extends "menu_gv.html" %}
+
+{% block title %}Dashboard Giáo viên{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --primary: #4361ee;
+        --primary-light: #eef2ff;
+        --secondary: #6c757d;
+        --success: #28a745;
+        --danger: #dc3545;
+        --warning: #ffc107;
+        --info: #17a2b8;
+        --light: #f8f9fa;
+        --dark: #343a40;
+        --gray-100: #f8f9fa;
+        --gray-200: #e9ecef;
+        --gray-300: #dee2e6;
+        --gray-400: #ced4da;
+        --gray-500: #adb5bd;
+        --gray-600: #6c757d;
+        --gray-700: #495057;
+        --gray-800: #343a40;
+        --gray-900: #212529;
+        --border-radius: 8px;
+        --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        --transition: all 0.3s ease;
+    }
+
+    .main-content {
+        padding: 20px;
+        background-color: var(--gray-100);
+        min-height: calc(100vh - 70px);
+    }
+
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        background: white;
+        padding: 20px;
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+    }
+
+    .page-title {
+        font-size: 24px;
+        font-weight: 600;
+        color: var(--gray-800);
+        margin: 0;
+    }
+
+    .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .search-box {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .search-box i {
+        position: absolute;
+        left: 12px;
+        color: var(--gray-500);
+    }
+
+    .search-box input {
+        padding: 10px 16px 10px 40px;
+        border: 1px solid var(--gray-300);
+        border-radius: var(--border-radius);
+        width: 280px;
+        font-size: 14px;
+        transition: var(--transition);
+    }
+
+    .search-box input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+    }
+
+    .notification-btn, .user-menu-btn {
+        position: relative;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--gray-100);
+        border-radius: 50%;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+    .notification-btn:hover, .user-menu-btn:hover {
+        background: var(--gray-200);
+    }
+
+    .notification-badge {
+        position: absolute;
+        top: -2px;
+        right: -2px;
+        background: var(--danger);
+        color: white;
+        font-size: 10px;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Filter Section */
+    .filter-section {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+        margin-bottom: 24px;
+        overflow: hidden;
+    }
+
+    .filter-title {
+        padding: 16px 20px;
+        background: var(--gray-100);
+        font-weight: 600;
+        color: var(--gray-700);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border-bottom: 1px solid var(--gray-200);
+    }
+
+    .filter-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 20px;
+        padding: 20px;
+    }
+
+    .filter-item {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .filter-item label {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--gray-700);
+    }
+
+    .filter-item select, .filter-item input {
+        padding: 10px 12px;
+        border: 1px solid var(--gray-300);
+        border-radius: var(--border-radius);
+        font-size: 14px;
+        transition: var(--transition);
+    }
+
+    .filter-item select:focus, .filter-item input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+    }
+
+    .filter-buttons {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        padding: 16px 20px;
+        background: var(--gray-100);
+        border-top: 1px solid var(--gray-200);
+    }
+
+    /* Buttons */
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px 16px;
+        border-radius: var(--border-radius);
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: var(--transition);
+        border: 1px solid transparent;
+    }
+
+    .btn-primary {
+        background: var(--primary);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #3651d4;
+        transform: translateY(-1px);
+    }
+
+    .btn-outline-primary {
+        background: transparent;
+        color: var(--primary);
+        border-color: var(--primary);
+    }
+
+    .btn-outline-primary:hover {
+        background: var(--primary);
+        color: white;
+    }
+
+    .btn-outline-secondary {
+        background: transparent;
+        color: var(--gray-600);
+        border-color: var(--gray-300);
+    }
+
+    .btn-outline-secondary:hover {
+        background: var(--gray-200);
+    }
+
+    /* Data Table */
+    .data-table {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+        overflow: hidden;
+    }
+
+    .table-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px;
+        border-bottom: 1px solid var(--gray-200);
+    }
+
+    .table-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--gray-800);
+    }
+
+    .table-actions {
+        display: flex;
+        gap: 12px;
+    }
+
+    .table-responsive {
+        overflow-x: auto;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th, td {
+        padding: 16px;
+        text-align: left;
+        border-bottom: 1px solid var(--gray-200);
+    }
+
+    th {
+        background: var(--gray-100);
+        font-weight: 600;
+        color: var(--gray-700);
+        font-size: 14px;
+        position: sticky;
+        top: 0;
+    }
+
+    tbody tr {
+        transition: var(--transition);
+    }
+
+    tbody tr:hover {
+        background: var(--primary-light);
+    }
+
+    /* Status Badges */
+    .status-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 500;
+        display: inline-block;
+    }
+
+    .status-pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .status-approved {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .status-rejected {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+    }
+
+    .btn-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+    .btn-approve {
+        background: var(--success);
+        color: white;
+    }
+
+    .btn-approve:hover:not(:disabled) {
+        background: #218838;
+        transform: scale(1.05);
+    }
+
+    .btn-reject {
+        background: var(--danger);
+        color: white;
+    }
+
+    .btn-reject:hover:not(:disabled) {
+        background: #c82333;
+        transform: scale(1.05);
+    }
+
+    .btn-icon:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    /* Pagination */
+    .pagination-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 20px;
+        border-top: 1px solid var(--gray-200);
+    }
+
+    .pagination-info {
+        font-size: 14px;
+        color: var(--gray-600);
+    }
+
+    .pagination {
+        display: flex;
+        list-style: none;
+        gap: 8px;
+        margin: 0;
+        padding: 0;
+    }
+
+    .page-item {
+        display: flex;
+    }
+
+    .page-link {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border-radius: var(--border-radius);
+        border: 1px solid var(--gray-300);
+        color: var(--gray-700);
+        font-size: 14px;
+        transition: var(--transition);
+    }
+
+    .page-link:hover {
+        background: var(--gray-100);
+    }
+
+    .page-item.active .page-link {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+
+    .page-item.disabled .page-link {
+        color: var(--gray-400);
+        cursor: not-allowed;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 992px) {
+        .filter-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .header-actions {
+            width: 100%;
+            justify-content: space-between;
+        }
+
+        .search-box input {
+            width: 100%;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .filter-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .table-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .table-actions {
+            width: 100%;
+            justify-content: space-between;
+        }
+
+        .pagination-container {
+            flex-direction: column;
+            gap: 16px;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .main-content {
+            padding: 16px;
+        }
+
+        .filter-buttons {
+            flex-direction: column;
+        }
+
+        .btn {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="main-content">
+    <div class="header">
+        <h1 class="page-title">Quản Lý Đơn Nghỉ Học</h1>
+        <div class="header-actions">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="globalSearch" placeholder="Tìm kiếm đơn nghỉ học...">
+            </div>
+            <div class="notification-btn">
+                <i class="fas fa-bell"></i>
+                <span class="notification-badge">3</span>
+            </div>
+            <div class="user-menu-btn">
+                <i class="fas fa-user"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="filter-section">
+        <div class="filter-title">
+            <i class="fas fa-filter"></i>
+            Bộ lọc và tìm kiếm
+        </div>
+        <div class="filter-grid">
+            <div class="filter-item">
+                <label for="subjectFilter">Môn học</label>
+                <select id="subjectFilter">
+                    <option value="">Tất cả môn học</option>
+                    <option value="math">Toán học</option>
+                    <option value="physics">Vật lý</option>
+                    <option value="chemistry">Hóa học</option>
+                    <option value="programming">Lập trình</option>
+                    <option value="database">Cơ sở dữ liệu</option>
+                </select>
+            </div>
+            <div class="filter-item">
+                <label for="statusFilter">Trạng thái</label>
+                <select id="statusFilter">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="pending">Đang chờ</option>
+                    <option value="approved">Đã duyệt</option>
+                    <option value="rejected">Đã từ chối</option>
+                </select>
+            </div>
+            <div class="filter-item">
+                <label for="dateFilter">Ngày gửi</label>
+                <input type="date" id="dateFilter">
+            </div>
+            <div class="filter-item">
+                <label for="studentFilter">Mã sinh viên</label>
+                <input type="text" id="studentFilter" placeholder="Nhập mã sinh viên">
+            </div>
+        </div>
+        <div class="filter-buttons">
+            <button class="btn btn-outline-secondary" id="resetFilter">
+                <i class="fas fa-times"></i> Xóa bộ lọc
+            </button>
+            <button class="btn btn-primary" id="applyFilter">
+                <i class="fas fa-search"></i> Áp dụng
+            </button>
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="data-table">
+        <div class="table-header">
+            <div class="table-title">Danh sách đơn nghỉ học</div>
+            <div class="table-actions">
+                <a href="{{ url_for('xuat_excel_don_nghi') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-download"></i> Xuất Excel
+                </a>
+                <button class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Thêm mới
+                </button>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tên SV</th>
+                        <th>Ngày gửi đơn</th>
+                        <th>Ngày nghỉ</th>
+                        <th>Môn học</th>
+                        <th>File đính kèm</th>
+                        <th>Trạng thái</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for don in don_nghi_list %}
+                    <tr>
+                        <td>{{ don.full_name }}</td>
+                        <td>{{ don.request_date.strftime('%d/%m/%Y') if don.request_date else '' }}</td>
+                        <td>{{ don.start_date.strftime('%d/%m/%Y') if don.start_date else '' }}</td>
+                        <td>{{ don.class_name }}</td>
+                        <td>
+                            {% if don.proof_file %}
+                                <a href="{{ url_for('static', filename='LUU_NGHI_HOC/' ~ don.proof_file) }}" class="text-primary" target="_blank">
+                                    <i class="fas fa-file"></i> File đính kèm
+                                </a>
+                            {% else %}
+                                Không có
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if don.status == "Pending" %}
+                                <span class="status-badge status-pending">Đang chờ</span>
+                            {% elif don.status == "Approved" %}
+                                <span class="status-badge status-approved">Đã duyệt</span>
+                            {% elif don.status == "Rejected" %}
+                                <span class="status-badge status-rejected">Đã từ chối</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                          <div class="action-buttons">
+                            <!-- Nút duyệt -->
+                            <form action="{{ url_for('update_status', request_id=don.request_id) }}" method="post" style="display:inline;">
+                              <input type="hidden" name="status" value="Approved">
+                              <button type="submit" class="btn-icon btn-approve" {% if don.status != "Pending" %}disabled{% endif %}>
+                                <i class="fas fa-check"></i>
+                              </button>
+                            </form>
+
+                            <!-- Nút từ chối -->
+                            <form action="{{ url_for('update_status', request_id=don.request_id) }}" method="post" style="display:inline;">
+                              <input type="hidden" name="status" value="Rejected">
+                              <button type="submit" class="btn-icon btn-reject" {% if don.status != "Pending" %}disabled{% endif %}>
+                                <i class="fas fa-times"></i>
+                              </button>
+                            </form>
+                          </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="pagination-container">
+            <div class="pagination-info">
+                Hiển thị 1-5 của 23 kết quả
+            </div>
+            <ul class="pagination">
+                <li class="page-item disabled"><a class="page-link" href="#"><i class="fas fa-chevron-left"></i></a></li>
+                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                <li class="page-item"><a class="page-link" href="#">3</a></li>
+                <li class="page-item"><a class="page-link" href="#"><i class="fas fa-chevron-right"></i></a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Toggle sidebar on mobile
+    document.querySelector('.menu-toggle')?.addEventListener('click', function() {
+        document.querySelector('.sidebar').classList.toggle('active');
+    });
+
+    // Filter functionality
+    const subjectFilter = document.getElementById('subjectFilter');
+    const statusFilter = document.getElementById('statusFilter');
+    const dateFilter = document.getElementById('dateFilter');
+    const studentFilter = document.getElementById('studentFilter');
+    const globalSearch = document.getElementById('globalSearch');
+    const resetFilterBtn = document.getElementById('resetFilter');
+    const applyFilterBtn = document.getElementById('applyFilter');
+
+    // Add event listeners
+    [subjectFilter, statusFilter, dateFilter, studentFilter, globalSearch].forEach(element => {
+        element.addEventListener('change', filterTable);
+    });
+
+    globalSearch.addEventListener('input', filterTable);
+    resetFilterBtn.addEventListener('click', resetFilters);
+    applyFilterBtn.addEventListener('click', filterTable);
+
+    function filterTable() {
+        const subjectValue = subjectFilter.value.toLowerCase();
+        const statusValue = statusFilter.value;
+        const dateValue = dateFilter.value;
+        const studentValue = studentFilter.value.toLowerCase();
+        const globalValue = globalSearch.value.toLowerCase();
+
+        const rows = document.querySelectorAll('tbody tr');
+
+        rows.forEach(row => {
+            const subject = row.cells[3].textContent.toLowerCase();
+            const status = row.cells[5].querySelector('.status-badge').classList[1];
+            const date = row.cells[1].textContent;
+            const student = row.cells[0].textContent.toLowerCase();
+            const rowText = row.textContent.toLowerCase();
+
+            const subjectMatch = !subjectValue || subject.includes(subjectValue);
+            const statusMatch = !statusValue || status.includes(statusValue);
+            const dateMatch = !dateValue || date === formatDateForComparison(dateValue);
+            const studentMatch = !studentValue || student.includes(studentValue);
+            const globalMatch = !globalValue || rowText.includes(globalValue);
+
+            if (subjectMatch && statusMatch && dateMatch && studentMatch && globalMatch) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    function resetFilters() {
+        subjectFilter.value = '';
+        statusFilter.value = '';
+        dateFilter.value = '';
+        studentFilter.value = '';
+        globalSearch.value = '';
+        filterTable();
+    }
+
+    function formatDateForComparison(dateString) {
+        // Convert yyyy-mm-dd to dd/mm/yyyy for comparison
+        const parts = dateString.split('-');
+        if (parts.length === 3) {
+            return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+        return dateString;
+    }
+
+    // Initialize filtering
+    document.addEventListener('DOMContentLoaded', function() {
+        filterTable();
+    });
+</script>
+{% endblock %}

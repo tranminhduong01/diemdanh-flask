@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đổi mật khẩu</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+        }
+        .password-container {
+            width: 100%;
+            max-width: 450px;
+            padding: 25px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.08);
+        }
+        .password-header {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+        .password-header h2 {
+            font-weight: 600;
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        .password-header p {
+            font-size: 0.85rem;
+        }
+        .form-label {
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: #2c3e50;
+            font-size: 0.9rem;
+        }
+        .form-control {
+            padding: 8px 12px;
+            font-size: 0.9rem;
+        }
+        .input-group {
+            position: relative;
+        }
+        .toggle-password {
+            position: absolute;
+            right: 10px;
+            top: 34px;
+            cursor: pointer;
+            color: #6c757d;
+            z-index: 5;
+            font-size: 0.9rem;
+        }
+        .btn {
+            padding: 8px 16px;
+            font-size: 0.9rem;
+        }
+        .btn-primary {
+            background-color: #3b71ca;
+            border: none;
+            font-weight: 500;
+        }
+        .btn-primary:hover {
+            background-color: #2c5aa0;
+        }
+        .btn-info {
+            background-color: #54b4d3;
+            border: none;
+        }
+        .btn-info:hover {
+            background-color: #3a9cb9;
+        }
+        .password-strength {
+            height: 4px;
+            margin-top: 5px;
+            border-radius: 5px;
+            background: #eee;
+        }
+        .password-strength-bar {
+            height: 100%;
+            border-radius: 5px;
+            width: 0;
+            transition: width 0.3s;
+        }
+        .requirement-list {
+            margin-top: 6px;
+            font-size: 0.75rem;
+            color: #6c757d;
+        }
+        .requirement {
+            margin-bottom: 3px;
+            display: flex;
+            align-items: center;
+        }
+        .requirement i {
+            margin-right: 4px;
+            font-size: 0.65rem;
+        }
+        .valid {
+            color: #198754;
+        }
+        .invalid {
+            color: #dc3545;
+        }
+        .otp-section {
+            background-color: #f8f9fa;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+        .alert {
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="password-container">
+        <div class="password-header">
+            <h2><i class="bi bi-shield-lock me-2"></i>Đổi mật khẩu</h2>
+            <p class="text-muted">Vui lòng nhập thông tin để đổi mật khẩu của bạn</p>
+        </div>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form method="POST">
+            <!-- Mật khẩu cũ -->
+            <div class="mb-3">
+                <label class="form-label">Mật khẩu cũ</label>
+                <div class="input-group">
+                    <input type="password" name="old_password" id="old_password"
+                           class="form-control" required
+                           value="{{ form_data['old_password'] }}">
+                    <span class="toggle-password" onclick="togglePassword('old_password')">
+                        <i class="bi bi-eye"></i>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Mật khẩu mới -->
+            <div class="mb-3">
+                <label class="form-label">Mật khẩu mới</label>
+                <div class="input-group">
+                    <input type="password" name="new_password" id="new_password"
+                           class="form-control" required onkeyup="checkPasswordStrength()"
+                           value="{{ form_data['new_password'] }}">
+                    <span class="toggle-password" onclick="togglePassword('new_password')">
+                        <i class="bi bi-eye"></i>
+                    </span>
+                </div>
+                <div class="password-strength mt-2">
+                    <div class="password-strength-bar" id="password-strength-bar"></div>
+                </div>
+                <div class="requirement-list">
+                    <div class="requirement" id="length-req">
+                        <i class="bi bi-x-circle invalid" id="length-icon"></i>
+                        <span>Ít nhất 8 ký tự</span>
+                    </div>
+                    <div class="requirement" id="uppercase-req">
+                        <i class="bi bi-x-circle invalid" id="uppercase-icon"></i>
+                        <span>Chứa ít nhất một chữ hoa</span>
+                    </div>
+                    <div class="requirement" id="number-req">
+                        <i class="bi bi-x-circle invalid" id="number-icon"></i>
+                        <span>Chứa ít nhất một số</span>
+                    </div>
+                    <div class="requirement" id="special-req">
+                        <i class="bi bi-x-circle invalid" id="special-icon"></i>
+                        <span>Chứa ít nhất một ký tự đặc biệt</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Xác nhận mật khẩu mới -->
+            <div class="mb-3">
+                <label class="form-label">Xác nhận mật khẩu mới</label>
+                <div class="input-group">
+                    <input type="password" name="confirm_password" id="confirm_password"
+                           class="form-control" required onkeyup="checkPasswordMatch()"
+                           value="{{ form_data['confirm_password'] }}">
+                    <span class="toggle-password" onclick="togglePassword('confirm_password')">
+                        <i class="bi bi-eye"></i>
+                    </span>
+                </div>
+                <div class="mt-2" id="password-match-message" style="font-size: 0.8rem;"></div>
+            </div>
+
+            <!-- Mã OTP -->
+            <div class="mb-3 otp-section">
+                <label class="form-label">Mã OTP</label>
+                <input type="text" name="otp" class="form-control mb-2"
+                       placeholder="Nhập mã xác nhận"
+                       value="{{ form_data['otp'] }}">
+                <button type="submit" name="action" value="send_otp" class="btn btn-info w-100">
+                    <i class="bi bi-send me-1"></i>Gửi mã OTP
+                </button>
+            </div>
+
+            <!-- Nút đổi mật khẩu -->
+            <div class="d-grid">
+                <button type="submit" name="action" value="change_password" class="btn btn-primary">
+                    <i class="bi bi-key me-1"></i>Đổi mật khẩu
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // Hiển thị/ẩn mật khẩu
+        function togglePassword(inputId) {
+            const passwordInput = document.getElementById(inputId);
+            const eyeIcon = passwordInput.nextElementSibling.querySelector('i');
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                eyeIcon.classList.remove('bi-eye');
+                eyeIcon.classList.add('bi-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                eyeIcon.classList.remove('bi-eye-slash');
+                eyeIcon.classList.add('bi-eye');
+            }
+        }
+
+        // Kiểm tra độ mạnh mật khẩu
+        function checkPasswordStrength() {
+            const password = document.getElementById('new_password').value;
+            const strengthBar = document.getElementById('password-strength-bar');
+            const requirements = {
+                length: password.length >= 8,
+                uppercase: /[A-Z]/.test(password),
+                number: /[0-9]/.test(password),
+                special: /[^A-Za-z0-9]/.test(password)
+            };
+
+            // Cập nhật biểu tượng yêu cầu
+            updateRequirement('length', requirements.length);
+            updateRequirement('uppercase', requirements.uppercase);
+            updateRequirement('number', requirements.number);
+            updateRequirement('special', requirements.special);
+
+            // Tính điểm mạnh mật khẩu
+            let strength = 0;
+            if (requirements.length) strength += 25;
+            if (requirements.uppercase) strength += 25;
+            if (requirements.number) strength += 25;
+            if (requirements.special) strength += 25;
+
+            // Cập nhật thanh độ mạnh
+            strengthBar.style.width = strength + '%';
+
+            if (strength < 50) {
+                strengthBar.style.backgroundColor = '#dc3545'; // Đỏ
+            } else if (strength < 100) {
+                strengthBar.style.backgroundColor = '#ffc107'; // Vàng
+            } else {
+                strengthBar.style.backgroundColor = '#198754'; // Xanh
+            }
+        }
+
+        // Cập nhật biểu tượng yêu cầu
+        function updateRequirement(type, isValid) {
+            const icon = document.getElementById(`${type}-icon`);
+            const requirement = document.getElementById(`${type}-req`);
+
+            if (isValid) {
+                icon.classList.remove('bi-x-circle', 'invalid');
+                icon.classList.add('bi-check-circle', 'valid');
+            } else {
+                icon.classList.remove('bi-check-circle', 'valid');
+                icon.classList.add('bi-x-circle', 'invalid');
+            }
+        }
+
+        // Kiểm tra mật khẩu khớp
+        function checkPasswordMatch() {
+            const password = document.getElementById('new_password').value;
+            const confirmPassword = document.getElementById('confirm_password').value;
+            const messageElement = document.getElementById('password-match-message');
+
+            if (confirmPassword === '') {
+                messageElement.innerHTML = '';
+                return;
+            }
+
+            if (password === confirmPassword) {
+                messageElement.innerHTML = '<span class="text-success"><i class="bi bi-check-circle"></i> Mật khẩu khớp</span>';
+            } else {
+                messageElement.innerHTML = '<span class="text-danger"><i class="bi bi-exclamation-circle"></i> Mật khẩu không khớp</span>';
+            }
+        }
+
+        // Tự động kiểm tra khi trang được tải nếu có dữ liệu
+        document.addEventListener('DOMContentLoaded', function() {
+            if (document.getElementById('new_password').value) {
+                checkPasswordStrength();
+            }
+            if (document.getElementById('confirm_password').value) {
+                checkPasswordMatch();
+            }
+        });
+    </script>
+</body>
+</html>

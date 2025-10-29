@@ -1,0 +1,218 @@
+{% extends "Menu_SV.html" %}
+
+{% block title %}Student Dashboard{% endblock %}
+
+{% block content %}
+
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-10 col-lg-8">
+      <div class="profile-card shadow-lg rounded-3 overflow-hidden">
+        <div class="profile-header bg-primary text-white p-4 text-center">
+          <h2 class="mb-0">Thông tin cá nhân</h2>
+          <p class="mb-0 mt-2 opacity-75">Quản lý thông tin tài khoản của bạn</p>
+        </div>
+
+        <form method="post" enctype="multipart/form-data" class="p-4">
+          <!-- Avatar Section -->
+          <div class="avatar-section text-center mb-4">
+            <div class="avatar-container position-relative d-inline-block">
+              {% if user.avatar %}
+                <img src="{{ url_for('static', filename=user.avatar) }}"
+                     alt="Avatar" class="avatar-img rounded-circle shadow">
+              {% else %}
+                <div class="avatar-placeholder rounded-circle shadow d-flex align-items-center justify-content-center">
+                  <i class="bi bi-person-fill fs-1 text-secondary"></i>
+                </div>
+              {% endif %}
+              <label for="avatar" class="avatar-upload-btn position-absolute rounded-circle bg-primary text-white d-flex align-items-center justify-content-center">
+                <i class="bi bi-camera-fill"></i>
+              </label>
+            </div>
+            <div class="user-badge bg-light text-primary d-inline-block px-3 py-1 rounded-pill mt-2">
+              <i class="bi bi-person-check me-1"></i>Sinh viên
+            </div>
+          </div>
+
+          <!-- Form Fields -->
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="name" class="form-label fw-semibold">Họ tên</label>
+              <input type="text" class="form-control rounded-2 py-2 px-3" id="name" name="name" value="{{ user.name }}">
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <label for="username" class="form-label fw-semibold">Tài khoản</label>
+              <input type="text" class="form-control rounded-2 py-2 px-3" id="username" name="username" value="{{ user.username }}" readonly>
+              <div class="form-text text-muted small">Tên đăng nhập không thể thay đổi</div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="email" class="form-label fw-semibold">Email</label>
+            <input type="email" class="form-control rounded-2 py-2 px-3" id="email" name="email" value="{{ user.email }}">
+          </div>
+
+          <div class="mb-4">
+            <label for="avatar" class="form-label fw-semibold">Tải ảnh đại diện mới</label>
+            <input type="file" class="form-control rounded-2 py-2 px-3" id="avatar" name="avatar" accept="image/*">
+            <div class="form-text text-muted small">Chấp nhận: JPG, PNG, GIF. Tối đa: 5MB.</div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="d-flex justify-content-between flex-wrap gap-3 mt-4">
+            <a href="{{ url_for('doi_mat_khau') }}" class="btn btn-outline-secondary rounded-2 px-4 py-2 d-flex align-items-center">
+              <i class="bi bi-lock-fill me-2"></i>Đổi mật khẩu
+            </a>
+
+            <!-- Nút mở modal -->
+            <button type="button" class="btn btn-primary rounded-2 px-4 py-2 d-flex align-items-center"
+                    data-bs-toggle="modal" data-bs-target="#updateStudentModal">
+              <i class="bi bi-pencil-square me-2"></i>Cập nhật thông tin
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =======================
+     MODAL CẬP NHẬT THÔNG TIN SINH VIÊN
+======================= -->
+<div class="modal fade" id="updateStudentModal" tabindex="-1" aria-labelledby="updateStudentModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content border-0 rounded-3 shadow-lg">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="updateStudentModalLabel">
+          <i class="bi bi-person-lines-fill me-2"></i>Cập nhật thông tin sinh viên
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
+      </div>
+      <form method="post">
+        <div class="modal-body px-4 py-3">
+          <input type="hidden" name="update_student" value="1">
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Số điện thoại</label>
+              <input type="text" name="phone" class="form-control" value="{{ student.phone or '' }}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Ngày sinh</label>
+              <input type="date" name="birthday" class="form-control" value="{{ student.birthday or '' }}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Giới tính</label>
+              <select name="gender" class="form-select">
+                <option value="Nam" {% if student.gender == 'Nam' %}selected{% endif %}>Nam</option>
+                <option value="Nữ" {% if student.gender == 'Nữ' %}selected{% endif %}>Nữ</option>
+                <option value="Khác" {% if student.gender == 'Khác' %}selected{% endif %}>Khác</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Trường</label>
+              <input type="text" name="school" class="form-control" value="{{ student.school or '' }}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Lớp</label>
+              <input type="text" name="class" class="form-control" value="{{ student.class or '' }}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Niên khóa</label>
+              <input type="text" name="course_year" class="form-control" value="{{ student.course_year or '' }}">
+            </div>
+            <div class="col-md-12">
+              <label class="form-label fw-semibold">Chuyên ngành</label>
+              <input type="text" name="major" class="form-control" value="{{ student.major or '' }}">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer d-flex justify-content-between">
+          <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">
+            <i class="bi bi-x-circle me-1"></i>Hủy
+          </button>
+          <button type="submit" class="btn btn-primary px-4">
+            <i class="bi bi-check-circle me-1"></i>Xác nhận cập nhật
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<style>
+  .profile-card {
+    background: white;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .profile-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+  }
+
+  .profile-header {
+    background: linear-gradient(135deg, #3498db, #2980b9) !important;
+  }
+
+  .avatar-section {
+    margin-top: -50px;
+  }
+
+  .avatar-img {
+    width: 120px;
+    height: 120px;
+    border: 4px solid white;
+    object-fit: cover;
+  }
+
+  .avatar-placeholder {
+    width: 120px;
+    height: 120px;
+    background-color: #e9ecef;
+    border: 4px solid white;
+  }
+
+  .avatar-upload-btn {
+    width: 36px;
+    height: 36px;
+    bottom: 5px;
+    right: 5px;
+    cursor: pointer;
+    border: 2px solid white;
+    transition: all 0.3s ease;
+  }
+
+  .avatar-upload-btn:hover {
+    background-color: #2980b9 !important;
+    transform: scale(1.1);
+  }
+</style>
+
+<script>
+  // Hiển thị preview ảnh đại diện khi chọn file mới
+  document.getElementById('avatar').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const avatarImg = document.querySelector('.avatar-img');
+        const avatarPlaceholder = document.querySelector('.avatar-placeholder');
+
+        if (avatarImg) {
+          avatarImg.src = e.target.result;
+        } else if (avatarPlaceholder) {
+          const newImg = document.createElement('img');
+          newImg.src = e.target.result;
+          newImg.alt = 'Avatar';
+          newImg.className = 'avatar-img rounded-circle shadow';
+          avatarPlaceholder.parentNode.replaceChild(newImg, avatarPlaceholder);
+        }
+      }
+      reader.readAsDataURL(file);
+    }
+  });
+</script>
+
+{% endblock %}

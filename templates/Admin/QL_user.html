@@ -1,0 +1,363 @@
+{% extends "menu_admin.html" %}
+
+{% block title %}Bảng điều khiển | Quản trị hệ thống{% endblock %}
+
+{% block content %}
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <style>
+    :root {
+      --primary: #4a6cf7;
+      --text-primary: #2d3748;
+      --text-secondary: #718096;
+      --border-color: #e2e8f0;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background-color: #f8fafc;
+      color: var(--text-primary);
+      line-height: 1.6;
+    }
+
+
+    .nav-item {
+      position: relative;
+      margin: 5px 15px;
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      padding: 12px 15px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+
+    .nav-link:hover, .nav-link.active {
+      background-color: #f8fafc;
+      color: var(--primary);
+    }
+
+    .nav-link i {
+      margin-right: 12px;
+      font-size: 18px;
+    }
+
+
+
+    .toggle-sidebar {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .user-menu {
+      display: flex;
+      align-items: center;
+    }
+
+    .user-info {
+      margin-right: 15px;
+      text-align: right;
+    }
+
+    .user-name {
+      font-weight: 600;
+      margin-bottom: 0;
+      font-size: 0.9rem;
+    }
+
+    .user-role {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--border-color);
+    }
+
+    /* Content area */
+    .content {
+      padding: 25px;
+    }
+
+    .page-title {
+      margin-bottom: 25px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    /* Form styling */
+    .user-form {
+      background: white;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      padding: 20px;
+      margin-bottom: 25px;
+    }
+
+    .form-control, .form-select {
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px 15px;
+    }
+
+    .form-control:focus, .form-select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(74, 108, 247, 0.1);
+    }
+
+    /* Table styling */
+    .data-table {
+      background: white;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      overflow: hidden;
+    }
+
+    .table thead th {
+      background-color: #f8fafc;
+      border-bottom: 1px solid var(--border-color);
+      padding: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .table tbody td {
+      padding: 15px;
+      vertical-align: middle;
+      border-color: var(--border-color);
+    }
+
+    .table-hover tbody tr:hover {
+      background-color: #f8fafc;
+    }
+
+    /* Button styling */
+    .btn {
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-weight: 500;
+    }
+
+    .btn-sm {
+      padding: 5px 10px;
+      font-size: 0.875rem;
+    }
+
+    .btn-success {
+      background-color: var(--primary);
+      border-color: var(--primary);
+    }
+
+    .btn-success:hover {
+      background-color: #3a5ad9;
+      border-color: #3a5ad9;
+    }
+
+    .btn-warning {
+      background-color: #f59e0b;
+      border-color: #f59e0b;
+    }
+
+    .btn-danger {
+      background-color: #ef4444;
+      border-color: #ef4444;
+    }
+
+    /* Edit form in table */
+    .edit-form {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .edit-form input, .edit-form select {
+      flex: 1;
+      min-width: 120px;
+    }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+      .sidebar {
+        transform: translateX(-100%);
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .sidebar.show {
+        transform: translateX(0);
+      }
+
+      .main-content {
+        margin-left: 0;
+      }
+
+      .sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.3);
+        z-index: 999;
+        display: none;
+      }
+
+      .sidebar-overlay.show {
+        display: block;
+      }
+
+      .edit-form {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .edit-form input, .edit-form select {
+        width: 100%;
+      }
+    }
+
+    /* Badge for roles */
+    .badge {
+      padding: 6px 10px;
+      border-radius: 20px;
+      font-weight: 500;
+    }
+
+    .badge-student {
+      background-color: #e9f5ff;
+      color: #0c6dfd;
+    }
+
+    .badge-teacher {
+      background-color: #fff4e6;
+      color: #fd7e14;
+    }
+
+    .badge-admin {
+      background-color: #f8e6ff;
+      color: #9b32d9;
+    }
+  </style>
+
+    <!-- Content -->
+    <div class="content">
+      <h2 class="page-title">Quản lý Users</h2>
+
+      <!-- Form thêm user -->
+      <div class="user-form">
+        <form action="/admin/users/add" method="POST">
+          <div class="row g-3 align-items-end">
+            <div class="col-md-3">
+              <label class="form-label">Tên</label>
+              <input type="text" name="name" class="form-control" placeholder="Nhập tên" required>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label">Username</label>
+              <input type="text" name="username" class="form-control" placeholder="Username" required>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label">Password</label>
+              <input type="password" name="password" class="form-control" placeholder="Password" required>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label">Vai trò</label>
+              <select name="role" class="form-select">
+                <option value="student">Student</option>
+                <option value="teacher">Teacher</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <button type="submit" class="btn btn-success w-100">
+                <i class="bi bi-plus-circle"></i> Thêm User
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Bảng danh sách -->
+      <div class="data-table">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th width="80">ID</th>
+              <th>Tên</th>
+              <th>Username</th>
+              <th>Vai trò</th>
+              <th width="300">Hành động</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for user in users %}
+            <tr>
+              <td>{{ user.id }}</td>
+              <td>{{ user.name }}</td>
+              <td>{{ user.username }}</td>
+              <td>
+                <span class="badge
+                  {% if user.role == 'student' %}badge-student
+                  {% elif user.role == 'teacher' %}badge-teacher
+                  {% else %}badge-admin{% endif %}">
+                  {% if user.role == 'student' %}Học sinh
+                  {% elif user.role == 'teacher' %}Giáo viên
+                  {% else %}Quản trị{% endif %}
+                </span>
+              </td>
+              <td>
+                <!-- Form sửa -->
+                <form action="/admin/users/edit/{{ user.id }}" method="POST" class="edit-form">
+                  <input type="text" name="name" value="{{ user.name }}" class="form-control form-control-sm" required>
+                  <input type="text" name="username" value="{{ user.username }}" class="form-control form-control-sm" required>
+                  <select name="role" class="form-select form-select-sm">
+                    <option value="student" {% if user.role=='student' %}selected{% endif %}>Student</option>
+                    <option value="teacher" {% if user.role=='teacher' %}selected{% endif %}>Teacher</option>
+                    <option value="admin" {% if user.role=='admin' %}selected{% endif %}>Admin</option>
+                  </select>
+                  <button type="submit" class="btn btn-sm btn-warning">
+                    <i class="bi bi-pencil"></i> Sửa
+                  </button>
+                  <a href="/admin/users/delete/{{ user.id }}" class="btn btn-sm btn-danger" onclick="return confirm('Bạn có chắc chắn muốn xóa user này?')">
+                    <i class="bi bi-trash"></i> Xóa
+                  </a>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Toggle sidebar on mobile
+    document.getElementById('toggleSidebar').addEventListener('click', function() {
+      document.querySelector('.sidebar').classList.toggle('show');
+      document.getElementById('sidebarOverlay').classList.toggle('show');
+    });
+
+    // Close sidebar when clicking overlay
+    document.getElementById('sidebarOverlay').addEventListener('click', function() {
+      document.querySelector('.sidebar').classList.remove('show');
+      this.classList.remove('show');
+    });
+  </script>
+{% endblock %}

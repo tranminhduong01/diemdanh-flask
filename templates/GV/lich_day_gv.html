@@ -1,0 +1,92 @@
+{% extends "menu_gv.html" %}
+
+{% block title %}Dashboard Giáo viên{% endblock %}
+
+{% block content %}
+<head>
+  <title>Lịch dạy của giáo viên</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { background-color: #f8f9fa; }
+    .table-schedule th, .table-schedule td {
+      text-align: center;
+      vertical-align: middle;
+      min-width: 140px;
+      height: 70px;
+    }
+    .class-cell {
+      background-color: #e7f1ff;
+      border-radius: 8px;
+      padding: 6px;
+    }
+    .class-name {
+      font-weight: 600;
+    }
+    .class-info {
+      font-size: 13px;
+      color: #555;
+    }
+    .week-nav {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container mt-4">
+    <h4 class="text-center mb-4">📘 Lịch dạy trong tuần</h4>
+
+    <!-- Thanh điều hướng tuần -->
+    <div class="week-nav">
+      <a href="{{ url_for('lich_day_gv', week_offset=week_offset - 1) }}" class="btn btn-outline-primary">Tuần trước</a>
+      <h5>Tuần {{ week_start }} - {{ week_end }}</h5>
+      <a href="{{ url_for('lich_day_gv', week_offset=week_offset + 1) }}" class="btn btn-outline-primary">Tuần sau</a>
+      <a href="{{ url_for('lich_day_gv') }}" class="btn btn-primary">Hôm nay</a>
+    </div>
+
+
+    <!-- Bảng thời khóa biểu -->
+    <table class="table table-bordered table-schedule bg-white">
+      <thead class="table-primary">
+        <tr>
+          <th>Tiết</th>
+          <th>Thứ 2</th>
+          <th>Thứ 3</th>
+          <th>Thứ 4</th>
+          <th>Thứ 5</th>
+          <th>Thứ 6</th>
+          <th>Thứ 7</th>
+          <th>Chủ Nhật</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for tiet in range(1, 11) %}
+        <tr>
+          <td><strong>Tiết {{ tiet }}</strong></td>
+
+          {% for thu in ['Thứ 2','Thứ 3','Thứ 4','Thứ 5','Thứ 6','Thứ 7','Chủ Nhật'] %}
+          <td>
+            {% for buoi in schedule[thu] %}
+              {% if tiet >= buoi.tiet_bat_dau and tiet <= buoi.tiet_ket_thuc %}
+              <div class="class-cell">
+                <div class="class-name">{{ buoi.class_name }}</div>
+                <div class="class-info">{{ buoi.room }} | {{ buoi.session_start }} - {{ buoi.session_end }}</div>
+                <div class="class-info text-muted"><em>Giáo viên: {{ teacher_name }}</em></div>
+              </div>
+              {% endif %}
+            {% endfor %}
+          </td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>
+
+
+{% endblock %}

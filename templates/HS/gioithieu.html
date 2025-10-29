@@ -1,0 +1,300 @@
+{% extends "Menu_SV.html" %}
+
+{% block title %}Student Dashboard{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --primary: #4361ee;
+        --primary-light: #eef2ff;
+        --secondary: #6c757d;
+        --success: #28a745;
+        --danger: #dc3545;
+        --warning: #ffc107;
+        --info: #17a2b8;
+        --light: #f8f9fa;
+        --dark: #343a40;
+        --gray-100: #f8f9fa;
+        --gray-200: #e9ecef;
+        --gray-300: #dee2e6;
+        --gray-400: #ced4da;
+        --gray-500: #adb5bd;
+        --gray-600: #6c757d;
+        --gray-700: #495057;
+        --gray-800: #343a40;
+        --gray-900: #212529;
+        --border-radius: 8px;
+        --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        --transition: all 0.3s ease;
+    }
+
+    .student-dashboard {
+        min-height: calc(100vh - 70px);
+        background: var(--gray-100);
+    }
+
+    /* Hero Section */
+    .student-hero {
+        background: linear-gradient(135deg, var(--primary) 0%, #3a0ca3 100%);
+        color: white;
+        padding: 60px 0;
+        text-align: center;
+    }
+
+    .student-hero-content {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 0 20px;
+    }
+
+    .student-hero h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 16px;
+    }
+
+    .student-hero .lead {
+        font-size: 1.2rem;
+        opacity: 0.9;
+        line-height: 1.6;
+    }
+
+    /* Features Section */
+    .student-features {
+        padding: 60px 0;
+    }
+
+    .student-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+    }
+
+    .student-section-heading {
+        text-align: center;
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--gray-800);
+        margin-bottom: 40px;
+    }
+
+    .student-feature-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 24px;
+        margin-bottom: 40px;
+    }
+
+    .student-feature-card {
+        background: white;
+        border-radius: var(--border-radius);
+        padding: 30px;
+        box-shadow: var(--box-shadow);
+        transition: var(--transition);
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .student-feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .student-feature-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 20px;
+        font-size: 24px;
+        color: white;
+    }
+
+    .student-feature-icon.target {
+        background: linear-gradient(135deg, #4361ee, #3a0ca3);
+    }
+
+    .student-feature-icon.gear {
+        background: linear-gradient(135deg, #f72585, #7209b7);
+    }
+
+    .student-feature-icon.rocket {
+        background: linear-gradient(135deg, #4cc9f0, #4895ef);
+    }
+
+    .student-feature-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--gray-800);
+        margin-bottom: 16px;
+    }
+
+    .student-feature-text {
+        color: var(--gray-600);
+        line-height: 1.6;
+        flex-grow: 1;
+    }
+
+    .student-feature-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .student-feature-list li {
+        padding: 4px 0;
+        color: var(--gray-600);
+        position: relative;
+        padding-left: 20px;
+    }
+
+    .student-feature-list li:before {
+        content: "•";
+        color: var(--primary);
+        font-weight: bold;
+        position: absolute;
+        left: 0;
+    }
+
+    .student-cta-section {
+        text-align: center;
+        margin-top: 40px;
+    }
+
+    .student-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px 24px;
+        border-radius: var(--border-radius);
+        font-size: 1rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: var(--transition);
+        border: none;
+        cursor: pointer;
+    }
+
+    .student-btn-primary {
+        background: var(--primary);
+        color: white;
+    }
+
+    .student-btn-primary:hover {
+        background: #3651d4;
+        transform: translateY(-2px);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .student-hero {
+            padding: 40px 0;
+        }
+
+        .student-hero h1 {
+            font-size: 2rem;
+        }
+
+        .student-hero .lead {
+            font-size: 1.1rem;
+        }
+
+        .student-features {
+            padding: 40px 0;
+        }
+
+        .student-section-heading {
+            font-size: 1.75rem;
+        }
+
+        .student-feature-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .student-feature-card {
+            padding: 24px;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .student-hero h1 {
+            font-size: 1.75rem;
+        }
+
+        .student-container {
+            padding: 0 16px;
+        }
+
+        .student-feature-icon {
+            width: 50px;
+            height: 50px;
+            font-size: 20px;
+        }
+    }
+</style>
+
+<div class="student-dashboard">
+    <!-- HERO SECTION -->
+    <section class="student-hero">
+        <div class="student-hero-content">
+            <h1>Giới thiệu về Hệ thống</h1>
+            <p class="lead">Hệ thống điểm danh bằng khuôn mặt được phát triển nhằm hiện đại hóa và tối ưu hoá công tác quản lý sinh viên.</p>
+        </div>
+    </section>
+
+    <!-- FEATURES SECTION -->
+    <section class="student-features">
+        <div class="student-container">
+            <h2 class="student-section-heading">Tính năng nổi bật</h2>
+
+            <div class="student-feature-grid">
+                <!-- Feature Card 1 -->
+                <div class="student-feature-card">
+                    <div class="student-feature-icon target">
+                        <i class="fas fa-bullseye"></i>
+                    </div>
+                    <h3 class="student-feature-title">Mục tiêu</h3>
+                    <p class="student-feature-text">
+                        Giúp giảng viên và nhà trường tiết kiệm thời gian, hạn chế gian lận trong điểm danh và quản lý lớp học hiệu quả hơn.
+                    </p>
+                </div>
+
+                <!-- Feature Card 2 -->
+                <div class="student-feature-card">
+                    <div class="student-feature-icon gear">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    <h3 class="student-feature-title">Tính năng</h3>
+                    <ul class="student-feature-list">
+                        <li>Điểm danh bằng khuôn mặt</li>
+                        <li>Quản lý lớp học và lịch học</li>
+                        <li>Nộp đơn nghỉ học trực tuyến</li>
+                        <li>Thống kê, báo cáo chi tiết</li>
+                    </ul>
+                </div>
+
+                <!-- Feature Card 3 -->
+                <div class="student-feature-card">
+                    <div class="student-feature-icon rocket">
+                        <i class="fas fa-rocket"></i>
+                    </div>
+                    <h3 class="student-feature-title">Tương lai</h3>
+                    <p class="student-feature-text">
+                        Phát triển thêm mobile app, tích hợp AI để phân tích dữ liệu học tập, hỗ trợ học tập cá nhân hoá cho sinh viên.
+                    </p>
+                </div>
+            </div>
+
+            <div class="student-cta-section">
+                <a href="/" class="student-btn student-btn-primary">
+                    Quay lại trang chủ
+                </a>
+            </div>
+        </div>
+    </section>
+</div>
+
+{% endblock %}

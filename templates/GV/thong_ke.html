@@ -1,0 +1,386 @@
+{% extends "menu_gv.html" %}
+
+{% block title %}Dashboard Giáo viên{% endblock %}
+
+{% block content %}
+<style>
+  /* Dashboard Styles */
+  .tp-dashboard {
+    padding: 0;
+  }
+
+  .tp-dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+
+  .tp-dashboard-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--tp-text-dark);
+    margin: 0;
+  }
+
+  .tp-dashboard-subtitle {
+    font-size: 14px;
+    color: var(--tp-text-light);
+    margin-top: 4px;
+  }
+
+  /* Filter Section */
+  .tp-filter-section {
+    background: white;
+    border-radius: var(--tp-border-radius);
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+    border: 1px solid var(--tp-border-color);
+  }
+
+  .tp-filter-row {
+    display: flex;
+    align-items: end;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .tp-filter-group {
+    display: flex;
+    flex-direction: column;
+    min-width: 150px;
+  }
+
+  .tp-filter-label {
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 6px;
+    color: var(--tp-text-dark);
+  }
+
+  .tp-filter-select, .tp-filter-input {
+    padding: 8px 12px;
+    border: 1px solid var(--tp-border-color);
+    border-radius: 6px;
+    font-size: 14px;
+    background: white;
+  }
+
+  .tp-filter-button {
+    background: var(--tp-primary-color);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--tp-transition);
+  }
+
+  .tp-filter-button:hover {
+    background: #2980b9;
+  }
+
+  /* Stats Cards */
+  .tp-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+    margin-bottom: 24px;
+  }
+
+  .tp-stats-card {
+    background: white;
+    border-radius: var(--tp-border-radius);
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+    border: 1px solid var(--tp-border-color);
+    transition: var(--tp-transition);
+  }
+
+  .tp-stats-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  .tp-stats-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+    font-size: 20px;
+  }
+
+  .tp-stats-icon.users {
+    background: rgba(52, 152, 219, 0.1);
+    color: var(--tp-primary-color);
+  }
+
+  .tp-stats-icon.classes {
+    background: rgba(46, 204, 113, 0.1);
+    color: #2ecc71;
+  }
+
+  .tp-stats-icon.sessions {
+    background: rgba(155, 89, 182, 0.1);
+    color: #9b59b6;
+  }
+
+  .tp-stats-icon.attendance {
+    background: rgba(231, 76, 60, 0.1);
+    color: #e74c3c;
+  }
+
+  .tp-stats-value {
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--tp-text-dark);
+    margin-bottom: 4px;
+  }
+
+  .tp-stats-label {
+    font-size: 14px;
+    color: var(--tp-text-light);
+  }
+
+  /* Charts Section */
+  .tp-charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 20px;
+  }
+
+  .tp-chart-container {
+    background: white;
+    border-radius: var(--tp-border-radius);
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+    border: 1px solid var(--tp-border-color);
+  }
+
+  .tp-chart-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: var(--tp-text-dark);
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .tp-stats-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .tp-charts-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .tp-filter-row {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .tp-filter-group {
+      min-width: auto;
+    }
+  }
+</style>
+
+<div class="tp-dashboard">
+  <!-- Header -->
+  <div class="tp-dashboard-header">
+    <div>
+      <h1 class="tp-dashboard-title">Dashboard Giáo viên</h1>
+      <p class="tp-dashboard-subtitle">Tổng quan về hoạt động giảng dạy</p>
+    </div>
+  </div>
+
+  <!-- Bộ lọc -->
+  <div class="tp-filter-section">
+    <div class="tp-filter-row">
+      <div class="tp-filter-group">
+        <label class="tp-filter-label">Chọn khoảng</label>
+        <select id="filterSelect" class="tp-filter-select">
+          <option value="day">Theo ngày</option>
+          <option value="week" selected>Theo tuần</option>
+          <option value="month">Theo tháng</option>
+        </select>
+      </div>
+      <div class="tp-filter-group">
+        <label class="tp-filter-label">Ngày</label>
+        <input type="date" id="dateInput" class="tp-filter-input">
+      </div>
+      <div class="tp-filter-group">
+        <button id="applyFilter" class="tp-filter-button">Xem</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="tp-stats-grid">
+    <div class="tp-stats-card">
+      <div class="tp-stats-icon users">
+        <i class="fas fa-users"></i>
+      </div>
+      <div class="tp-stats-value" id="totalUsers">0</div>
+      <div class="tp-stats-label">Người dùng</div>
+    </div>
+
+    <div class="tp-stats-card">
+      <div class="tp-stats-icon classes">
+        <i class="fas fa-chalkboard"></i>
+      </div>
+      <div class="tp-stats-value" id="totalClasses">0</div>
+      <div class="tp-stats-label">Lớp học</div>
+    </div>
+
+    <div class="tp-stats-card">
+      <div class="tp-stats-icon sessions">
+        <i class="fas fa-calendar-alt"></i>
+      </div>
+      <div class="tp-stats-value" id="totalSessions">0</div>
+      <div class="tp-stats-label">Buổi học</div>
+    </div>
+
+    <div class="tp-stats-card">
+      <div class="tp-stats-icon attendance">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <div class="tp-stats-value" id="totalAttendance">0</div>
+      <div class="tp-stats-label">Điểm danh</div>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="tp-charts-grid">
+    <div class="tp-chart-container">
+      <h5 class="tp-chart-title">Điểm danh 7 ngày qua</h5>
+      <canvas id="attendanceChart" height="250"></canvas>
+    </div>
+
+    <div class="tp-chart-container">
+      <h5 class="tp-chart-title">Số lớp theo tháng</h5>
+      <canvas id="classChart" height="250"></canvas>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  let attendanceChartInstance = null;
+  let classChartInstance = null;
+
+  // Vẽ biểu đồ điểm danh
+  function renderAttendanceChart(labels, data) {
+    const ctx = document.getElementById('attendanceChart');
+    if (!ctx) return;
+
+    if (attendanceChartInstance) attendanceChartInstance.destroy();
+
+    attendanceChartInstance = new Chart(ctx.getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: labels || [],
+        datasets: [{
+          label: 'Điểm danh',
+          data: data || [],
+          borderColor: '#4a6cf7',
+          backgroundColor: 'rgba(74, 108, 247, 0.1)',
+          fill: true,
+          tension: 0.3
+        }]
+      },
+      options: {
+        plugins: {
+          legend: { display: true, position: 'top' }
+        }
+      }
+    });
+  }
+
+  // Vẽ biểu đồ số lớp
+  function renderClassChart(labels, data) {
+    const ctx = document.getElementById('classChart');
+    if (!ctx) return;
+
+    if (classChartInstance) classChartInstance.destroy();
+
+    classChartInstance = new Chart(ctx.getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: labels || [],
+        datasets: [{
+          label: 'Số lớp',
+          data: data || [],
+          backgroundColor: 'rgba(74, 108, 247, 0.5)'
+        }]
+      },
+      options: {
+        plugins: {
+          legend: { display: true, position: 'top' }
+        }
+      }
+    });
+  }
+
+  // Lấy dữ liệu động từ API
+  function loadReport(filter='week', date=null) {
+    let url = '/thong_ke?filter=' + filter;
+    if (date) url += '&date=' + date;
+
+    fetch(url, {
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(res => res.ok ? res.json() : Promise.reject(res.status))
+    .then(data => {
+      // Vẽ biểu đồ
+      renderAttendanceChart(data.attendanceChartLabels, data.attendanceChartData);
+      renderClassChart(data.classChartLabels, data.classChartData);
+
+      // Gán số liệu vào card
+      document.getElementById('totalUsers').textContent = data.totalUsers;
+      document.getElementById('totalClasses').textContent = data.totalClasses;
+      document.getElementById('totalSessions').textContent = data.totalSessions;
+      document.getElementById('totalAttendance').textContent = data.totalAttendance;
+    })
+    .catch(err => {
+      console.warn('Không lấy được dữ liệu API', err);
+    });
+  }
+
+  // Nút áp dụng filter theo ngày/tuần/tháng
+  const applyFilterBtn = document.getElementById('applyFilter');
+  if (applyFilterBtn) {
+    applyFilterBtn.addEventListener('click', function() {
+      const filter = document.getElementById('filterSelect').value;
+      const date = document.getElementById('dateInput').value;
+      loadReport(filter, date);
+    });
+  }
+
+  // Gọi lần đầu khi load trang (mặc định là tuần)
+  loadReport('week');
+
+  // Toggle sidebar mobile
+  const toggleBtn = document.getElementById('toggleSidebar');
+  const sidebar = document.querySelector('.sidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+
+  if (toggleBtn && sidebar && overlay) {
+    toggleBtn.addEventListener('click', function() {
+      sidebar.classList.toggle('show');
+      overlay.classList.toggle('show');
+    });
+
+    overlay.addEventListener('click', function() {
+      sidebar.classList.remove('show');
+      overlay.classList.remove('show');
+    });
+  }
+</script>
+{% endblock %}

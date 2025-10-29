@@ -1,0 +1,410 @@
+{% extends "Menu_SV.html" %}
+
+{% block title %}Student Dashboard{% endblock %}
+
+{% block content %}
+  <!-- PAGE HEADER -->
+  <div class="tkb-page-header">
+    <div class="tkb-container">
+      <h1 class="tkb-page-title">Thời khóa biểu</h1>
+      <p class="tkb-page-subtitle">Lịch học hàng tuần của bạn</p>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="tkb-container tkb-py-4">
+    <div class="tkb-navigation-controls">
+      <a href="{{ url_for('thoikhoabieu', week_offset=week_offset-1) }}" class="tkb-btn tkb-btn-outline">
+        <i class="fas fa-chevron-left tkb-btn-icon"></i> Tuần trước
+      </a>
+      <div class="tkb-week-display">Tuần {{ week_start }} - {{ week_end }}</div>
+      <div class="tkb-navigation-right">
+        <a href="{{ url_for('thoikhoabieu', week_offset=week_offset+1) }}" class="tkb-btn tkb-btn-outline tkb-mr-2">
+          Tuần sau <i class="fas fa-chevron-right tkb-btn-icon"></i>
+        </a>
+        <a href="{{ url_for('thoikhoabieu') }}" class="tkb-btn tkb-btn-primary">
+          <i class="fas fa-calendar-day tkb-btn-icon"></i>Hôm nay
+        </a>
+      </div>
+    </div>
+
+    <div class="tkb-timetable-container">
+      <table class="tkb-timetable">
+        <thead>
+          <tr>
+            <th class="tkb-period-header">Tiết</th>
+            <th>Thứ 2</th>
+            <th>Thứ 3</th>
+            <th>Thứ 4</th>
+            <th>Thứ 5</th>
+            <th>Thứ 6</th>
+            <th>Thứ 7</th>
+            <th>Chủ Nhật</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for i in range(1, 11) %}
+          <tr>
+            <td class="tkb-period-cell"><strong>Tiết {{ i }}</strong></td>
+            {% for day in range(2,9) %}
+              {% set row = grid.get(i, {}) %}
+              {% set cell = row.get(day) %}
+              {% if cell is none %}
+                <td class="tkb-empty-cell"></td>
+              {% elif cell == 'SPAN' %}
+                {# ô này bị gộp từ trên #}
+              {% else %}
+                <td class="tkb-class-cell" rowspan="{{ cell.duration }}">
+                  <div class="tkb-class-content">
+                    <p class="tkb-class-name">{{ cell.class_name }}</p>
+                    <p class="tkb-class-details">{{ cell.room }} | {{ cell.start_time }} - {{ cell.end_time }}</p>
+                    <p class="tkb-class-teacher">Giáo viên: {{ cell.teacher_name }}</p>
+                  </div>
+                </td>
+              {% endif %}
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="tkb-footer">
+    <div class="tkb-container">
+      <div class="tkb-footer-content">
+        <div class="tkb-footer-section">
+          <h5>Student Portal</h5>
+          <p>Nền tảng quản lý học tập toàn diện dành cho sinh viên</p>
+        </div>
+        <div class="tkb-footer-section">
+          <p>Theo dõi chúng tôi:</p>
+          <div class="tkb-social-links">
+            <a href="#" class="tkb-social-link"><i class="bi bi-facebook"></i></a>
+            <a href="#" class="tkb-social-link"><i class="bi bi-youtube"></i></a>
+            <a href="#" class="tkb-social-link"><i class="bi bi-linkedin"></i></a>
+          </div>
+        </div>
+      </div>
+      <hr class="tkb-footer-divider">
+      <p class="tkb-footer-copyright">&copy; 2025 Student Portal - All Rights Reserved</p>
+    </div>
+  </footer>
+
+  <style>
+    /* Biến hệ thống */
+    :root {
+      --tkb-primary: #3498db;
+      --tkb-primary-dark: #2980b9;
+      --tkb-secondary: #6c757d;
+      --tkb-success: #28a745;
+      --tkb-info: #17a2b8;
+      --tkb-warning: #ffc107;
+      --tkb-danger: #dc3545;
+      --tkb-light: #f8f9fa;
+      --tkb-dark: #343a40;
+      --tkb-white: #ffffff;
+      --tkb-gray: #6c757d;
+      --tkb-gray-light: #e9ecef;
+      --tkb-gray-lighter: #f8f9fa;
+      --tkb-border-radius: 8px;
+      --tkb-box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      --tkb-transition: all 0.3s ease;
+    }
+
+    /* Layout styles */
+    .tkb-container {
+      width: 100%;
+      padding-right: 15px;
+      padding-left: 15px;
+      margin-right: auto;
+      margin-left: auto;
+    }
+
+    @media (min-width: 576px) {
+      .tkb-container {
+        max-width: 540px;
+      }
+    }
+
+    @media (min-width: 768px) {
+      .tkb-container {
+        max-width: 720px;
+      }
+    }
+
+    @media (min-width: 992px) {
+      .tkb-container {
+        max-width: 960px;
+      }
+    }
+
+    @media (min-width: 1200px) {
+      .tkb-container {
+        max-width: 1140px;
+      }
+    }
+
+    /* Header styles */
+    .tkb-page-header {
+      background: linear-gradient(135deg, var(--tkb-primary) 0%, var(--tkb-primary-dark) 100%);
+      color: var(--tkb-white);
+      padding: 2rem 0;
+      margin-bottom: 2rem;
+    }
+
+    .tkb-page-title {
+      font-size: 2.2rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .tkb-page-subtitle {
+      font-size: 1.1rem;
+      opacity: 0.9;
+      margin-bottom: 0;
+    }
+
+    /* Spacing utilities */
+    .tkb-py-4 {
+      padding-top: 1.5rem;
+      padding-bottom: 1.5rem;
+    }
+
+    .tkb-mr-2 {
+      margin-right: 0.5rem;
+    }
+
+    /* Navigation controls */
+    .tkb-navigation-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .tkb-week-display {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--tkb-dark);
+      background-color: var(--tkb-gray-lighter);
+      padding: 0.75rem 1.5rem;
+      border-radius: var(--tkb-border-radius);
+    }
+
+    .tkb-navigation-right {
+      display: flex;
+      align-items: center;
+    }
+
+    /* Button styles */
+    .tkb-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 500;
+      text-align: center;
+      vertical-align: middle;
+      cursor: pointer;
+      user-select: none;
+      background-color: transparent;
+      border: 2px solid transparent;
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      line-height: 1.5;
+      border-radius: var(--tkb-border-radius);
+      transition: var(--tkb-transition);
+      text-decoration: none;
+    }
+
+    .tkb-btn-primary {
+      color: var(--tkb-white);
+      background-color: var(--tkb-primary);
+      border-color: var(--tkb-primary);
+    }
+
+    .tkb-btn-primary:hover {
+      background-color: var(--tkb-primary-dark);
+      border-color: var(--tkb-primary-dark);
+      transform: translateY(-2px);
+      box-shadow: var(--tkb-box-shadow);
+    }
+
+    .tkb-btn-outline {
+      color: var(--tkb-primary);
+      border-color: var(--tkb-primary);
+    }
+
+    .tkb-btn-outline:hover {
+      color: var(--tkb-white);
+      background-color: var(--tkb-primary);
+    }
+
+    .tkb-btn-icon {
+      margin-right: 0.5rem;
+    }
+
+    /* Timetable styles */
+    .tkb-timetable-container {
+      background-color: var(--tkb-white);
+      border-radius: var(--tkb-border-radius);
+      box-shadow: var(--tkb-box-shadow);
+      overflow: auto;
+      margin-bottom: 2rem;
+    }
+
+    .tkb-timetable {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 800px;
+    }
+
+    .tkb-timetable th {
+      background-color: var(--tkb-primary);
+      color: var(--tkb-white);
+      padding: 1rem;
+      text-align: center;
+      font-weight: 600;
+      border: 1px solid var(--tkb-primary-dark);
+    }
+
+    .tkb-period-header {
+      background-color: var(--tkb-primary-dark) !important;
+    }
+
+    .tkb-timetable td {
+      padding: 0.5rem;
+      border: 1px solid var(--tkb-gray-light);
+      text-align: center;
+      vertical-align: top;
+      height: 60px;
+    }
+
+    .tkb-period-cell {
+      background-color: var(--tkb-gray-lighter);
+      font-weight: 600;
+      color: var(--tkb-dark);
+      width: 80px;
+    }
+
+    .tkb-empty-cell {
+      background-color: var(--tkb-white);
+    }
+
+    .tkb-class-cell {
+      background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+      border: 1px solid #90caf9 !important;
+    }
+
+    .tkb-class-content {
+      padding: 0.5rem;
+      text-align: left;
+    }
+
+    .tkb-class-name {
+      font-weight: 600;
+      color: var(--tkb-dark);
+      margin: 0 0 0.25rem 0;
+      font-size: 0.9rem;
+    }
+
+    .tkb-class-details {
+      color: var(--tkb-primary-dark);
+      margin: 0 0 0.25rem 0;
+      font-size: 0.8rem;
+    }
+
+    .tkb-class-teacher {
+      color: var(--tkb-gray);
+      margin: 0;
+      font-size: 0.8rem;
+      font-style: italic;
+    }
+
+    /* Footer styles */
+    .tkb-footer {
+      background-color: var(--tkb-dark);
+      color: var(--tkb-white);
+      padding: 2rem 0 1rem;
+      margin-top: 3rem;
+    }
+
+    .tkb-footer-content {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+
+    .tkb-footer-section {
+      flex: 1;
+      min-width: 250px;
+      margin-bottom: 1rem;
+    }
+
+    .tkb-footer-section h5 {
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+    }
+
+    .tkb-social-links {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .tkb-social-link {
+      color: var(--tkb-white);
+      font-size: 1.5rem;
+      transition: var(--tkb-transition);
+    }
+
+    .tkb-social-link:hover {
+      color: var(--tkb-primary);
+      transform: translateY(-2px);
+    }
+
+    .tkb-footer-divider {
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      margin: 1rem 0;
+    }
+
+    .tkb-footer-copyright {
+      text-align: center;
+      margin-bottom: 0;
+      font-size: 0.9rem;
+      opacity: 0.8;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .tkb-navigation-controls {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .tkb-navigation-right {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .tkb-btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .tkb-week-display {
+        order: -1;
+        width: 100%;
+      }
+
+      .tkb-timetable-container {
+        border-radius: 0;
+        margin-left: -15px;
+        margin-right: -15px;
+      }
+    }
+  </style>
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends "menu_gv.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">💡 Trung tâm trợ giúp giảng viên</h2>
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs" id="helpTabs">
+        <li class="nav-item">
+            <button class="nav-link active" id="chat-tab" data-bs-toggle="tab" data-bs-target="#chat">Trợ lý ảo</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" id="ticket-tab" data-bs-toggle="tab" data-bs-target="#ticket">Yêu cầu hỗ trợ</button>
+        </li>
+    </ul>
+
+    <div class="tab-content mt-3">
+        <!-- CHATBOT TAB -->
+        <div class="tab-pane fade show active" id="chat">
+            <div class="card shadow-sm p-3">
+                <div id="chat-box" style="height: 350px; overflow-y:auto; background:#f8f9fa; padding:10px;"></div>
+                <form id="chat-form" class="d-flex mt-2">
+                    <input type="text" name="message" id="chat-input" class="form-control" placeholder="Nhập câu hỏi của bạn...">
+                    <button class="btn btn-primary ms-2">Gửi</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- SUPPORT TICKET TAB -->
+        <div class="tab-pane fade" id="ticket">
+            <div class="card shadow-sm p-3">
+                <h5>Tạo yêu cầu hỗ trợ</h5>
+                <form action="/teacher/help/ticket" method="POST">
+                    <input name="title" class="form-control mb-2" placeholder="Tiêu đề" required>
+                    <textarea name="description" class="form-control mb-2" rows="3" placeholder="Mô tả vấn đề" required></textarea>
+                    <button class="btn btn-success">Gửi yêu cầu</button>
+                </form>
+
+                <hr>
+                <h5>📋 Danh sách yêu cầu của bạn</h5>
+                <ul class="list-group">
+                    {% for t in tickets %}
+                    <li class="list-group-item">
+                        <b>{{ t.title }}</b> — <span class="badge bg-info">{{ t.status }}</span><br>
+                        {{ t.description }}<br>
+                        <small class="text-muted">{{ t.created_at }}</small>
+                    </li>
+                    {% else %}
+                    <li class="list-group-item text-muted">Chưa có yêu cầu nào.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.querySelector("#chat-form").onsubmit = async function(e) {
+    e.preventDefault();
+    const input = document.querySelector("#chat-input");
+    const box = document.querySelector("#chat-box");
+    const msg = input.value.trim();
+    if (!msg) return;
+
+    box.innerHTML += `<div><b>Bạn:</b> ${msg}</div>`;
+    input.value = "";
+
+    const res = await fetch("/teacher/help/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: `message=${encodeURIComponent(msg)}`
+    });
+    const data = await res.json();
+
+    box.innerHTML += `<div class='text-primary'><b>Trợ lý:</b> ${data.response}</div>`;
+    box.scrollTop = box.scrollHeight;
+};
+</script>
+{% endblock %}

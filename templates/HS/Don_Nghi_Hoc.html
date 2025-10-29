@@ -1,0 +1,752 @@
+{% extends "Menu_SV.html" %}
+
+{% block title %}Student Dashboard{% endblock %}
+
+{% block content %}
+
+ <!-- HEADER TRANG -->
+<div class="dn-page-header">
+  <div class="dn-container">
+    <h1 class="dn-page-title">Xin phép nghỉ học</h1>
+    <p class="dn-page-subtitle">Gửi đơn xin phép nghỉ học kèm minh chứng</p>
+  </div>
+</div>
+
+<!-- NỘI DUNG CHÍNH -->
+<div class="dn-container dn-py-4">
+  <div class="dn-row dn-justify-center">
+    <div class="dn-col-lg-8">
+      <div class="dn-form-container">
+        <form action="/don_nghi_hoc" method="POST" enctype="multipart/form-data" id="dnLeaveForm">
+          <!-- Thông tin người xin phép -->
+          <div class="dn-form-section">
+            <h4 class="dn-section-header">
+              <i class="fas fa-user-circle dn-section-icon"></i>Thông tin người xin phép
+            </h4>
+
+            <div class="dn-form-row">
+              <div class="dn-form-group dn-col-md-6">
+                <label class="dn-form-label dn-required">Họ và tên</label>
+                <input type="text" class="dn-form-control" name="student_name" required>
+              </div>
+              <div class="dn-form-group dn-col-md-6">
+                <label class="dn-form-label dn-required">Mã số sinh viên</label>
+                <input type="text" class="dn-form-control" name="student_id" required>
+              </div>
+            </div>
+
+            <div class="dn-form-row">
+              <div class="dn-form-group dn-col-md-6">
+                <label class="dn-form-label dn-required">Lớp</label>
+                <select class="dn-form-select" name="classes_id" id="classSelect" required>
+                  <option value="">-- Chọn lớp --</option>
+                  {% for cls in classes %}
+                    <option value="{{ cls.id }}">{{ cls.class_name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="dn-form-group dn-col-md-6">
+                <label class="dn-form-label dn-required">Số điện thoại</label>
+                <input type="tel" class="dn-form-control" name="phone" required>
+              </div>
+            </div>
+          </div>
+
+          <!-- Thông tin buổi học xin nghỉ -->
+          <div class="dn-form-section">
+            <h4 class="dn-section-header">
+              <i class="fas fa-calendar-alt dn-section-icon"></i>Buổi học xin nghỉ
+            </h4>
+
+            <div class="dn-form-group">
+              <label class="dn-form-label dn-required">Buổi học</label>
+              <select class="dn-form-select" name="session_id" id="sessionSelect" required>
+                <option value="">-- Chọn buổi học --</option>
+              </select>
+            </div>
+
+            <div class="dn-form-group">
+              <label class="dn-form-label dn-required">Lý do xin nghỉ</label>
+              <textarea class="dn-form-control" name="reason" rows="4" required placeholder="Mô tả chi tiết lý do xin nghỉ..."></textarea>
+            </div>
+          </div>
+
+          <!-- Tải lên minh chứng -->
+          <div class="dn-form-section">
+            <h4 class="dn-section-header">
+              <i class="fas fa-file-upload dn-section-icon"></i>Minh chứng
+            </h4>
+
+            <div class="dn-file-upload-container" id="dnFileUploadContainer">
+              <div class="dn-file-upload-icon">
+                <i class="fas fa-cloud-upload-alt"></i>
+              </div>
+              <p>Kéo thả file vào đây hoặc</p>
+              <label for="dnProofFile" class="dn-file-upload-label dn-btn dn-btn-outline">
+                Chọn file từ máy tính
+              </label>
+              <input type="file" class="dn-file-input" id="dnProofFile" name="proof_file" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx" required>
+              <div class="dn-file-name" id="dnFileName">Chưa có file nào được chọn</div>
+              <small class="dn-text-muted">Hỗ trợ định dạng: JPG, PNG, PDF, DOC (Tối đa 10MB)</small>
+            </div>
+          </div>
+
+          <!-- Nút gửi -->
+          <div class="dn-form-actions">
+            <button type="submit" class="dn-btn dn-btn-primary dn-btn-lg" id="dnSubmitBtn">
+              <i class="fas fa-paper-plane dn-btn-icon"></i>Gửi đơn xin nghỉ
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Lưu ý -->
+      <div class="dn-alert dn-alert-info">
+        <h5><i class="fas fa-info-circle dn-alert-icon"></i>Lưu ý</h5>
+        <ul class="dn-alert-list">
+          <li>Vui lòng điền đầy đủ và chính xác thông tin</li>
+          <li>Đơn xin nghỉ cần được gửi trước ít nhất 01 ngày</li>
+          <li>Minh chứng cần rõ ràng, dễ đọc (nếu là ảnh) hoặc đầy đủ thông tin (nếu là tài liệu)</li>
+          <li>Đơn sẽ được phê duyệt trong vòng 24-48 giờ làm việc</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal thông báo thành công -->
+<div class="dn-modal" id="dnSuccessModal">
+  <div class="dn-modal-content">
+    <div class="dn-modal-header">
+      <div class="dn-modal-icon success">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <h3 class="dn-modal-title">Gửi đơn thành công!</h3>
+    </div>
+    <div class="dn-modal-body">
+      <p>Đơn xin nghỉ học của bạn đã được gửi thành công và đang chờ phê duyệt.</p>
+      <p><strong>Thời gian xử lý:</strong> 24-48 giờ làm việc</p>
+      <p><strong>Liên hệ:</strong> Phòng Đào tạo - 0123.456.789</p>
+    </div>
+    <div class="dn-modal-footer">
+      <button type="button" class="dn-btn dn-btn-primary" id="dnModalCloseBtn">Đóng</button>
+    </div>
+  </div>
+</div>
+
+
+  <style>
+    /* Biến hệ thống */
+    :root {
+      --dn-primary: #3498db;
+      --dn-primary-dark: #2980b9;
+      --dn-secondary: #6c757d;
+      --dn-success: #28a745;
+      --dn-info: #17a2b8;
+      --dn-warning: #ffc107;
+      --dn-danger: #dc3545;
+      --dn-light: #f8f9fa;
+      --dn-dark: #343a40;
+      --dn-white: #ffffff;
+      --dn-gray: #6c757d;
+      --dn-gray-light: #e9ecef;
+      --dn-border-radius: 8px;
+      --dn-box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      --dn-transition: all 0.3s ease;
+    }
+
+    /* Layout styles */
+    .dn-container {
+      width: 100%;
+      padding-right: 15px;
+      padding-left: 15px;
+      margin-right: auto;
+      margin-left: auto;
+    }
+
+    @media (min-width: 576px) {
+      .dn-container {
+        max-width: 540px;
+      }
+    }
+
+    @media (min-width: 768px) {
+      .dn-container {
+        max-width: 720px;
+      }
+    }
+
+    @media (min-width: 992px) {
+      .dn-container {
+        max-width: 960px;
+      }
+    }
+
+    @media (min-width: 1200px) {
+      .dn-container {
+        max-width: 1140px;
+      }
+    }
+
+    .dn-row {
+      display: flex;
+      flex-wrap: wrap;
+      margin-right: -15px;
+      margin-left: -15px;
+    }
+
+    .dn-justify-center {
+      justify-content: center;
+    }
+
+    .dn-col-md-6 {
+      flex: 0 0 50%;
+      max-width: 50%;
+      padding: 0 15px;
+    }
+
+    .dn-col-lg-8 {
+      flex: 0 0 66.666667%;
+      max-width: 66.666667%;
+      padding: 0 15px;
+    }
+
+    /* Header styles */
+    .dn-page-header {
+      background: linear-gradient(135deg, var(--dn-primary) 0%, var(--dn-primary-dark) 100%);
+      color: var(--dn-white);
+      padding: 2rem 0;
+      margin-bottom: 2rem;
+    }
+
+    .dn-page-title {
+      font-size: 2.2rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .dn-page-subtitle {
+      font-size: 1.1rem;
+      opacity: 0.9;
+      margin-bottom: 0;
+    }
+
+    /* Spacing utilities */
+    .dn-py-4 {
+      padding-top: 1.5rem;
+      padding-bottom: 1.5rem;
+    }
+
+    .dn-mb-3 {
+      margin-bottom: 1rem;
+    }
+
+    .dn-mb-4 {
+      margin-bottom: 1.5rem;
+    }
+
+    /* Form styles */
+    .dn-form-container {
+      background-color: var(--dn-white);
+      border-radius: var(--dn-border-radius);
+      box-shadow: var(--dn-box-shadow);
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .dn-form-section {
+      margin-bottom: 2rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--dn-gray-light);
+    }
+
+    .dn-form-section:last-of-type {
+      border-bottom: none;
+    }
+
+    .dn-section-header {
+      display: flex;
+      align-items: center;
+      color: var(--dn-primary);
+      margin-bottom: 1.5rem;
+      font-weight: 600;
+    }
+
+    .dn-section-icon {
+      margin-right: 10px;
+      font-size: 1.2rem;
+    }
+
+    .dn-form-row {
+      display: flex;
+      flex-wrap: wrap;
+      margin-right: -15px;
+      margin-left: -15px;
+    }
+
+    .dn-form-group {
+      margin-bottom: 1rem;
+      width: 100%;
+    }
+
+    .dn-form-label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      color: var(--dn-dark);
+    }
+
+    .dn-required::after {
+      content: "*";
+      color: var(--dn-danger);
+      margin-left: 4px;
+    }
+
+    .dn-form-control,
+    .dn-form-select {
+      display: block;
+      width: 100%;
+      padding: 0.75rem 1rem;
+      font-size: 1rem;
+      font-weight: 400;
+      line-height: 1.5;
+      color: var(--dn-dark);
+      background-color: var(--dn-white);
+      background-clip: padding-box;
+      border: 1px solid #ced4da;
+      border-radius: var(--dn-border-radius);
+      transition: var(--dn-transition);
+    }
+
+    .dn-form-control:focus,
+    .dn-form-select:focus {
+      color: var(--dn-dark);
+      background-color: var(--dn-white);
+      border-color: var(--dn-primary);
+      outline: 0;
+      box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+    }
+
+    textarea.dn-form-control {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    /* File upload styles */
+    .dn-file-upload-container {
+      border: 2px dashed var(--dn-gray-light);
+      border-radius: var(--dn-border-radius);
+      padding: 2rem;
+      text-align: center;
+      transition: var(--dn-transition);
+      background-color: #f8f9fa;
+    }
+
+    .dn-file-upload-container:hover {
+      border-color: var(--dn-primary);
+      background-color: #e8f4ff;
+    }
+
+    .dn-file-upload-icon {
+      font-size: 3rem;
+      color: var(--dn-primary);
+      margin-bottom: 1rem;
+    }
+
+    .dn-file-upload-label {
+      display: inline-block;
+      cursor: pointer;
+      margin: 1rem 0;
+    }
+
+    .dn-file-input {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      border: 0;
+    }
+
+    .dn-file-name {
+      margin-top: 0.5rem;
+      font-weight: 500;
+    }
+
+    .dn-text-muted {
+      color: var(--dn-gray) !important;
+      font-size: 0.875rem;
+    }
+
+    /* Button styles */
+    .dn-form-actions {
+      text-align: center;
+      margin-top: 2rem;
+    }
+
+    .dn-btn {
+      display: inline-block;
+      font-weight: 500;
+      text-align: center;
+      vertical-align: middle;
+      cursor: pointer;
+      user-select: none;
+      background-color: transparent;
+      border: 1px solid transparent;
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      line-height: 1.5;
+      border-radius: var(--dn-border-radius);
+      transition: var(--dn-transition);
+      text-decoration: none;
+    }
+
+    .dn-btn-lg {
+      padding: 0.875rem 2rem;
+      font-size: 1.1rem;
+    }
+
+    .dn-btn-primary {
+      color: var(--dn-white);
+      background-color: var(--dn-primary);
+      border-color: var(--dn-primary);
+    }
+
+    .dn-btn-primary:hover {
+      background-color: var(--dn-primary-dark);
+      border-color: var(--dn-primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .dn-btn-outline {
+      color: var(--dn-primary);
+      border-color: var(--dn-primary);
+    }
+
+    .dn-btn-outline:hover {
+      color: var(--dn-white);
+      background-color: var(--dn-primary);
+    }
+
+    .dn-btn-icon {
+      margin-right: 0.5rem;
+    }
+
+    /* Alert styles */
+    .dn-alert {
+      position: relative;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1rem;
+      border: 1px solid transparent;
+      border-radius: var(--dn-border-radius);
+    }
+
+    .dn-alert-info {
+      color: #055160;
+      background-color: #cff4fc;
+      border-color: #b6effb;
+    }
+
+    .dn-alert-icon {
+      margin-right: 0.5rem;
+    }
+
+    .dn-alert-list {
+      margin-bottom: 0;
+      padding-left: 1.5rem;
+    }
+
+    .dn-alert-list li {
+      margin-bottom: 0.25rem;
+    }
+
+    /* Modal styles */
+    .dn-modal {
+      display: none;
+      position: fixed;
+      z-index: 9999;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      animation: fadeIn 0.3s ease;
+    }
+
+    .dn-modal-content {
+      background-color: var(--dn-white);
+      margin: 10% auto;
+      padding: 0;
+      border-radius: var(--dn-border-radius);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      width: 90%;
+      max-width: 500px;
+      animation: slideIn 0.3s ease;
+    }
+
+    .dn-modal-header {
+      padding: 2rem 2rem 1rem;
+      text-align: center;
+      border-bottom: 1px solid var(--dn-gray-light);
+    }
+
+    .dn-modal-icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+    }
+
+    .dn-modal-icon.success {
+      color: var(--dn-success);
+    }
+
+    .dn-modal-title {
+      color: var(--dn-success);
+      margin-bottom: 0;
+      font-weight: 600;
+    }
+
+    .dn-modal-body {
+      padding: 1.5rem 2rem;
+      text-align: center;
+    }
+
+    .dn-modal-body p {
+      margin-bottom: 0.75rem;
+    }
+
+    .dn-modal-footer {
+      padding: 1rem 2rem 2rem;
+      text-align: center;
+      border-top: 1px solid var(--dn-gray-light);
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-50px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Footer styles */
+    .dn-footer {
+      background-color: var(--dn-dark);
+      color: var(--dn-white);
+      padding: 2rem 0 1rem;
+      margin-top: 3rem;
+    }
+
+    .dn-footer-content {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+
+    .dn-footer-section {
+      flex: 1;
+      min-width: 250px;
+      margin-bottom: 1rem;
+    }
+
+    .dn-footer-section h5 {
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+    }
+
+    .dn-social-links {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .dn-social-link {
+      color: var(--dn-white);
+      font-size: 1.5rem;
+      transition: var(--dn-transition);
+    }
+
+    .dn-social-link:hover {
+      color: var(--dn-primary);
+      transform: translateY(-2px);
+    }
+
+    .dn-footer-divider {
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      margin: 1rem 0;
+    }
+
+    .dn-footer-copyright {
+      text-align: center;
+      margin-bottom: 0;
+      font-size: 0.9rem;
+      opacity: 0.8;
+    }
+  </style>
+
+  <script>
+document.addEventListener('DOMContentLoaded', function() {
+  const fileInput = document.getElementById('dnProofFile');
+  const fileName = document.getElementById('dnFileName');
+  const fileUploadContainer = document.getElementById('dnFileUploadContainer');
+  const leaveForm = document.getElementById('dnLeaveForm');
+  const successModal = document.getElementById('dnSuccessModal');
+  const modalCloseBtn = document.getElementById('dnModalCloseBtn');
+  const submitBtn = document.getElementById('dnSubmitBtn');
+
+  // Helper: show modal (block) và focus
+  function showModal(modal) {
+    modal.style.display = 'block';
+    // optional: set focus vào nút đóng nếu cần
+    const btn = modal.querySelector('button');
+    if (btn) btn.focus();
+  }
+
+  function hideModal(modal) {
+    modal.style.display = 'none';
+  }
+
+  // Hiển thị tên file khi chọn
+  fileInput.addEventListener('change', function() {
+    fileName.textContent = this.files.length > 0 ? this.files[0].name : 'Chưa có file nào được chọn';
+  });
+
+  // Kéo thả file
+  fileUploadContainer.addEventListener('dragover', e => {
+    e.preventDefault();
+    fileUploadContainer.style.borderColor = 'var(--dn-primary)';
+    fileUploadContainer.style.backgroundColor = '#e8f4ff';
+  });
+  fileUploadContainer.addEventListener('dragleave', () => {
+    fileUploadContainer.style.borderColor = 'var(--dn-gray-light)';
+    fileUploadContainer.style.backgroundColor = '#f8f9fa';
+  });
+  fileUploadContainer.addEventListener('drop', e => {
+    e.preventDefault();
+    fileUploadContainer.style.borderColor = 'var(--dn-gray-light)';
+    fileUploadContainer.style.backgroundColor = '#f8f9fa';
+    if (e.dataTransfer.files.length) {
+      fileInput.files = e.dataTransfer.files;
+      fileName.textContent = e.dataTransfer.files[0].name;
+    }
+  });
+
+  // Gửi form bằng AJAX (fetch)
+  leaveForm.addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    // disable button
+    submitBtn.disabled = true;
+    const originalBtnHtml = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin dn-btn-icon"></i> Đang gửi...';
+
+    const formData = new FormData(leaveForm);
+
+    try {
+      const response = await fetch("/don_nghi_hoc", {
+        method: "POST",
+        body: formData,
+        credentials: 'same-origin' // giữ cookie session nếu cần
+      });
+
+      // Nếu server trả JSON thì parse, nếu không thì lấy text
+      const contentType = response.headers.get('content-type') || '';
+      let result = { success: false, message: '' };
+
+      if (contentType.includes('application/json')) {
+        result = await response.json();
+      } else {
+        // server có thể trả html/text (ví dụ bạn chưa đổi route) -> treat as text
+        const text = await response.text();
+        // cố gắng detect success trong text hoặc show text như message
+        result.message = text;
+        result.success = response.ok;
+      }
+
+      if (response.ok && result.success) {
+        // Hiển thị modal thành công
+        showModal(successModal);
+
+        // Reset form nhẹ nhàng
+        leaveForm.reset();
+        fileName.textContent = 'Chưa có file nào được chọn';
+      } else {
+        // Nếu server trả lỗi (status >=400) hoặc result.success = false
+        const errMsg = result.message || `Lỗi server (status ${response.status})`;
+        alert("Gửi đơn thất bại: " + errMsg);
+        console.error("don_nghi_hoc error:", errMsg);
+      }
+    } catch (err) {
+      console.error("Network error khi gửi đơn:", err);
+      alert("Lỗi kết nối, vui lòng thử lại.");
+    } finally {
+      // restore button
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalBtnHtml;
+    }
+  });
+
+  // Đóng modal
+  modalCloseBtn.addEventListener('click', function() {
+    hideModal(successModal);
+  });
+
+  // Đóng modal khi click bên ngoài
+  window.addEventListener('click', function(e) {
+    if (e.target === successModal) hideModal(successModal);
+  });
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const classSelect = document.getElementById('classSelect');
+  const sessionSelect = document.getElementById('sessionSelect');
+
+  // Khi chọn lớp, fetch danh sách buổi học
+  classSelect.addEventListener('change', async function() {
+    const classId = this.value;
+    sessionSelect.innerHTML = '<option value="">-- Đang tải buổi học --</option>';
+
+    if (!classId) {
+      sessionSelect.innerHTML = '<option value="">-- Chọn buổi học --</option>';
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/get_sessions/${classId}`);
+      if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+      const sessions = await response.json();
+
+      if (sessions.length === 0) {
+        sessionSelect.innerHTML = '<option value="">-- Không có buổi học nào --</option>';
+      } else {
+        sessionSelect.innerHTML = '<option value="">-- Chọn buổi học --</option>';
+        sessions.forEach(s => {
+          const option = document.createElement('option');
+          option.value = s.id;
+          option.textContent = `Buổi ${s.session_number} - ${s.date}`;
+          sessionSelect.appendChild(option);
+        });
+      }
+    } catch (err) {
+      console.error("Lỗi khi tải buổi học:", err);
+      sessionSelect.innerHTML = '<option value="">-- Lỗi tải buổi học --</option>';
+    }
+  });
+});
+</script>
+
+
+
+{% endblock %}
