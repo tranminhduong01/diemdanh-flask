@@ -77,22 +77,44 @@
   </div>
 </div>
 
-<!-- =======================
-     MODAL CẬP NHẬT THÔNG TIN SINH VIÊN
-======================= -->
+<!-- Modal -->
 <div class="modal fade" id="updateStudentModal" tabindex="-1" aria-labelledby="updateStudentModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content border-0 rounded-3 shadow-lg">
-      <div class="modal-header bg-primary text-white">
-        <h5 class="modal-title" id="updateStudentModalLabel">
-          <i class="bi bi-person-lines-fill me-2"></i>Cập nhật thông tin sinh viên
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+
+      <!-- Modal Header -->
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold text-primary" id="updateStudentModalLabel">
+          <i class="bi bi-person-badge me-2"></i> Cập nhật thông tin sinh viên
         </h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
       </div>
+
+      <!-- Modal Body -->
       <form method="post">
         <div class="modal-body px-4 py-3">
           <input type="hidden" name="update_student" value="1">
 
+          <!-- Thông tin tài khoản -->
+          <div class="border-bottom pb-2 mb-3">
+            <h6 class="fw-bold text-primary mb-2">Thông tin tài khoản</h6>
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">Tên người dùng</label>
+                <input type="text" name="name" class="form-control" value="{{ user.name or '' }}">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">Tên đăng nhập</label>
+                <input type="text" name="username" class="form-control" value="{{ user.username or '' }}">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">Email</label>
+                <input type="email" name="email" class="form-control" value="{{ user.email or '' }}">
+              </div>
+            </div>
+          </div>
+
+          <!-- Thông tin sinh viên -->
           <div class="row g-3">
             <div class="col-md-6">
               <label class="form-label fw-semibold">Số điện thoại</label>
@@ -128,18 +150,31 @@
             </div>
           </div>
         </div>
+
+        <!-- Modal Footer -->
         <div class="modal-footer d-flex justify-content-between">
           <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">
-            <i class="bi bi-x-circle me-1"></i>Hủy
+            <i class="bi bi-x-circle me-1"></i> Hủy
           </button>
           <button type="submit" class="btn btn-primary px-4">
-            <i class="bi bi-check-circle me-1"></i>Xác nhận cập nhật
+            <i class="bi bi-check-circle me-1"></i> Xác nhận cập nhật
           </button>
         </div>
       </form>
+
     </div>
   </div>
 </div>
+
+<!-- Nút kích hoạt Modal (ví dụ) -->
+
+
+
+<!-- Bootstrap CSS -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<!-- Bootstrap JS (cần cho modal) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <style>
   .profile-card {

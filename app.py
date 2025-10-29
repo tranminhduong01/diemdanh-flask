@@ -5,10 +5,9 @@ from flask import Flask, request, redirect, url_for, flash, session, render_temp
 import os
 from openpyxl.workbook import Workbook
 from werkzeug.utils import secure_filename
-# ❌ Nặng - KHÔNG hỗ trợ trên Render (AI + Nhận diện khuôn mặt)
-# import face_recognition
-# import numpy as np
-# from PIL import Image, ImageOps, ImageFile
+import face_recognition
+import numpy as np
+from PIL import Image, ImageOps, ImageFile
 import io
 from datetime import date, datetime
 import random
@@ -16,19 +15,17 @@ from werkzeug.security import check_password_hash, generate_password_hash
 import json
 from flask_apscheduler import APScheduler
 from flask_socketio import SocketIO, emit
-# ❌ Không dùng khi deploy (AI chatbot)
-# from ai import get_ai_response
-# from google.genai import Client, types
+from ai import get_ai_response
+from google.genai import Client, types
 from email.message import EmailMessage
 import smtplib
 from email.mime.text import MIMEText
 from flask_mail import Mail, Message
 from itsdangerous import URLSafeTimedSerializer
-# ❌ Nếu không có file .env thì cũng có thể bỏ qua
 from dotenv import load_dotenv
 
 # Nếu dùng PIL ở local, giữ lại dòng dưới:
-# ImageFile.LOAD_TRUNCATED_IMAGES = True
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 load_dotenv()
 
@@ -41,11 +38,11 @@ socketio = SocketIO(app)
 # =============================
 def get_connection():
     return mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="123456",
-        database="face_attendance",
-        auth_plugin="mysql_native_password"
+        host="by7zig60biczjuvswrdz-mysql.services.clever-cloud.com",
+        user="uumdfgygkm0wytsg",
+        password="4Ji7vJxqSuMbuGDzKn2i",
+        database="by7zig60biczjuvswrdz",
+        port=3306
     )
 
 def add_notification(user_id, title, message):
@@ -2983,69 +2980,42 @@ def info_canhan():
     try:
         # --- Nếu người dùng gửi form ---
         if request.method == "POST":
-            # ==============
-            # CẬP NHẬT USERS
-            # ==============
-            if "update_user" in request.form:
-                name = request.form.get("name")
-                username = request.form.get("username")
-                email = request.form.get("email")
+            # Lấy dữ liệu chung
+            name = request.form.get("name")
+            username = request.form.get("username")
+            email = request.form.get("email")
+            phone = request.form.get("phone")
+            birthday = request.form.get("birthday")
+            gender = request.form.get("gender")
+            school = request.form.get("school")
+            class_name = request.form.get("class")
+            course_year = request.form.get("course_year")
+            major = request.form.get("major")
 
-                # --- Xử lý file upload (ảnh đại diện) ---
-                file = request.files.get("avatar")
-                if file and allowed_file(file.filename):
-                    filename = secure_filename(file.filename)
-                    save_path = os.path.join(app.config["UPLOAD_FOLDER1"], f"user_{user_id}_{filename}")
-                    file.save(save_path)
+            # ---- CẬP NHẬT USERS ----
+            cursor.execute("""
+                UPDATE users
+                SET name=%s, username=%s, email=%s
+                WHERE id=%s
+            """, (name, username, email, user_id))
 
-                    avatar_path = f"avatars/user_{user_id}_{filename}"
-
-                    cursor.execute("""
-                        UPDATE users
-                        SET avatar = %s
-                        WHERE id = %s
-                    """, (avatar_path, user_id))
-
-                # --- Cập nhật thông tin user ---
+            # ---- CẬP NHẬT STUDENT ----
+            cursor.execute("SELECT * FROM student WHERE user_id = %s", (user_id,))
+            existing = cursor.fetchone()
+            if existing:
                 cursor.execute("""
-                    UPDATE users
-                    SET name=%s, username=%s, email=%s
-                    WHERE id=%s
-                """, (name, username, email, user_id))
+                    UPDATE student
+                    SET phone=%s, birthday=%s, gender=%s, school=%s, class=%s, course_year=%s, major=%s
+                    WHERE user_id=%s
+                """, (phone, birthday, gender, school, class_name, course_year, major, user_id))
+            else:
+                cursor.execute("""
+                    INSERT INTO student (user_id, phone, birthday, gender, school, class, course_year, major)
+                    VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
+                """, (user_id, phone, birthday, gender, school, class_name, course_year, major))
 
-                conn.commit()
-                flash("✅ Cập nhật thông tin tài khoản thành công.", "success")
-
-            # ===================
-            # CẬP NHẬT SINH VIÊN
-            # ===================
-            elif "update_student" in request.form:
-                phone = request.form.get("phone")
-                birthday = request.form.get("birthday")
-                gender = request.form.get("gender")
-                school = request.form.get("school")
-                class_name = request.form.get("class")
-                course_year = request.form.get("course_year")
-                major = request.form.get("major")
-
-                # Kiểm tra sinh viên đã có record chưa
-                cursor.execute("SELECT * FROM student WHERE user_id = %s", (user_id,))
-                existing = cursor.fetchone()
-
-                if existing:
-                    cursor.execute("""
-                        UPDATE student
-                        SET phone=%s, birthday=%s, gender=%s, school=%s, class=%s, course_year=%s, major=%s
-                        WHERE user_id=%s
-                    """, (phone, birthday, gender, school, class_name, course_year, major, user_id))
-                else:
-                    cursor.execute("""
-                        INSERT INTO student (user_id, phone, birthday, gender, school, class, course_year, major)
-                        VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
-                    """, (user_id, phone, birthday, gender, school, class_name, course_year, major))
-
-                conn.commit()
-                flash("✅ Cập nhật thông tin sinh viên thành công.", "success")
+            conn.commit()
+            flash("✅ Cập nhật thông tin cá nhân thành công.", "success")
 
         # --- Lấy lại dữ liệu sau khi cập nhật ---
         cursor.execute("""
@@ -3502,7 +3472,7 @@ def quen_mat_khau():
             conn.commit()
 
             # ✅ Thay bằng link public của ngrok
-            ngrok_url = "https://diemdanh-flask-jf27.onrender.com"
+            ngrok_url = "http://127.0.0.1:5000"  # hoặc link public nếu dùng ngrok
             reset_url = f"{ngrok_url}/dat_lai_mat_khau/{token}"
 
             # ---------- GỬI EMAIL ----------
