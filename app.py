@@ -3496,7 +3496,7 @@ def quen_mat_khau():
             conn.commit()
 
             # ✅ Thay bằng link public của ngrok
-            ngrok_url = "https://noiseless-qualifiedly-martin.ngrok-free.dev"
+            ngrok_url = "https://diemdanh-flask-jf27.onrender.com"
             reset_url = f"{ngrok_url}/dat_lai_mat_khau/{token}"
 
             # ---------- GỬI EMAIL ----------
