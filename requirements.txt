@@ -3,7 +3,7 @@
 # ===============================
 Flask==2.3.3
 Werkzeug==2.3.7
-Flask-APScheduler==1.13.4
+Flask-APScheduler==1.13.1
 Flask-SocketIO==6.3.2
 Flask-Mail==0.9.1
 itsdangerous==2.1.2
