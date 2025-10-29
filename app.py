@@ -3837,7 +3837,7 @@ def lich_su_diem_danh():
 
 
 
-client = Client(api_key="AIzaSyDymlFtdZhgmaA8Jw1FQnSaENuz5GZ1cdA")  # Thay bằng API key thật
+#client = Client(api_key="AIzaSyDymlFtdZhgmaA8Jw1FQnSaENuz5GZ1cdA")  # Thay bằng API key thật
 
 
 # --- Hàm lấy context từ DB ---
