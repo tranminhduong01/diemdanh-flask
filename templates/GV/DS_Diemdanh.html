@@ -60,9 +60,14 @@
                     </div>
                     <div class="gv-class-footer">
                         <button class="gv-class-btn gv-view-sessions-btn">Xem buổi học</button>
-                        <button class="gv-class-btn gv-edit-btn">Chỉnh sửa</button>
+                        <button class="gv-class-btn gv-edit-btn">
+                            <a href="/xemlop/{{ cls.id }}" class="class-btn view-btn">
+                                <i class="fas fa-eye"></i> Xem
+                            </a>
+                        </button>
                     </div>
                 </div>
+
                 {% endfor %}
             </div>
         </div>

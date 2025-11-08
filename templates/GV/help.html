@@ -40,12 +40,46 @@
                 <ul class="list-group">
                     {% for t in tickets %}
                     <li class="list-group-item">
-                        <b>{{ t.title }}</b> — <span class="badge bg-info">{{ t.status }}</span><br>
-                        {{ t.description }}<br>
-                        <small class="text-muted">{{ t.created_at }}</small>
+                         <div>
+                            <b>{{ t.title }}</b> — <span class="badge bg-info">{{ t.status }}</span><br>
+                            {{ t.description }}<br>
+                            <small class="text-muted">{{ t.created_at }}</small>
+                        </div>
+
+                        <!-- Nút mở modal xác nhận -->
+                        <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#confirmDelete{{ t.id }}">
+                            <i class="fas fa-trash"></i>
+                        </button>
                     </li>
                     {% else %}
                     <li class="list-group-item text-muted">Chưa có yêu cầu nào.</li>
+                    <!-- Modal Xác Nhận Xóa -->
+                    <div class="modal fade" id="confirmDelete{{ t.id }}" tabindex="-1">
+                      <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+
+                          <div class="modal-header">
+                            <h5 class="modal-title">Xác nhận xóa</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                          </div>
+
+                          <div class="modal-body">
+                            Bạn có chắc muốn xóa yêu cầu hỗ trợ:
+                            <br><b>{{ t.title }}</b>?
+                            <br><span class="text-danger">Thao tác này không thể hoàn tác.</span>
+                          </div>
+
+                          <div class="modal-footer">
+                            <button class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+
+                            <form action="/teacher/help/ticket/delete/{{ t.id }}" method="POST">
+                              <button type="submit" class="btn btn-danger">Xóa</button>
+                            </form>
+                          </div>
+
+                        </div>
+                      </div>
+                    </div>
                     {% endfor %}
                 </ul>
             </div>

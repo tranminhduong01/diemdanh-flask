@@ -1,5 +1,7 @@
 {% extends "Menu_SV.html" %}
 {% block content %}
+{% include "chat_bot.html" %}
+
 <div class="container-fluid py-4">
   <div class="card border-0 shadow-sm rounded-4">
     <!-- Tiêu đề -->
@@ -75,8 +77,9 @@
               <th>Lý do</th>
               <th>Minh chứng</th>
               <th>Trạng thái</th>
+              <th>Hành động</th> <!-- THÊM -->
             </tr>
-          </thead>
+        </thead>
           <tbody>
             {% for item in requests %}
             <tr>
@@ -103,6 +106,16 @@
                 <span class="badge status-pending">Chờ duyệt</span>
                 {% endif %}
               </td>
+              <td>
+              {% if item.status == 'Pending' %}
+                <a href="/xoa_don_nghi_phep/{{ item.request_id }}"
+                   class="btn btn-danger btn-sm fw-semibold"
+                  <i class="fas fa-trash-alt me-1"></i> Xóa
+                </a>
+              {% else %}
+                <span class="text-muted small fst-italic">Không thể xóa</span>
+              {% endif %}
+            </td>
             </tr>
             {% endfor %}
           </tbody>
@@ -121,6 +134,39 @@
     </div>
   </div>
 </div>
+<div class="modal fade" id="notifyModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Thông báo</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p id="notifyMessage"></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Đóng</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const modal = new bootstrap.Modal(document.getElementById("notifyModal"));
+      const msg = "{{ messages[0][1] }}";
+      const type = "{{ messages[0][0] }}";
+
+      const msgBox = document.getElementById("notifyMessage");
+      msgBox.textContent = msg;
+
+      msgBox.className = (type === "success") ? "text-success fw-bold" : "text-danger fw-bold";
+      modal.show();
+    });
+  </script>
+  {% endif %}
+{% endwith %}
 
 <style>
 /* Cấu trúc chung */

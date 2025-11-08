@@ -259,7 +259,13 @@
         .tp-quick-actions {
             grid-template-columns: repeat(2, 1fr);
         }
+
     }
+    .activity-item.unread {
+        background: #f3f8ff;
+        border-left: 4px solid #007bff;
+    }
+
 </style>
 
     <div class="tp-welcome-section">
@@ -364,45 +370,13 @@
                 </h3>
                 <ul class="tp-activity-list">
                     {% for act in activities %}
-                    <li class="tp-activity-item">
-                        <!-- Icon -->
-                        <div class="tp-activity-icon"
-                             style="
-                                {% if act.type == 'attendance' %}background: rgba(52, 152, 219, 0.1); color: #3498db;
-                                {% elif act.type == 'class' %}background: rgba(46, 204, 113, 0.1); color: #2ecc71;
-                                {% elif act.type == 'leave' %}background: rgba(241, 196, 15, 0.1); color: #f1c40f;
-                                {% elif act.type == 'message' %}background: rgba(230, 126, 34, 0.1); color: #e67e22;
-                                {% elif act.type == 'enrolment' %}background: rgba(155, 89, 182, 0.1); color: #9b59b6;
-                                {% else %}background: rgba(149, 165, 166, 0.1); color: #95a5a6;
-                                {% endif %}
-                             ">
-                            <i class="fas
-                                {% if act.type == 'attendance' %} fa-check-circle
-                                {% elif act.type == 'class' %} fa-file-upload
-                                {% elif act.type == 'leave' %} fa-exclamation-circle
-                                {% elif act.type == 'message' %} fa-comment
-                                {% elif act.type == 'enrolment' %} fa-user-plus
-                                {% else %} fa-info-circle
-                                {% endif %}
-                            "></i>
+                        <div class="activity-item {% if act.is_read == 0 %}unread{% endif %}">
+                            <strong>{{ act.title }}</strong><br>
+                            <span>{{ act.description }}</span><br>
+                            <small>{{ act.time }}</small>
                         </div>
-
-                        <!-- Nội dung -->
-                        <div class="tp-activity-content">
-                            <h4>{{ act.title }}</h4>
-                            <p>{{ act.description }}</p>
-                        </div>
-
-                        <!-- Thời gian -->
-                       <div class="tp-activity-time">
-                            {% if act.time %}
-                                {{ act.time|time_ago }}
-                            {% else %}
-                                Chưa có
-                            {% endif %}
-                        </div>
-                    </li>
                     {% endfor %}
+
                 </ul>
             </div>
         </div>

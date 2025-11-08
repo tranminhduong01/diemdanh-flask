@@ -231,6 +231,7 @@
       font-size: 0.9rem;
     }
 
+
     /* Mobile menu improvements */
     @media (max-width: 991.98px) {
       .navbar-collapse {
@@ -254,13 +255,106 @@
         color: rgba(255,255,255,0.9);
       }
     }
+
   </style>
+
   <style>
   .menu-content {
       max-width: 1200px;
       margin: 0 auto; /* căn giữa toàn bộ nội dung */
   }
   </style>
+<style>
+/* ===== Lớp ngoài ===== */
+#notif-dropdown {
+  width: 280px;
+  border-radius: 12px;
+  overflow: hidden; /* hide inner overflow outside */
+  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+  background-color: #fff;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+/* ===== Lớp trong ===== */
+#notif-items-container {
+  max-height: 380px; /* container scrollable */
+  overflow-y: auto;
+  overflow-x: hidden;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 4px;
+  box-sizing: border-box;
+
+  /* Scrollbar ẩn nhưng vẫn cuộn được */
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: transparent transparent;
+}
+#notif-items-container::-webkit-scrollbar {
+  width: 0px; /* Chrome/Edge/Safari */
+}
+#notif-items-container::-webkit-scrollbar-thumb {
+  background-color: rgba(0,0,0,0.2);
+  border-radius: 3px;
+}
+#notif-items-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ===== Item thông báo ===== */
+#notif-items .notification {
+  background: #fff;
+  margin-bottom: 4px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+#notif-items .notification:hover {
+  background-color: #e6f2ff;
+  transform: translateY(-1px);
+}
+
+#notif-items .notification.unread {
+  border-left: 4px solid #007bff;
+  font-weight: 500;
+}
+
+/* Tiêu đề, nội dung, thời gian */
+#notif-items .notification h5 {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+}
+#notif-items .notification p {
+  margin: 0;
+  font-size: 13px;
+  color: #555;
+}
+#notif-items .notification small {
+  font-size: 11px;
+  color: #888;
+}
+
+/* Button đánh dấu đã đọc */
+#notif-items .notification button {
+  margin-top: 6px;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 5px;
+  border: none;
+  background-color: #007bff;
+  color: white;
+  cursor: pointer;
+}
+#notif-items .notification button:hover {
+  background-color: #0056b3;
+}
+
+/* Ngăn không cho body xuất scroll ngang */
+body {
+  overflow-x: hidden;
+}
+</style>
 
 </head>
 <body>
@@ -315,20 +409,25 @@
           </li>
 
           <!-- 🔔 Icon thông báo -->
-          <li class="nav-item dropdown position-relative me-2">
-            <a class="nav-link sp-navlink" href="#" id="notifBtn" role="button">
-              <i class="bi bi-bell-fill fs-5"></i>
-              <span id="notif-count"
-                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-                style="font-size: 0.6rem; display: none;">
-              </span>
-            </a>
-            <div id="notif-dropdown"
-              class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3 p-0"
-              style="width: 300px; max-height: 320px; overflow-y: auto; display: none;">
+         <li class="nav-item dropdown position-relative me-2">
+          <a class="nav-link sp-navlink" href="#" id="notifBtn" role="button">
+            <i class="bi bi-bell-fill fs-5"></i>
+            <span id="notif-count"
+                  class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                  style="font-size: 0.6rem; display: none;">
+            </span>
+          </a>
+
+          <!-- Lớp ngoài -->
+          <div id="notif-dropdown"
+               class="dropdown-menu dropdown-menu-end shadow border-0 p-0"
+               style="display: none;">
+            <!-- Lớp trong -->
+            <div id="notif-items-container">
               <div id="notif-items"></div>
             </div>
-          </li>
+          </div>
+        </li>
 
           <!-- User dropdown -->
           <li class="nav-item dropdown">
@@ -558,7 +657,7 @@ document.addEventListener("DOMContentLoaded", function () {
               <div class="fw-semibold text-primary">${n.title}</div>
               <div>${n.message}</div>
               <div class="text-muted mt-1" style="font-size: 0.75rem;">
-                ${new Date(n.created_at).toLocaleString()}
+                ${n.created_at}
               </div>
             </div>`;
         });

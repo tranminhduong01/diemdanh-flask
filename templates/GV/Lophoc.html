@@ -515,9 +515,9 @@
                     <button class="class-btn edit-btn">
                         <i class="fas fa-edit"></i> Sửa
                     </button>
-                    <a href="/xemlop/{{ c.id }}" class="class-btn view-btn">
-                        <i class="fas fa-eye"></i> Xem
-                    </a>
+                    <button type="button" class="btn btn-danger deleteClassBtn">
+                        <i class="fas fa-trash me-1"></i> Xóa
+                    </button>
                 </div>
             </div>
             {% endfor %}
@@ -625,15 +625,15 @@
 
                         <div class="col-md-6">
                             <label class="form-label">Thứ trong tuần</label>
-                            <select class="form-select" id="editDayOfWeek" required>
+                            <select class="form-select" id="editDayOfWeek" disabled>
                                 <option value="">-- Chọn --</option>
-                                <option>Thứ 2</option>
-                                <option>Thứ 3</option>
-                                <option>Thứ 4</option>
-                                <option>Thứ 5</option>
-                                <option>Thứ 6</option>
-                                <option>Thứ 7</option>
-                                <option>Chủ nhật</option>
+                                <option value="Thứ 2">Thứ 2</option>
+                                <option value="Thứ 3">Thứ 3</option>
+                                <option value="Thứ 4">Thứ 4</option>
+                                <option value="Thứ 5">Thứ 5</option>
+                                <option value="Thứ 6">Thứ 6</option>
+                                <option value="Thứ 7">Thứ 7</option>
+                                <option value="Chủ nhật">Chủ nhật</option>
                             </select>
                         </div>
 
@@ -666,9 +666,6 @@
             </div>
 
             <div class="modal-footer">
-                <button type="button" class="btn btn-danger" id="deleteClass">
-                    <i class="fas fa-trash me-1"></i> Xóa
-                </button>
                 <button type="submit" class="btn btn-primary" form="editClassForm">
                     <i class="fas fa-save me-1"></i> Lưu
                 </button>
@@ -677,16 +674,54 @@
     </div>
 </div>
 
+<!-- Modal Xem Chi Tiết Lớp -->
+<div class="modal fade" id="viewClassModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Chi tiết lớp học</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+
+        <div class="row">
+          <div class="col-md-6">
+            <p><strong>Mã lớp:</strong> <span id="viewClassCode"></span></p>
+            <p><strong>Tên lớp:</strong> <span id="viewClassName"></span></p>
+            <p><strong>Giảng viên:</strong> <span id="viewTeacherName"></span></p>
+            <p><strong>Số lượng tối đa:</strong> <span id="viewMaxStudents"></span></p>
+          </div>
+
+          <div class="col-md-6">
+            <p><strong>Phòng học:</strong> <span id="viewRoom"></span></p>
+            <p><strong>Thời gian:</strong> <span id="viewDayOfWeek"></span>,
+               <span id="viewStartTime"></span> đến <span id="viewEndTime"></span>
+            </p>
+            <p><strong>Ngày bắt đầu:</strong> <span id="viewStartDate"></span></p>
+            <p><strong>Số tuần:</strong> <span id="viewWeeks"></span></p>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
     document.getElementById("createClassForm").addEventListener("submit", async function(e) {
-        e.preventDefault();
+    e.preventDefault();
 
-        const formData = new FormData(this);
-        const data = Object.fromEntries(formData.entries());
+    const formData = new FormData(this);
+    const data = Object.fromEntries(formData.entries());
 
+    try {
         const res = await fetch("/api/taolop", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
@@ -694,16 +729,47 @@
         });
 
         const result = await res.json();
+
         if (res.ok) {
-            alert("Tạo lớp thành công!");
-            location.reload();
+            Swal.fire({
+                title: "🎉 Tạo lớp thành công!",
+                text: `Lớp "${data.class_name}" đã được thêm.`,
+                icon: "success",
+                timer: 1500,
+                showConfirmButton: false
+            }).then(() => {
+                location.reload();
+            });
         } else {
-            alert("Lỗi: " + (result.error || "Không xác định"));
+            Swal.fire({
+                title: "❌ Không thể tạo lớp",
+                text: result.error || "Đã có lỗi xảy ra",
+                icon: "error"
+            });
         }
+    } catch (err) {
+        Swal.fire({
+            title: "⚠️ Lỗi kết nối!",
+            text: "Không thể kết nối đến server.",
+            icon: "error"
+        });
+        console.error(err);
+    }
     });
+
 
     document.addEventListener("DOMContentLoaded", function () {
         // Bắt sự kiện click nút "Sửa"
+        function getDayOfWeek(dateStr) {
+                const days = ["Chủ nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
+                const d = new Date(dateStr);
+                return days[d.getDay()];
+            }
+
+            document.getElementById("editStartDate").addEventListener("change", function () {
+                const day = getDayOfWeek(this.value);
+                document.getElementById("editDayOfWeek").value = day;
+            });
         document.addEventListener("click", function (e) {
             const editBtn = e.target.closest(".edit-btn");
             if (!editBtn) return;
@@ -721,11 +787,36 @@
             document.getElementById("editMaxStudents").value = card.getAttribute("data-max-students");
             document.getElementById("editStartDate").value = card.getAttribute("data-start-date");
             document.getElementById("editWeeks").value = card.getAttribute("data-weeks");
+            document.getElementById("editDayOfWeek").value = getDayOfWeek(card.getAttribute("data-start-date"));
+
 
             // Mở modal
             const modal = new bootstrap.Modal(document.getElementById('editClassModal'));
             modal.show();
         });
+        document.querySelectorAll('.class-card').forEach(card => {
+            card.addEventListener('click', function(e) {
+
+                // Không mở modal khi người dùng bấm nút Sửa hoặc Xóa
+                if (e.target.closest('.class-actions')) return;
+
+                document.getElementById('viewClassCode').textContent = this.dataset.classId;
+                document.getElementById('viewClassName').textContent = this.dataset.className;
+                document.getElementById('viewTeacherName').textContent = this.dataset.teacherName;
+                document.getElementById('viewRoom').textContent = this.dataset.room || 'Chưa cập nhật';
+                document.getElementById('viewDayOfWeek').textContent = this.dataset.dayOfWeek || 'Chưa cập nhật';
+                document.getElementById('viewStartTime').textContent = this.dataset.startTime;
+                document.getElementById('viewEndTime').textContent = this.dataset.endTime;
+                document.getElementById('viewMaxStudents').textContent = this.dataset.maxStudents || 0;
+                document.getElementById('viewStartDate').textContent = this.dataset.startDate || 'Chưa cập nhật';
+                document.getElementById('viewWeeks').textContent = this.dataset.weeks || '—';
+
+                // Mở modal
+                new bootstrap.Modal(document.getElementById('viewClassModal')).show();
+            });
+
+        });
+
 
         // Xử lý submit form chỉnh sửa
         document.getElementById("editClassForm").addEventListener("submit", function (e) {
@@ -751,43 +842,96 @@
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    alert("✅ Cập nhật thành công");
-                    location.reload();
+                    Swal.fire({
+                        title: "✅ Cập nhật thành công!",
+                        text: "Thông tin lớp học đã được lưu.",
+                        icon: "success",
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => {
+                        location.reload();
+                    });
                 } else {
-                    alert("❌ Lỗi khi cập nhật: " + (data.error || "Không rõ nguyên nhân"));
+                    Swal.fire({
+                        title: "❌ Lỗi khi cập nhật",
+                        text: data.error || "Không rõ nguyên nhân",
+                        icon: "error"
+                    });
                 }
             })
             .catch(err => {
                 console.error("Fetch error:", err);
-                alert("⚠️ Không thể kết nối server");
+                Swal.fire({
+                    title: "⚠️ Lỗi kết nối!",
+                    text: "Không thể kết nối đến server.",
+                    icon: "error"
+                });
             });
         });
+
 
         // Xử lý xóa lớp
-        document.getElementById("deleteClass").addEventListener("click", function () {
-            if (!confirm("Bạn có chắc chắn muốn xóa lớp này không?")) return;
+        // Lắng nghe click nút xoá trên mỗi thẻ lớp
+        document.addEventListener("click", function(e) {
+        const deleteBtn = e.target.closest(".deleteClassBtn");
+        if (!deleteBtn) return;
 
-            const id = document.getElementById("editClassId").value;
+        const card = deleteBtn.closest(".class-card");
+        const id = card.getAttribute("data-class-id");
 
-            fetch("/delete_class", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ id })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    alert("🗑️ Xóa thành công");
-                    location.reload();
-                } else {
-                    alert("❌ Xóa thất bại: " + (data.error || "Không rõ nguyên nhân"));
-                }
-            })
-            .catch(err => {
-                console.error("Fetch error:", err);
-                alert("⚠️ Không thể kết nối server");
-            });
+        // Hiển thị hộp thoại xác nhận đẹp
+        Swal.fire({
+            title: "Bạn có chắc chắn muốn xóa?",
+            text: "Hành động này không thể hoàn tác!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Xóa ngay",
+            cancelButtonText: "Hủy",
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6"
+        }).then((result) => {
+            if (result.isConfirmed) {
+
+                fetch("/delete_class", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            title: "Đã xóa!",
+                            text: "Lớp học đã được xóa thành công.",
+                            icon: "success",
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            title: "Lỗi!",
+                            text: data.error || "Không rõ nguyên nhân",
+                            icon: "error"
+                        });
+                    }
+                })
+                .catch(err => {
+                    console.error("Fetch error:", err);
+                    Swal.fire({
+                        title: "Lỗi kết nối!",
+                        text: "Không thể kết nối tới server.",
+                        icon: "error"
+                    });
+                });
+            }
         });
     });
+
+
+    });
 </script>
+
+
 {% endblock %}

@@ -297,33 +297,66 @@
       font-weight: 600;
     }
 
-    /* Notification item */
-    .tp-notif-item {
-      cursor: pointer;
-      padding: 12px;
-      border-bottom: 1px solid var(--tp-border);
-      transition: background-color 0.2s ease;
-    }
+   /* ===== Lớp ngoài dropdown ===== */
+  .tp-notif-dropdown {
+    width: 300px; /* điều chỉnh bề ngang */
+    max-height: 400px; /* chiều cao tối đa */
+    border-radius: 12px;
+    overflow: hidden; /* ẩn scroll ngoài */
+    box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+    background-color: #fff;
+  }
 
-    .tp-notif-item:hover {
-      background-color: #f8f9fa;
-    }
+  /* ===== Lớp trong: container chứa items ===== */
+  .tp-notif-items-container {
+    max-height: 392px; /* 400px - padding */
+    overflow-y: auto; /* cho phép scroll dọc */
+    overflow-x: hidden;
+    padding: 4px 0;
+    box-sizing: border-box;
 
-    .tp-notif-item:last-child {
-      border-bottom: none;
-    }
+    /* Ẩn scrollbar nhưng vẫn cuộn được */
+    scrollbar-width: thin; /* Firefox */
+    scrollbar-color: transparent transparent;
+  }
+  .tp-notif-items-container::-webkit-scrollbar {
+    width: 0px; /* Chrome/Edge/Safari */
+  }
+  .tp-notif-items-container::-webkit-scrollbar-thumb {
+    background-color: rgba(0,0,0,0.2);
+    border-radius: 3px;
+  }
+  .tp-notif-items-container::-webkit-scrollbar-track {
+    background: transparent;
+  }
 
-    .tp-notif-item.unread {
-      background-color: var(--tp-primary-light);
-    }
+  /* ===== Header ===== */
+  .tp-notif-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--tp-border);
+    background-color: var(--tp-primary-light);
+    font-weight: 600;
+    color: var(--tp-primary);
+  }
 
-    .tp-notif-header {
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--tp-border);
-      background-color: var(--tp-primary-light);
-      font-weight: 600;
-      color: var(--tp-primary);
-    }
+  /* ===== Item thông báo ===== */
+  .tp-notif-item {
+    cursor: pointer;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--tp-border);
+    transition: background-color 0.2s ease;
+    background: #fff;
+  }
+  .tp-notif-item:last-child {
+    border-bottom: none;
+  }
+  .tp-notif-item:hover {
+    background-color: #f0f8ff;
+  }
+  .tp-notif-item.unread {
+    background-color: var(--tp-primary-light);
+    font-weight: 500;
+  }
   </style>
 </head>
 <body class="tp-body">
@@ -498,7 +531,7 @@
                   <div class="fw-semibold text-primary">${n.title}</div>
                   <div class="small">${n.message}</div>
                   <div class="text-muted mt-1" style="font-size: 0.7rem;">
-                    ${new Date(n.created_at).toLocaleString('vi-VN')}
+                  ${n.created_at}
                   </div>
                 </div>`;
             });

@@ -19,9 +19,27 @@
   .tp-form-label {font-weight: 500; color: var(--tp-text-dark); margin-bottom: 8px;}
   .tp-form-control {border: 1px solid #e0e0e0; border-radius: 8px; padding: 12px 15px; font-size: 1rem;}
   .tp-form-control:focus {border-color: var(--tp-primary-color); box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);}
-  .tp-btn-primary {background-color: var(--tp-primary-color); border: none; color: white; padding: 12px 20px; border-radius: 8px; font-weight: 500;}
+  .tp-btn-primary {
+    background-color: #0d6efd; /* màu xanh */
+    border: none;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: 500;
+  }
   .tp-btn-outline {background-color: transparent; border: 1px solid var(--tp-primary-color); color: var(--tp-primary-color); padding: 12px 20px; border-radius: 8px; font-weight: 500;}
-  .tp-button-group {display: flex; gap: 15px; margin-top: 10px;}
+  .tp-button-group .btn {
+    color: #fff !important;
+    background-color: #6c757d !important;
+    border: none !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  .tp-button-group .btn:hover {
+    background-color: #5a6268 !important;
+  }
+
   .tp-avatar-options {display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 15px 0;}
   .tp-avatar-option {width: 80px; height: 80px; border-radius: 50%; object-fit: cover; cursor: pointer; border: 2px solid transparent; transition: all 0.3s;}
   .tp-avatar-option.selected {border-color: var(--tp-primary-color); box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3);}

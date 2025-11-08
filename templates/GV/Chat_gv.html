@@ -500,9 +500,43 @@
             max-width: 90%;
         }
     }
+    .student-avatar img.avatar-img {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    .current-student-avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background-color: #ccc;      /* Màu mặc định khi không có ảnh */
+      background-size: cover;
+      background-position: center;
+      text-align: center;
+      line-height: 50px;           /* căn chữ vào giữa */
+      font-weight: bold;
+      color: white;
+      font-size: 24px;
+      overflow: hidden;
+    }
+    .badge {
+      display: inline-block;
+      background: red;
+      color: white;
+      padding: 2px 6px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: bold;
+      min-width: 20px;
+      text-align: center;
+    }
+
 </style>
 
 <div class="chat-container-wrapper">
+    <div id="teacherPage" data-user-id="{{ giang_vien_id }}"></div>
+
     <!-- Sidebar: danh sách sinh viên -->
     <div class="chat-sidebar">
         <div class="sidebar-header">
@@ -519,22 +553,26 @@
 
         <div class="students-list">
             {% for sv in danh_sach_sinh_vien %}
-                <div class="student" onclick="chonSinhVien({{ sv.id }}, '{{ sv.name }}', event)">
-                    <div class="student-avatar">{{ sv.name[0]|upper }}</div>
-                    <div class="student-info">
-                        <div class="student-name">{{ sv.name }}</div>
-                        <div class="student-lastmsg">Tin nhắn cuối...</div>
-                    </div>
-                    <div id="conversation-list">
-                    <div class="student-meta">
-                      <div class="student-time"></div>
-                      <div class="student-unread"></div>
-                    </div>
-                    </div>
+                <div class="student"
+                     data-id="{{ sv.id }}"
+                     data-ten="{{ sv.name }}"
+                     onclick="chonSinhVien({{ sv.id }}, '{{ sv.name }}')">
+                    <span class="student-avatar">
+                      {% if sv.avatar %}
+                        <img src="{{ url_for('static', filename=sv.avatar) }}"
+                             alt="{{ sv.name }}"
+                             class="avatar-img">
+                      {% else %}
+                        {{ (sv.name or "?")[0].upper() }}
+                      {% endif %}
+                    </span>
+                  <span class="student-name">{{ sv.name }}</span>
+
+                  <span class="student-time"></span>
+                  <span class="student-unread badge"></span>
                 </div>
-            {% else %}
-                <div class="no-students">Chưa có sinh viên nào nhắn tin</div>
             {% endfor %}
+
         </div>
     </div>
 
@@ -542,7 +580,7 @@
     <div class="chat-main">
         <div class="chat-header">
             <div class="current-student">
-                <div class="current-student-avatar" id="currentStudentAvatar">S</div>
+            <div class="current-student-avatar" id="currentStudentAvatar"></div>
                 <div class="current-student-info">
                     <h3 id="chatHeader">Chọn sinh viên để chat</h3>
                     <p id="studentStatus">Trạng thái</p>
@@ -579,197 +617,249 @@
 </div>
 
 <script>
-async function loadConversations(userId) {
-  try {
-    const res = await fetch(`/api/conversations/${userId}`);
-    const data = await res.json();
-
-    const listEl = document.getElementById("conversation-list");
-    if (!listEl) {
-      console.error("Không tìm thấy #conversation-list trong HTML");
-      return;
-    }
-    listEl.innerHTML = "";
-
-    data.forEach(conv => {
-      const item = document.createElement("div");
-      item.className = "student-item";
-
-      item.innerHTML = `
-        <div class="student-avatar">${conv.name[0].toUpperCase()}</div>
-        <div class="student-info">
-          <div class="student-name">${conv.name}</div>
-          <div class="student-last">${conv.last_message || ""}</div>
-        </div>
-        <div class="student-meta">
-          <div class="student-time">
-            ${conv.last_time ? new Date(conv.last_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : ""}
-          </div>
-          <div class="student-unread">
-            ${conv.unread_count > 0 ? `<span class="badge">${conv.unread_count}</span>` : ""}
-          </div>
-        </div>
-      `;
-      listEl.appendChild(item);
-    });
-  } catch (err) {
-    console.error("Lỗi khi load cuộc trò chuyện:", err);
-  }
-}
-
-// load lần đầu
-loadConversations(1);
-
-// auto refresh 5 giây 1 lần
-setInterval(() => {
-  loadConversations(1);
-}, 5000);
-</script>
-
-
-<script>
   const currentUserId = {{ user_id }}; // user đang đăng nhập
   let sinhVienDangChon = null;
 
-  // Cập nhật thông tin meta (giờ tin cuối + số tin chưa đọc)
-  function loadStudentMeta(userId) {
-    fetch(`/api/message_info/${userId}`)
-      .then(res => res.json())
-      .then(data => {
-        // Xử lý thời gian tin nhắn cuối cùng
-        if (data.last_time) {
-          const dt = new Date(data.last_time);
-          const hh = dt.getHours().toString().padStart(2, "0");
-          const mm = dt.getMinutes().toString().padStart(2, "0");
-          document.querySelector(".student-time").textContent = `${hh}:${mm}`;
-        } else {
-          document.querySelector(".student-time").textContent = "";
+  // ----------------------------
+  // Helper: Lấy query param
+  // ----------------------------
+  function getQueryParam(name) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(name);
+  }
+
+  // ----------------------------
+  // Load danh sách conversations
+  // ----------------------------
+  async function loadConversations(userId) {
+    try {
+      const res = await fetch(`/api/conversations/${userId}`);
+      const data = await res.json();
+
+      const listEl = document.getElementById("conversation-list");
+      if (!listEl) return console.error("Không tìm thấy #conversation-list trong HTML");
+      listEl.innerHTML = "";
+
+      data.forEach(conv => {
+        const item = document.createElement("div");
+        item.className = "student-item";
+
+        item.innerHTML = `
+          <div class="student-avatar">${conv.name[0].toUpperCase()}</div>
+          <div class="student-info">
+            <div class="student-name">${conv.name}</div>
+            <div class="student-last">${conv.last_message || ""}</div>
+          </div>
+          <div class="student-meta">
+            <div class="student-time">
+              ${conv.last_time ? new Date(conv.last_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : ""}
+            </div>
+            <div class="student-unread">
+              ${conv.unread_count > 0 ? `<span class="badge">${conv.unread_count}</span>` : ""}
+            </div>
+          </div>
+        `;
+
+        listEl.appendChild(item);
+      });
+    } catch (err) {
+      console.error("Lỗi khi load cuộc trò chuyện:", err);
+    }
+  }
+
+  // ----------------------------
+  // Load meta info của sinh viên
+  // ----------------------------
+    async function loadStudentMeta(userId) {
+      try {
+        const res = await fetch(`/api/message_info/${userId}`);
+        const data = await res.json();
+
+        const avatarEl = document.getElementById("currentStudentAvatar");
+        if (avatarEl) {
+          if (data.avatar && data.avatar.trim() !== "") {
+            // Nếu có avatar → hiển thị ảnh
+            avatarEl.style.backgroundImage = `url('/static/${data.avatar}')`;
+            avatarEl.textContent = "";
+          } else {
+            // Nếu không có avatar → hiển thị chữ cái đầu
+            avatarEl.style.backgroundImage = "";
+            avatarEl.textContent = (data.name || "?")[0].toUpperCase();
+          }
         }
 
-        // Số tin chưa đọc
-        document.querySelector(".student-unread").textContent =
-          data.unread_count > 0 ? data.unread_count : "";
-      });
-  }
+        // Hiển thị tên, thời gian, unread
+        document.getElementById("chatHeader").innerText = data.name;
 
-  // Đánh dấu đã đọc
-  function markMessagesRead(userId) {
-    fetch(`/api/mark_read/${userId}`, { method: "POST" })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          loadStudentMeta(userId);
+        const timeEl = document.querySelector(".student-time");
+        if (timeEl) timeEl.textContent = data.last_time
+          ? new Date(data.last_time).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})
+          : "";
+
+        const unreadEl = document.querySelector(".student-unread");
+        if (unreadEl) {
+          if (data.unread_count > 0) {
+            unreadEl.style.display = "inline-block";
+            unreadEl.textContent = data.unread_count;
+          } else {
+            unreadEl.style.display = "none";
+          }
         }
-      });
+
+      } catch (err) {
+        console.error("Lỗi load student meta:", err);
+      }
+    }
+
+  async function markMessagesRead(userId) {
+    try {
+      const res = await fetch(`/api/mark_read/${userId}`, { method: "POST" });
+      const data = await res.json();
+      if (data.success) await loadStudentMeta(userId);
+    } catch (err) {
+      console.error("Lỗi mark read:", err);
+    }
   }
 
-  // Khi chọn sinh viên
-  function chonSinhVien(id, ten) {
-    document.querySelectorAll(".student").forEach(el => el.classList.remove("active"));
-    event.currentTarget.classList.add("active");
-
-    sinhVienDangChon = id;
-    document.getElementById("chatHeader").innerText = ten;
-    document.getElementById("currentStudentAvatar").innerText = ten.charAt(0).toUpperCase();
-    document.querySelector(".no-chat-selected")?.remove();
-
-    // Tải tin nhắn
-    taiTinNhan();
-
-    // Đánh dấu đã đọc khi mở chat
-    markMessagesRead(id);
-  }
-
-  // Tải danh sách tin nhắn
-  function taiTinNhan() {
+  // ----------------------------
+  // Load tin nhắn
+  // ----------------------------
+  async function taiTinNhan() {
     if (!sinhVienDangChon) return;
+    try {
+      const res = await fetch(`/tin_nhan/${sinhVienDangChon}`);
+      const data = await res.json();
 
-    fetch(`/tin_nhan/${sinhVienDangChon}`)
-      .then(res => res.json())
-      .then(data => {
-        let box = document.getElementById("chatMessages");
-        box.innerHTML = "";
+      const box = document.getElementById("chatMessages");
+      box.innerHTML = "";
 
-        if (Array.isArray(data) && data.length > 0) {
-          data.forEach(msg => {
-            let messageDiv = document.createElement("div");
-            messageDiv.classList.add("message");
+      if (Array.isArray(data) && data.length > 0) {
+        data.forEach(msg => {
+          const messageDiv = document.createElement("div");
+          messageDiv.classList.add("message");
 
-            let bubbleDiv = document.createElement("div");
-            bubbleDiv.classList.add("message-bubble");
-            bubbleDiv.innerText = msg.noi_dung;
+          const bubbleDiv = document.createElement("div");
+          bubbleDiv.classList.add("message-bubble");
+          bubbleDiv.innerText = msg.noi_dung;
 
-            let timeDiv = document.createElement("div");
-            timeDiv.classList.add("message-time");
-            timeDiv.innerText = msg.thoi_gian || "";
+          const timeDiv = document.createElement("div");
+          timeDiv.classList.add("message-time");
+          timeDiv.innerText = msg.thoi_gian || "";
 
-            messageDiv.appendChild(bubbleDiv);
-            messageDiv.appendChild(timeDiv);
+          messageDiv.appendChild(bubbleDiv);
+          messageDiv.appendChild(timeDiv);
 
-            // Xác định ai gửi
-            if (msg.nguoi_gui_id === currentUserId) {
-              messageDiv.classList.add("sent");
-            } else {
-              messageDiv.classList.add("received");
-            }
+          messageDiv.classList.add(msg.nguoi_gui_id === currentUserId ? "sent" : "received");
 
-            box.appendChild(messageDiv);
-          });
-        } else {
-          box.innerHTML = '<div class="no-chat-selected"><p>Chưa có tin nhắn nào</p></div>';
-        }
+          box.appendChild(messageDiv);
+        });
+      } else {
+        box.innerHTML = '<div class="no-chat-selected"><p>Chưa có tin nhắn nào</p></div>';
+      }
 
-        box.scrollTop = box.scrollHeight;
-      })
-      .catch(error => console.error("Lỗi tải tin nhắn:", error));
+      box.scrollTop = box.scrollHeight;
+    } catch (err) {
+      console.error("Lỗi tải tin nhắn:", err);
+    }
   }
 
+  // ----------------------------
   // Gửi tin nhắn
-  function guiTinNhan() {
-    let noiDung = document.getElementById("noiDung").value.trim();
+  // ----------------------------
+  async function guiTinNhan() {
+    const noiDung = document.getElementById("noiDung").value.trim();
     if (!noiDung || !sinhVienDangChon) return;
 
-    fetch("/gui_tin_nhan", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        nguoi_nhan_id: sinhVienDangChon,
-        noi_dung: noiDung
-      })
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          document.getElementById("noiDung").value = "";
-          taiTinNhan(); // Tải lại tin nhắn
-          loadStudentMeta(sinhVienDangChon); // cập nhật meta
-        }
-      })
-      .catch(error => {
-        console.error("Lỗi gửi tin nhắn:", error);
-        alert("Không thể gửi tin nhắn. Vui lòng thử lại!");
+    try {
+      const res = await fetch("/gui_tin_nhan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nguoi_nhan_id: sinhVienDangChon, noi_dung: noiDung })
       });
+      const data = await res.json();
+
+      if (data.success) {
+        document.getElementById("noiDung").value = "";
+        await taiTinNhan();
+        await loadStudentMeta(sinhVienDangChon);
+      }
+    } catch (err) {
+      console.error("Lỗi gửi tin nhắn:", err);
+      alert("Không thể gửi tin nhắn. Vui lòng thử lại!");
+    }
   }
 
-  // Enter để gửi tin nhắn
-  document.getElementById("noiDung").addEventListener("keypress", function(e) {
+  // ----------------------------
+  // Chọn sinh viên
+  // ----------------------------
+  function chonSinhVien(id, ten) {
+    sinhVienDangChon = id;
+
+    // Bỏ active cũ
+    document.querySelectorAll(".student").forEach(el => el.classList.remove("active"));
+
+    // Lấy đúng student được click (KHÔNG dùng querySelector nữa)
+    const item = event.currentTarget;
+    item.classList.add("active");
+
+    // Cập nhật header
+    document.getElementById("chatHeader").innerText = ten;
+
+    // Xóa message "chưa chọn chat"
+    document.querySelector(".no-chat-selected")?.remove();
+
+    // Load tin nhắn
+    taiTinNhan();
+
+    // Đánh dấu tin nhắn của thằng này đã đọc trên DB
+    markMessagesRead(id);
+
+    // Xóa số tin nhắn chưa đọc **chỉ của thằng vừa bấm**
+    const unreadBadge = item.querySelector(".student-unread");
+    if (unreadBadge) unreadBadge.textContent = "";
+
+    // Cập nhật meta (avatar + thời gian tin nhắn cuối + số chưa đọc)
+    loadStudentMeta(id);
+}
+
+
+
+  // ----------------------------
+  // Event: Enter để gửi tin nhắn
+  // ----------------------------
+  document.getElementById("noiDung").addEventListener("keypress", e => {
     if (e.key === "Enter") {
       e.preventDefault();
       guiTinNhan();
     }
   });
 
-  // Auto refresh mỗi 3 giây
+  // ----------------------------
+  // Auto refresh tin nhắn + meta 3 giây
+  // ----------------------------
   setInterval(() => {
     taiTinNhan();
-    if (sinhVienDangChon) {
-      loadStudentMeta(sinhVienDangChon);
-    }
+    if (sinhVienDangChon) loadStudentMeta(sinhVienDangChon);
   }, 3000);
 
-  // Load meta ban đầu (ví dụ cho user_id = 5)
-  loadStudentMeta(5);
+  // ----------------------------
+  // Khi load trang, tự động chọn sinh viên từ URL / Jinja
+  // ----------------------------
+  window.addEventListener("DOMContentLoaded", () => {
+    const svId = getQueryParam("sv") || "{{ sinh_vien_id }}";
+    if (svId) {
+      const svElement = document.querySelector(`.student[data-id="${svId}"]`);
+      if (svElement) chonSinhVien(svId, svElement.getAttribute("data-ten"));
+    }
+
+    // Load meta ban đầu
+    loadStudentMeta(5);
+
+    // Load conversations ban đầu
+    loadConversations(currentUserId);
+  });
 </script>
+
 
 
 {% endblock %}

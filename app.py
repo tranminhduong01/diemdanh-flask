@@ -38,12 +38,14 @@ socketio = SocketIO(app)
 # =============================
 def get_connection():
     return mysql.connector.connect(
-        host="by7zig60biczjuvswrdz-mysql.services.clever-cloud.com",
-        user="uumdfgygkm0wytsg",
-        password="4Ji7vJxqSuMbuGDzKn2i",
-        database="by7zig60biczjuvswrdz",
-        port=3306
+        host="localhost",
+        user="root",
+        password="123456",
+        database="face_attendance",
+        auth_plugin="mysql_native_password"
     )
+
+
 
 def add_notification(user_id, title, message):
     print("📢 Hàm add_notification chạy")
@@ -354,23 +356,26 @@ def teacher_dashboard():
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
 
-    # 🧠 Lấy thông tin giảng viên để hiển thị trong menu_gv.html
+    # Thông tin giảng viên
     cursor.execute("""
-        SELECT 
-            u.name, u.avatar, t.major
+        SELECT u.name, u.avatar, t.major
         FROM users u
         LEFT JOIN teacher t ON u.id = t.user_id
         WHERE u.id = %s
     """, (user_id,))
     teacher = cursor.fetchone()
 
-    # 1️⃣ Lấy số lớp mà giảng viên này đang dạy
-    cursor.execute("SELECT COUNT(*) AS total FROM classes WHERE teacher_id = %s", (user_id,))
+    # 1️⃣ Số lớp giảng viên đang dạy
+    cursor.execute("""
+        SELECT COUNT(*) AS total
+        FROM classes
+        WHERE teacher_id = %s
+    """, (user_id,))
     lop_hoc = cursor.fetchone()["total"]
 
-    # 2️⃣ Tổng sinh viên
+    # 2️⃣ Tổng sinh viên trong các lớp GV đang dạy
     cursor.execute("""
-        SELECT COUNT(DISTINCT student_id) AS total
+        SELECT COUNT(DISTINCT e.student_id) AS total
         FROM enrollments e
         JOIN classes c ON e.class_id = c.id
         WHERE c.teacher_id = %s
@@ -407,130 +412,38 @@ def teacher_dashboard():
     """, (user_id,))
     lich_hom_nay = cursor.fetchall()
 
+    # ==========================
     # ==============================
-    # 6️⃣ Hoạt động gần đây (an toàn với None)
+    # 6️⃣ Hoạt động gần đây từ bảng notifications
     # ==============================
+    cursor.execute("""
+        SELECT title, message, created_at, is_read
+        FROM notifications
+        WHERE user_id = %s
+        ORDER BY created_at DESC
+        LIMIT 5
+    """, (user_id,))
+
     activities = []
+    for row in cursor.fetchall():
+        # Format thời gian theo chuẩn Việt Nam
+        created_time = row["created_at"].strftime("%d/%m/%Y %H:%M:%S")
 
-    from datetime import datetime, date, timedelta
-
-    def ensure_datetime(value):
-        """
-        Trả về:
-         - datetime nếu value hợp lệ,
-         - None nếu value is None hoặc không parse được.
-        """
-        if value is None:
-            return None
-        if isinstance(value, datetime):
-            return value
-        if isinstance(value, date):
-            # date -> datetime at 00:00
-            return datetime.combine(value, datetime.min.time())
-        # Nếu DB trả về chuỗi (iso) -> thử parse
-        try:
-            return datetime.fromisoformat(str(value))
-        except Exception:
-            return None
-
-    # helper để thêm activity: đảm bảo có 'time' (None hoặc datetime) và 'sort_time' (datetime)
-    def push_activity(act_type, title, description, time_value):
-        t = ensure_datetime(time_value)
         activities.append({
-            "type": act_type,
-            "title": title,
-            "description": description,
-            "time": t,                     # dùng để hiển thị; có thể là None
-            "sort_time": t or datetime.min  # dùng để sort (luôn datetime)
+            "type": "notification",
+            "title": row["title"] or "Thông báo",
+            "description": row["message"],
+            "time": created_time,  # <-- Đã format rồi, không dùng datetime object nữa
+            "is_read": row["is_read"]
         })
 
-    # Tin nhắn mới
-    cursor.execute("""
-        SELECT m.noi_dung, m.thoi_gian, s.name AS sender_name
-        FROM messages m
-        JOIN users s ON m.nguoi_gui_id = s.id
-        WHERE m.nguoi_nhan_id = %s
-        ORDER BY m.thoi_gian DESC
-        LIMIT 3
-    """, (user_id,))
-    for row in cursor.fetchall():
-        push_activity("message",
-                      "Tin nhắn mới",
-                      f"Từ {row['sender_name']}: {row['noi_dung']}",
-                      row["thoi_gian"])
-
-    # Lớp học mới
-    cursor.execute("""
-        SELECT c.class_name, c.created_at, u.name AS teacher_name
-        FROM classes c
-        JOIN users u ON c.teacher_id = u.id
-        ORDER BY c.created_at DESC
-        LIMIT 3
-    """)
-    for row in cursor.fetchall():
-        push_activity("class",
-                      "Lớp học mới",
-                      f"{row['class_name']} (GV: {row['teacher_name']})",
-                      row["created_at"])
-
-    # Điểm danh gần đây
-    cursor.execute("""
-        SELECT a.status_in, a.time_in, u.name, c.class_name
-        FROM attendance_records a
-        JOIN enrollments e ON a.enrollment_id = e.id
-        JOIN users u ON e.student_id = u.id
-        JOIN classes c ON e.class_id = c.id
-        ORDER BY a.time_in DESC
-        LIMIT 3
-    """)
-    for row in cursor.fetchall():
-        push_activity("attendance",
-                      f"Điểm danh: {row['status_in']}",
-                      f"{row['name']} - {row['class_name']}",
-                      row["time_in"])
-
-    # Ghi danh mới
-    cursor.execute("""
-        SELECT e.created_at, u.name, c.class_name
-        FROM enrollments e
-        JOIN users u ON e.student_id = u.id
-        JOIN classes c ON e.class_id = c.id
-        ORDER BY e.created_at DESC
-        LIMIT 3
-    """)
-    for row in cursor.fetchall():
-        push_activity("enrolment",
-                      "Sinh viên ghi danh",
-                      f"{row['name']} vào lớp {row['class_name']}",
-                      row["created_at"])
-
-    # Đơn xin phép
-    cursor.execute("""
-        SELECT r.request_date, r.status, u.name, c.class_name
-        FROM leave_requests r
-        JOIN users u ON r.user_id = u.id
-        JOIN classes c ON r.classes_id = c.id
-        ORDER BY r.request_date DESC
-        LIMIT 3
-    """)
-    for row in cursor.fetchall():
-        push_activity("leave",
-                      "Đơn xin phép",
-                      f"{row['name']} - {row['class_name']} ({row['status']})",
-                      row["request_date"])
-
-    activities = sorted(
-        activities,
-        key=lambda x: x["time"] if isinstance(x["time"], datetime) else datetime.min,
-        reverse=True
-    )[:5]
 
     cursor.close()
     conn.close()
 
     return render_template("GV/Giangvien.html",
                            teacher=teacher,
-                           ten=session.get("username"),
+                           ten=teacher["name"],
                            lop_hoc=lop_hoc,
                            sinh_vien=sinh_vien,
                            lich_hom_nay=lich_hom_nay,
@@ -729,17 +642,17 @@ def QLsinhvien():
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
 
-    # ✅ Lấy thông tin giáo viên (avatar + name + major)
+    # ✅ Lấy thông tin giáo viên (avatar + name + major + id)
     cursor.execute("""
         SELECT 
-            u.name, u.avatar, t.major
+            u.id, u.name, u.avatar, t.major   -- 🔥 THÊM u.id
         FROM users u
         LEFT JOIN teacher t ON u.id = t.user_id
         WHERE u.id = %s
     """, (teacher_id,))
     teacher = cursor.fetchone()
 
-    # ✅ Lấy danh sách lớp mà giảng viên này dạy
+    # ✅ Lấy danh sách lớp giảng viên dạy
     cursor.execute("""
         SELECT 
             c.id,
@@ -768,6 +681,7 @@ def QLsinhvien():
         teacher=teacher,
         ten=teacher["name"] if teacher else session.get("username", "Giáo viên")
     )
+
 
 import os
 
@@ -2045,7 +1959,7 @@ def xuat_excel_don_nghi():
     cursor = conn.cursor(dictionary=True)
 
     base_query = """
-        SELECT lr.request_id, e.full_name, c.class_name, lr.request_date, lr.start_date,
+        SELECT lr.request_id, e.full_name, c.class_name, lr.request_date, lr.session_date,
                lr.reason, lr.proof_file, lr.status
         FROM leave_requests lr
         JOIN classes c ON lr.classes_id = c.id
@@ -2077,7 +1991,7 @@ def xuat_excel_don_nghi():
             don["full_name"],
             don["class_name"],
             str(don["request_date"]),
-            str(don["start_date"]),
+            str(don["session_date"]),
             don["reason"],
             don["proof_file"] or "Không có",
             don["status"]
@@ -2226,20 +2140,84 @@ def chat_sinh_vien():
         user_name=user["name"] if user else "Sinh viên"
     )
 
+def get_user_from_db(user_id):
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
+    user = cursor.fetchone()
+    conn.close()
+    return user
 
-@app.route("/api/mark_read/<int:user_id>", methods=["POST"])
-def mark_read(user_id):
+# Lấy thời gian tin nhắn cuối cùng
+def last_message_time(user_id):
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
+        SELECT thoi_gian
+        FROM messages
+        WHERE nguoi_gui_id = %s OR nguoi_nhan_id = %s
+        ORDER BY thoi_gian DESC
+        LIMIT 1
+    """, (user_id, user_id))
+    row = cursor.fetchone()
+    conn.close()
+    return row[0] if row else None
+
+# Lấy số tin nhắn chưa đọc
+def unread_count(user_id):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT COUNT(*) 
+        FROM messages
+        WHERE nguoi_gui_id = %s     -- người gửi là sinh viên
+          AND nguoi_nhan_id = %s    -- người nhận là giảng viên đăng nhập
+          AND da_xem = 0            -- chỉ đếm chưa đọc
+    """, (user_id, session["user_id"]))   # session[user_id] = giảng viên hiện tại
+
+    count = cursor.fetchone()[0]
+    cursor.close()
+    conn.close()
+    return count
+
+
+# Route trả JSON
+@app.route("/api/message_info/<int:user_id>")
+def message_info(user_id):
+    user = get_user_from_db(user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    return jsonify({
+        "name": user["name"],
+        "avatar": user["avatar"],  # ví dụ: "avatars/user_6_tung.jpg"
+        "last_time": last_message_time(user_id),
+        "unread_count": unread_count(user_id)
+    })
+
+@app.route("/api/mark_read/<int:user_id>", methods=["POST"])
+def mark_read(user_id):
+    teacher_id = session.get("user_id")  # id giảng viên đăng nhập
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
         UPDATE messages
         SET da_xem = 1
-        WHERE nguoi_nhan_id = %s
-    """, (user_id,))
+        WHERE nguoi_gui_id = %s     -- sinh viên đang chat
+          AND nguoi_nhan_id = %s    -- giảng viên đang xem
+          AND da_xem = 0
+    """, (user_id, teacher_id))  # user_id = sinh viên
+
     conn.commit()
     cursor.close()
     conn.close()
+
     return jsonify({"success": True})
+
+
 
 
 @app.route("/api/conversations/<int:user_id>")
@@ -2296,18 +2274,18 @@ def chat_gv(giang_vien_id):
     user_role = session.get("role")
     user_id = session["user_id"]
 
-    # ✅ Auto redirect nếu là student
+    # ✅ Nếu là sinh viên → chuyển sang trang chat của sv
     if user_role == "student":
         return redirect("/chat")
 
-    # ✅ Chỉ cho phép teacher và đúng ID
+    # ✅ Kiểm tra quyền truy cập
     if user_role != "teacher" or user_id != giang_vien_id:
         return "Không có quyền truy cập", 403
 
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
 
-    # ✅ Lấy danh sách sinh viên đã từng nhắn tin với giảng viên này
+    # ✅ Lấy danh sách sinh viên đã từng nhắn tin
     cursor.execute("""
         SELECT DISTINCT u.id, u.name, u.avatar
         FROM users u
@@ -2318,10 +2296,32 @@ def chat_gv(giang_vien_id):
     """, (giang_vien_id, giang_vien_id))
     danh_sach_sinh_vien = cursor.fetchall()
 
-    # ✅ Lấy thông tin giảng viên để hiển thị trên menu
+    # ✅ Nhận ID sinh viên từ URL (sv=xxx)
+    sinh_vien_id = request.args.get("sv", type=int)
+    active_student = None
+    messages = []
+
+    if sinh_vien_id:
+        # ✅ Lấy thông tin sinh viên được chọn
+        cursor.execute("SELECT id, name, avatar FROM users WHERE id = %s AND role='student'", (sinh_vien_id,))
+        active_student = cursor.fetchone()
+
+        # ✅ Nếu sinh viên chưa có trong danh sách → thêm vào danh sách để hiển thị
+        if active_student and not any(sv["id"] == active_student["id"] for sv in danh_sach_sinh_vien):
+            danh_sach_sinh_vien.insert(0, active_student)
+
+        # ✅ Lấy lịch sử chat
+        cursor.execute("""
+            SELECT * FROM messages
+            WHERE (nguoi_gui_id = %s AND nguoi_nhan_id = %s)
+               OR (nguoi_gui_id = %s AND nguoi_nhan_id = %s)
+            ORDER BY thoi_gian ASC
+        """, (giang_vien_id, sinh_vien_id, sinh_vien_id, giang_vien_id))
+        messages = cursor.fetchall()
+
+    # ✅ Lấy thông tin giáo viên để hiển thị giao diện
     cursor.execute("""
-        SELECT 
-            u.name, u.avatar, t.major
+        SELECT u.name, u.avatar, t.major
         FROM users u
         LEFT JOIN teacher t ON u.id = t.user_id
         WHERE u.id = %s
@@ -2337,6 +2337,8 @@ def chat_gv(giang_vien_id):
         giang_vien_id=giang_vien_id,
         user_id=user_id,
         teacher=teacher,
+        active_student=active_student,   # ✅ sinh viên được chọn
+        messages=messages,               # ✅ lịch sử chat nếu có
         ten=teacher["name"] if teacher else session.get("username", "Giáo viên")
     )
 
@@ -2643,10 +2645,25 @@ def admin_users():
 def delete_user(id):
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM users WHERE id = %s", (id,))
-    conn.commit()
-    conn.close()
+    try:
+        # Xóa tất cả message liên quan tới user
+        cursor.execute("DELETE FROM messages WHERE nguoi_gui_id = %s OR nguoi_nhan_id = %s", (id, id))
+
+        # Xóa tất cả notification liên quan tới user
+        cursor.execute("DELETE FROM notifications WHERE user_id = %s", (id,))
+
+        # Xóa user
+        cursor.execute("DELETE FROM users WHERE id = %s", (id,))
+
+        conn.commit()
+    except mysql.connector.Error as err:
+        conn.rollback()
+        print("Lỗi khi xóa user:", err)
+    finally:
+        conn.close()
+
     return redirect(url_for("admin_users"))
+
 
 # Sửa user
 @app.route("/admin/users/edit/<int:id>", methods=["POST"])
@@ -2967,6 +2984,8 @@ os.makedirs(app.config["UPLOAD_FOLDER1"], exist_ok=True)
 
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
 @app.route("/info_canhan", methods=["GET", "POST"])
 def info_canhan():
     user_id = session.get("user_id")
@@ -2978,57 +2997,29 @@ def info_canhan():
     cursor = conn.cursor(dictionary=True)
 
     try:
-        # --- Nếu người dùng gửi form ---
         if request.method == "POST":
-            # Lấy dữ liệu chung
-            name = request.form.get("name")
-            username = request.form.get("username")
-            email = request.form.get("email")
-            phone = request.form.get("phone")
-            birthday = request.form.get("birthday")
-            gender = request.form.get("gender")
-            school = request.form.get("school")
-            class_name = request.form.get("class")
-            course_year = request.form.get("course_year")
-            major = request.form.get("major")
+            # --- File Avatar ---
+            avatar_file = request.files.get("avatar")
+            avatar_path = None
 
-            # ---- CẬP NHẬT USERS ----
-            cursor.execute("""
-                UPDATE users
-                SET name=%s, username=%s, email=%s
-                WHERE id=%s
-            """, (name, username, email, user_id))
+            if avatar_file and allowed_file(avatar_file.filename):
+                filename = secure_filename(avatar_file.filename)
+                save_path = os.path.join(app.config["UPLOAD_FOLDER1"], filename)
+                avatar_file.save(save_path)
+                avatar_path = os.path.join("avatars", filename).replace("\\", "/")
 
-            # ---- CẬP NHẬT STUDENT ----
-            cursor.execute("SELECT * FROM student WHERE user_id = %s", (user_id,))
-            existing = cursor.fetchone()
-            if existing:
-                cursor.execute("""
-                    UPDATE student
-                    SET phone=%s, birthday=%s, gender=%s, school=%s, class=%s, course_year=%s, major=%s
-                    WHERE user_id=%s
-                """, (phone, birthday, gender, school, class_name, course_year, major, user_id))
-            else:
-                cursor.execute("""
-                    INSERT INTO student (user_id, phone, birthday, gender, school, class, course_year, major)
-                    VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
-                """, (user_id, phone, birthday, gender, school, class_name, course_year, major))
+                cursor.execute("UPDATE users SET avatar=%s WHERE id=%s", (avatar_path, user_id))
+                conn.commit()
+                flash("✅ Cập nhật ảnh đại diện thành công!", "success")
 
-            conn.commit()
-            flash("✅ Cập nhật thông tin cá nhân thành công.", "success")
-
-        # --- Lấy lại dữ liệu sau khi cập nhật ---
-        cursor.execute("""
-            SELECT id, name, username, email, avatar
-            FROM users
-            WHERE id = %s
-        """, (user_id,))
+        # --- Lấy dữ liệu hiển thị ---
+        cursor.execute("SELECT id, name, username, email, avatar FROM users WHERE id=%s", (user_id,))
         user = cursor.fetchone()
 
         cursor.execute("""
             SELECT phone, birthday, gender, school, class, course_year, major
             FROM student
-            WHERE user_id = %s
+            WHERE user_id=%s
         """, (user_id,))
         student = cursor.fetchone() or {}
 
@@ -3036,13 +3027,25 @@ def info_canhan():
         cursor.close()
         conn.close()
 
-    if not user:
-        flash("Không tìm thấy thông tin người dùng.", "danger")
-        return redirect(url_for("login"))
-
     return render_template("HS/Info_canhan.html", user=user, student=student)
 
+@app.route('/update_avatar', methods=['POST'])
+def update_avatar():
+    file = request.files.get('avatar')
+    if not file:
+        flash('Vui lòng chọn ảnh!', 'warning')
+        return redirect(request.referrer)
 
+    filename = secure_filename(file.filename)
+    filepath = os.path.join('static/avatars', filename)
+    file.save(filepath)
+
+    # Giả sử có biến session['user_id']
+    cursor = conn.cursor()
+    cursor.execute("UPDATE users SET avatar=%s WHERE id=%s", (f'uploads/{filename}', session['user_id']))
+    conn.commit()
+    flash('Cập nhật ảnh đại diện thành công!', 'success')
+    return redirect(request.referrer)
 
 def send_otp_email(to_email, otp_code):
     sender = "2124802010398@student.tdmu.edu.vn"
@@ -3288,88 +3291,112 @@ def gv_caidat_save_avatar():
 
 @app.route("/thong_ke")
 def gv_thongke():
+    teacher_id = session.get("user_id")
+    if not teacher_id:
+        return redirect(url_for("login"))
+
     # Nếu là AJAX thì trả về JSON
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
         filter_type = request.args.get("filter", "all")
-        date_str = request.args.get("date")  # yyyy-mm-dd
+        date_str = request.args.get("date")
 
         conn = get_connection()
         cursor = conn.cursor()
 
-        # --- Tổng users (không filter)
-        cursor.execute("SELECT COUNT(*) FROM users")
+        # --- Tổng sinh viên thuộc các lớp giáo viên đang dạy
+        cursor.execute("""
+            SELECT COUNT(DISTINCT e.student_id)
+            FROM enrollments e
+            JOIN classes c ON e.class_id = c.id
+            WHERE c.teacher_id = %s
+        """, (teacher_id,))
         total_users = cursor.fetchone()[0]
 
-        # --- Tổng classes theo filter
+        # --- Tổng lớp giáo viên theo filter
         where_classes = ""
         params_classes = []
         if filter_type == "day" and date_str:
-            where_classes = "WHERE DATE(start_date) = %s"
+            where_classes = "AND DATE(c.start_date) = %s"
             params_classes = [date_str]
         elif filter_type == "week" and date_str:
-            where_classes = "WHERE YEARWEEK(start_date, 1) = YEARWEEK(%s, 1)"
+            where_classes = "AND YEARWEEK(c.start_date, 1) = YEARWEEK(%s, 1)"
             params_classes = [date_str]
         elif filter_type == "month" and date_str:
-            where_classes = "WHERE YEAR(start_date) = YEAR(%s) AND MONTH(start_date) = MONTH(%s)"
+            where_classes = "AND YEAR(c.start_date) = YEAR(%s) AND MONTH(c.start_date) = MONTH(%s)"
             params_classes = [date_str, date_str]
 
-        cursor.execute(f"SELECT COUNT(*) FROM classes {where_classes}", params_classes)
+        cursor.execute(
+            f"SELECT COUNT(*) FROM classes c WHERE c.teacher_id = %s {where_classes}",
+            [teacher_id] + params_classes
+        )
         total_classes = cursor.fetchone()[0]
 
-        # --- Tổng sessions theo filter (nếu có bảng sessions)
-        try:
-            where_sessions = ""
-            params_sessions = []
-            if filter_type == "day" and date_str:
-                where_sessions = "WHERE DATE(date) = %s"
-                params_sessions = [date_str]
-            elif filter_type == "week" and date_str:
-                where_sessions = "WHERE YEARWEEK(date, 1) = YEARWEEK(%s, 1)"
-                params_sessions = [date_str]
-            elif filter_type == "month" and date_str:
-                where_sessions = "WHERE YEAR(date) = YEAR(%s) AND MONTH(date) = MONTH(%s)"
-                params_sessions = [date_str, date_str]
+        # --- Tổng buổi học (sessions)
+        where_sessions = ""
+        params_sessions = []
+        if filter_type == "day" and date_str:
+            where_sessions = "AND DATE(s.date) = %s"
+            params_sessions = [date_str]
+        elif filter_type == "week" and date_str:
+            where_sessions = "AND YEARWEEK(s.date, 1) = YEARWEEK(%s, 1)"
+            params_sessions = [date_str]
+        elif filter_type == "month" and date_str:
+            where_sessions = "AND YEAR(s.date) = YEAR(%s) AND MONTH(s.date) = MONTH(%s)"
+            params_sessions = [date_str, date_str]
 
-            cursor.execute(f"SELECT COUNT(*) FROM sessions {where_sessions}", params_sessions)
-            total_sessions = cursor.fetchone()[0]
-        except:
-            total_sessions = 0
+        cursor.execute(f"""
+            SELECT COUNT(*)
+            FROM sessions s
+            JOIN classes c ON s.class_id = c.id
+            WHERE c.teacher_id = %s {where_sessions}
+        """, [teacher_id] + params_sessions)
+        total_sessions = cursor.fetchone()[0]
 
-        # --- Tổng attendance_records (dùng time_in)
+        # --- Tổng lượt điểm danh
         where_attendance = ""
         params_attendance = []
         if filter_type == "day" and date_str:
-            where_attendance = "WHERE DATE(time_in) = %s"
+            where_attendance = "AND DATE(ar.time_in) = %s"
             params_attendance = [date_str]
         elif filter_type == "week" and date_str:
-            where_attendance = "WHERE YEARWEEK(time_in, 1) = YEARWEEK(%s, 1)"
+            where_attendance = "AND YEARWEEK(ar.time_in, 1) = YEARWEEK(%s, 1)"
             params_attendance = [date_str]
         elif filter_type == "month" and date_str:
-            where_attendance = "WHERE YEAR(time_in) = YEAR(%s) AND MONTH(time_in) = MONTH(%s)"
+            where_attendance = "AND YEAR(ar.time_in) = YEAR(%s) AND MONTH(ar.time_in) = MONTH(%s)"
             params_attendance = [date_str, date_str]
 
-        cursor.execute(f"SELECT COUNT(*) FROM attendance_records {where_attendance}", params_attendance)
+        cursor.execute(f"""
+            SELECT COUNT(*)
+            FROM attendance_records ar
+            JOIN sessions s ON ar.session_id = s.id
+            JOIN classes c ON s.class_id = c.id
+            WHERE c.teacher_id = %s {where_attendance}
+        """, [teacher_id] + params_attendance)
         total_attendance = cursor.fetchone()[0]
 
         # --- Biểu đồ điểm danh 7 ngày gần nhất
         cursor.execute("""
-            SELECT DATE(time_in) AS ngay, COUNT(*) AS so_luong
-            FROM attendance_records
-            WHERE time_in >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
-            GROUP BY DATE(time_in)
-            ORDER BY DATE(time_in)
-        """)
+            SELECT DATE(ar.time_in), COUNT(*)
+            FROM attendance_records ar
+            JOIN sessions s ON ar.session_id = s.id
+            JOIN classes c ON s.class_id = c.id
+            WHERE c.teacher_id = %s
+              AND ar.time_in >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+            GROUP BY DATE(ar.time_in)
+            ORDER BY DATE(ar.time_in)
+        """, (teacher_id,))
         attendance_rows = cursor.fetchall()
         attendance_labels = [str(r[0]) for r in attendance_rows]
         attendance_counts = [r[1] for r in attendance_rows]
 
         # --- Biểu đồ số lớp theo tháng
         cursor.execute("""
-            SELECT MONTH(created_at) AS thang, COUNT(*) AS so_luong
-            FROM classes
-            GROUP BY MONTH(created_at)
-            ORDER BY thang
-        """)
+            SELECT MONTH(c.created_at), COUNT(*)
+            FROM classes c
+            WHERE c.teacher_id = %s
+            GROUP BY MONTH(c.created_at)
+            ORDER BY MONTH(c.created_at)
+        """, (teacher_id,))
         class_rows = cursor.fetchall()
         class_labels = [f"Tháng {r[0]}" for r in class_rows]
         class_counts = [r[1] for r in class_rows]
@@ -3387,18 +3414,12 @@ def gv_thongke():
             "classChartData": class_counts
         })
 
-    # Nếu không phải AJAX thì render template HTML
-    if "role" not in session or session["role"] != "teacher":
-        return redirect(url_for("login"))
-
-    teacher_id = session["user_id"]
+    # Render trang HTML giáo viên
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
 
-    # ✅ Lấy thông tin giáo viên
     cursor.execute("""
-        SELECT 
-            u.name, u.avatar, t.major
+        SELECT u.name, u.avatar, t.major
         FROM users u
         LEFT JOIN teacher t ON u.id = t.user_id
         WHERE u.id = %s
@@ -3407,11 +3428,8 @@ def gv_thongke():
 
     conn.close()
 
-    return render_template(
-        "GV/thong_ke.html",
-        teacher=teacher,
-        ten=teacher["name"] if teacher else session.get("username", "Giáo viên")
-    )
+    return render_template("GV/thong_ke.html", teacher=teacher, ten=teacher["name"])
+
 
 
 @app.route("/menu_gv")
@@ -3737,6 +3755,33 @@ def lich_su_nghi_phep():
 
     return render_template("HS/history_nghi_phep.html", requests=requests)
 
+@app.route("/xoa_don_nghi_phep/<int:request_id>")
+def xoa_don_nghi_phep(request_id):
+    if "user_id" not in session:
+        return redirect("/login")
+
+    user_id = session["user_id"]
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    query = """
+        DELETE FROM leave_requests
+        WHERE request_id = %s AND user_id = %s AND status = 'Pending'
+    """
+
+    cursor.execute(query, (request_id, user_id))
+    conn.commit()
+
+    # Nếu có xóa => rowcount > 0
+    if cursor.rowcount > 0:
+        flash("Xóa đơn thành công!", "success")
+    else:
+        flash("Không thể xóa đơn (đơn đã được duyệt hoặc không tồn tại).", "danger")
+
+    cursor.close()
+    conn.close()
+
+    return redirect("/lich_su_nghi_phep")
 
 @app.route("/lich_su_diem_danh", methods=['GET'])
 def lich_su_diem_danh():
@@ -3807,7 +3852,7 @@ def lich_su_diem_danh():
 
 
 
-#client = Client(api_key="AIzaSyDymlFtdZhgmaA8Jw1FQnSaENuz5GZ1cdA")  # Thay bằng API key thật
+client = Client(api_key="AIzaSyDymlFtdZhgmaA8Jw1FQnSaENuz5GZ1cdA")  # Thay bằng API key thật
 
 
 # --- Hàm lấy context từ DB ---
@@ -4240,6 +4285,22 @@ def teacher_help():
     # Render template với context
     return render_template("GV/help.html", teacher=teacher, tickets=tickets)
 
+@app.route("/teacher/help/ticket/delete/<int:ticket_id>", methods=["POST"])
+def delete_ticket(ticket_id):
+    if "user_id" not in session:
+        return redirect("/login")
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    query = "DELETE FROM support_tickets WHERE id = %s AND teacher_id = %s"
+    cursor.execute(query, (ticket_id, session["user_id"]))
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    return redirect("/teacher/help")
 
 # 🧠 Route xử lý chat bot
 @app.route("/teacher/help/chat", methods=["POST"])
@@ -4337,7 +4398,21 @@ def get_notifications():
         ORDER BY created_at DESC
     """, (session["user_id"],))
 
-    notifications = cursor.fetchall()
+    rows = cursor.fetchall()
+
+    notifications = []
+    for r in rows:
+        created = r["created_at"]
+        # Format chuẩn VN
+        created_str = created.strftime("%d/%m/%Y %H:%M:%S")
+
+        notifications.append({
+            "id": r["id"],
+            "title": r["title"],
+            "message": r["message"],
+            "is_read": r["is_read"],
+            "created_at": created_str
+        })
 
     cursor.close()
     conn.close()
@@ -4447,16 +4522,31 @@ def lich_day_gv():
             c.weeks,
             c.start_time,
             c.end_time,
-            u.name AS teacher_name
+            u.name,
+            u.avatar,
+            t.major
         FROM classes c
         JOIN users u ON c.teacher_id = u.id
+        JOIN teacher t ON t.user_id = u.id
         WHERE c.teacher_id = %s
     """, (teacher_id,))
     classes = cursor.fetchall()
     cursor.close()
     conn.close()
 
-    teacher_name = classes[0]['teacher_name'] if classes else 'Không rõ'
+    # Nếu có dữ liệu thì lấy thông tin giáo viên từ dòng đầu tiên
+    if classes:
+        teacher = {
+            "name": classes[0]["name"],
+            "avatar": classes[0]["avatar"],
+            "major": classes[0]["major"]
+        }
+    else:
+        teacher = {
+            "name": "Không rõ",
+            "avatar": None,
+            "major": None
+        }
 
     # Khởi tạo khung thời khóa biểu
     schedule = { 'Thứ 2': [], 'Thứ 3': [], 'Thứ 4': [],
@@ -4485,7 +4575,6 @@ def lich_day_gv():
                 "session_end": end_time,
                 "tiet_bat_dau": tiet_bd,
                 "tiet_ket_thuc": tiet_kt,
-                "teacher_name": teacher_name
             })
 
     # === Gộp các tiết liền nhau cùng lớp ===
@@ -4499,9 +4588,7 @@ def lich_day_gv():
         current = buoi_list[0]
 
         for b in buoi_list[1:]:
-            # Nếu cùng lớp và tiết bắt đầu của buổi sau = tiết kết thúc của buổi trước + 1
             if b["class_name"] == current["class_name"] and b["tiet_bat_dau"] == current["tiet_ket_thuc"] + 1:
-                # gộp tiết
                 current["tiet_ket_thuc"] = b["tiet_ket_thuc"]
                 current["session_end"] = b["session_end"]
             else:
@@ -4516,9 +4603,10 @@ def lich_day_gv():
         schedule=schedule,
         week_start=start_of_week.strftime("%d/%m/%Y"),
         week_end=end_of_week.strftime("%d/%m/%Y"),
-        teacher_name=teacher_name,
-        week_offset=week_offset
+        week_offset=week_offset,
+        teacher=teacher
     )
+
 # ====================== EMAIL ======================
 # ====================== SEND EMAIL ======================
 

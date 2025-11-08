@@ -40,48 +40,34 @@
   }
 
   .tp-filter-row {
-    display: flex;
-    align-items: end;
-    gap: 16px;
-    flex-wrap: wrap;
-  }
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+}
 
-  .tp-filter-group {
-    display: flex;
-    flex-direction: column;
-    min-width: 150px;
-  }
+.tp-filter-group {
+  display: flex;
+  flex-direction: column;
+  min-width: 150px;
+}
 
-  .tp-filter-label {
-    font-size: 13px;
-    font-weight: 500;
-    margin-bottom: 6px;
-    color: var(--tp-text-dark);
-  }
+.tp-filter-button {
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.3s;
+}
 
-  .tp-filter-select, .tp-filter-input {
-    padding: 8px 12px;
-    border: 1px solid var(--tp-border-color);
-    border-radius: 6px;
-    font-size: 14px;
-    background: white;
-  }
+.tp-filter-button:hover {
+  background: #2980b9;
+}
 
-  .tp-filter-button {
-    background: var(--tp-primary-color);
-    color: white;
-    border: none;
-    border-radius: 6px;
-    padding: 8px 16px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: var(--tp-transition);
-  }
-
-  .tp-filter-button:hover {
-    background: #2980b9;
-  }
 
   /* Stats Cards */
   .tp-stats-grid {
@@ -218,6 +204,9 @@
       <div class="tp-filter-group">
         <button id="applyFilter" class="tp-filter-button">Xem</button>
       </div>
+      <div class="tp-filter-group">
+        <button id="exportPdf" class="tp-filter-button">Xuất PDF</button>
+      </div>
     </div>
   </div>
 
@@ -269,6 +258,8 @@
     </div>
   </div>
 </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
@@ -327,6 +318,29 @@
       }
     });
   }
+  document.getElementById("exportPdf").addEventListener("click", async () => {
+    const { jsPDF } = window.jspdf;
+
+    // 1. Chọn phần dashboard
+    const dashboard = document.querySelector(".tp-dashboard");
+
+    // 2. Chụp dashboard thành canvas
+    const canvas = await html2canvas(dashboard, { scale: 2 });
+
+    // 3. Chuyển canvas thành hình ảnh
+    const imgData = canvas.toDataURL("image/png");
+
+    // 4. Tạo PDF
+    const pdf = new jsPDF("p", "mm", "a4");
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+    pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+
+    // 5. Lưu PDF
+    pdf.save("dashboard.pdf");
+  });
+
 
   // Lấy dữ liệu động từ API
   function loadReport(filter='week', date=null) {
