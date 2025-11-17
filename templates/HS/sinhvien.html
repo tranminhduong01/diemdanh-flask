@@ -5,36 +5,460 @@
 {% block content %}
 {% include "chat_bot.html" %}
 
-  <!-- HERO BANNER -->
-  <section class="hero">
-    <div class="hero-content text-center text-white p-5" style="background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1200&q=80') center/cover; height: 380px;">
-      <h1>Chào mừng, {{ ten }}</h1>
-      <p class="lead">Quản lý hành trình học tập của bạn với bảng điều khiển sinh viên toàn diện</p>
-      <a href="#" class="btn btn-primary btn-lg">Xem khóa học</a>
-    </div>
-  </section>
+<style>
+    /* HERO SECTION STYLES */
+    .sv-hero {
+        position: relative;
+        height: 350px;
+        overflow: hidden;
+        margin-bottom: 40px;
+        border-radius: 0 0 25px 25px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    }
 
-  <!-- FEATURED COURSES -->
-  <div class="container py-5">
-    <h2 class="section-heading">Các lớp học nổi bật</h2>
-    <div class="row g-4">
-      {% for cl in classes %}
-        <div class="col-md-4">
-          <div class="course-card card">
-            <div class="card-body">
-              <h5 class="card-title">{{ cl.class_name }}</h5>
-              <p class="card-text">
-                <strong>Giảng viên:</strong> {{ cl.teacher_name }} <br>
-                <strong>Phòng:</strong> {{ cl.room }} <br>
-                <strong>Thời gian:</strong> {{ cl.day_of_week }} | {{ cl.start_time }} - {{ cl.end_time }} <br>
-                <strong>Số sinh viên:</strong> {{ cl.student_count }}
-              </p>
-              <a href="/ghi_vao_lop/{{ cl.id }}" class="btn btn-success">Ghi danh vào lớp</a>
+    .sv-hero-carousel {
+        height: 100%;
+        border-radius: 0 0 25px 25px;
+    }
+
+    .sv-carousel-item {
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .sv-carousel-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 8s ease;
+    }
+
+    .sv-carousel-item:hover .sv-carousel-image {
+        transform: scale(1.05);
+    }
+
+    .sv-carousel-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(to right, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.3) 100%);
+        display: flex;
+        align-items: center;
+        padding: 0 80px;
+    }
+
+    .sv-carousel-caption {
+        color: white;
+        max-width: 600px;
+        text-align: left;
+        animation: fadeInUp 0.8s ease;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .sv-carousel-caption h1 {
+        font-size: 3rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        text-shadow: 2px 2px 8px rgba(0,0,0,0.4);
+        line-height: 1.2;
+    }
+
+    .sv-carousel-caption p {
+        font-size: 1.4rem;
+        margin-bottom: 2rem;
+        text-shadow: 1px 1px 4px rgba(0,0,0,0.4);
+        line-height: 1.5;
+    }
+
+    .sv-hero-cta {
+        display: flex;
+        gap: 15px;
+        margin-top: 2rem;
+    }
+
+    .sv-btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 50px;
+        padding: 12px 30px;
+        color: white;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .sv-btn-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        color: white;
+    }
+
+    .sv-btn-outline {
+        background: transparent;
+        border: 2px solid white;
+        border-radius: 50px;
+        padding: 12px 30px;
+        color: white;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .sv-btn-outline:hover {
+        background: white;
+        color: #667eea;
+        transform: translateY(-3px);
+    }
+
+    .sv-carousel-indicators {
+        bottom: 30px;
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .sv-carousel-indicators button {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background-color: rgba(255,255,255,0.5);
+        border: 2px solid transparent;
+        transition: all 0.3s ease;
+    }
+
+    .sv-carousel-indicators button.active {
+        background-color: white;
+        transform: scale(1.2);
+        border-color: rgba(255,255,255,0.8);
+    }
+
+    .sv-carousel-control-prev,
+    .sv-carousel-control-next {
+        width: 60px;
+        height: 60px;
+        background: rgba(255,255,255,0.15);
+        border-radius: 50%;
+        top: 50%;
+        transform: translateY(-50%);
+        margin: 0 30px;
+        opacity: 0.8;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(5px);
+        border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .sv-carousel-control-prev:hover,
+    .sv-carousel-control-next:hover {
+        background: rgba(255,255,255,0.25);
+        opacity: 1;
+        transform: translateY(-50%) scale(1.05);
+    }
+
+    .sv-carousel-control-prev {
+        left: 0;
+    }
+
+    .sv-carousel-control-next {
+        right: 0;
+    }
+
+    /* Fallback background colors if images don't load */
+    .sv-slide-1 {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .sv-slide-2 {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .sv-slide-3 {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Additional styling for the rest of the page */
+    .sv-section-heading {
+        font-size: 1.8rem;
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #e2e8f0;
+    }
+
+    /* STYLES FOR CLASS CARDS BASED ON THE IMAGE */
+    .sv-class-card {
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        background: white;
+        transition: all 0.3s ease;
+        height: 100%;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        overflow: hidden;
+    }
+
+    .sv-class-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+        border-color: #d0d0d0;
+    }
+
+    .sv-class-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #e0e0e0;
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .sv-class-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #333;
+        margin: 0;
+    }
+
+    .sv-class-seats {
+        background-color: #3b82f6;
+        color: white;
+        border-radius: 20px;
+        padding: 4px 12px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+
+    .sv-class-body {
+        padding: 20px;
+    }
+
+    .sv-class-info {
+        margin-bottom: 15px;
+        font-size: 0.95rem;
+        color: #555;
+        line-height: 1.5;
+    }
+
+    .sv-class-info strong {
+        color: #333;
+        font-weight: 600;
+    }
+
+    .sv-class-register {
+        background-color: #3b82f6;
+        border: none;
+        border-radius: 6px;
+        padding: 10px 20px;
+        color: white;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        width: 100%;
+        margin-top: 10px;
+        font-size: 1rem;
+    }
+
+    .sv-class-register:hover {
+        background-color: #2563eb;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+        color: white;
+    }
+
+    .sv-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+    }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+        .sv-hero {
+            height: 400px;
+        }
+
+        .sv-carousel-overlay {
+            padding: 0 40px;
+        }
+
+        .sv-carousel-caption h1 {
+            font-size: 2.5rem;
+        }
+
+        .sv-carousel-caption p {
+            font-size: 1.2rem;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .sv-hero {
+            height: 350px;
+        }
+
+        .sv-carousel-overlay {
+            padding: 0 20px;
+        }
+
+        .sv-carousel-caption h1 {
+            font-size: 2rem;
+        }
+
+        .sv-carousel-caption p {
+            font-size: 1.1rem;
+        }
+
+        .sv-hero-cta {
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .sv-btn-primary, .sv-btn-outline {
+            width: 100%;
+            text-align: center;
+        }
+
+        .sv-carousel-control-prev,
+        .sv-carousel-control-next {
+            width: 45px;
+            height: 45px;
+            margin: 0 15px;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .sv-hero {
+            height: 300px;
+        }
+
+        .sv-carousel-caption h1 {
+            font-size: 1.8rem;
+        }
+
+        .sv-carousel-caption p {
+            font-size: 1rem;
+        }
+
+        .sv-carousel-indicators button {
+            width: 10px;
+            height: 10px;
+        }
+    }
+</style>
+
+<!-- HERO SECTION WITH CAROUSEL -->
+<section class="sv-hero">
+  <div id="svHeroCarousel" class="carousel slide sv-hero-carousel" data-bs-ride="carousel">
+
+    <!-- Indicators -->
+    <div class="carousel-indicators sv-carousel-indicators">
+      {% for banner in banners %}
+        <button type="button" data-bs-target="#svHeroCarousel" data-bs-slide-to="{{ loop.index0 }}" class="{% if loop.first %}active{% endif %}"></button>
+      {% endfor %}
+
+    </div>
+
+    <!-- Slides -->
+    <div class="carousel-inner">
+      <!-- Banner từ SQL -->
+      {% for banner in banners %}
+        <div class="carousel-item {% if loop.first %}active{% endif %}">
+          <img src="{{ banner.image_path | replace('\\', '/') }}"
+               class="d-block w-100 sv-carousel-image"
+               alt="{{ banner.title }}">
+          <div class="sv-carousel-overlay">
+            <div class="sv-carousel-caption">
+              <h1>{{ banner.title }}</h1>
+              <p>{{ banner.description }}</p>
             </div>
           </div>
         </div>
       {% endfor %}
     </div>
+
+    <!-- Controls -->
+    <button class="carousel-control-prev sv-carousel-control-prev" type="button" data-bs-target="#svHeroCarousel" data-bs-slide="prev">
+      <span class="carousel-control-prev-icon"></span>
+    </button>
+    <button class="carousel-control-next sv-carousel-control-next" type="button" data-bs-target="#svHeroCarousel" data-bs-slide="next">
+      <span class="carousel-control-next-icon"></span>
+    </button>
   </div>
+</section>
+
+<!-- FEATURED COURSES -->
+<div class="sv-container py-5" id="featured-courses">
+  <h2 class="sv-section-heading">Lớp học đang mở</h2>
+  <div class="row g-4">
+    {% for cl in classes %}
+      <div class="col-lg-4 col-md-6">
+        <div class="sv-class-card">
+          <div class="sv-class-header">
+            <h5 class="sv-class-title">{{ cl.class_name }}</h5>
+            <span class="sv-class-seats">{{ cl.max_students }} chỗ</span>
+          </div>
+          <div class="sv-class-body">
+            <div class="sv-class-info">
+              <strong>Giáo viên:</strong> {{ cl.teacher_name }}
+            </div>
+            <div class="sv-class-info">
+              <strong>Phòng:</strong> {{ cl.room }}
+            </div>
+            <div class="sv-class-info">
+              <strong>Lịch học:</strong> {{ cl.day_of_week }} ({{ cl.start_time }} - {{ cl.end_time }})
+            </div>
+            <div class="sv-class-info">
+              <strong>Bắt đầu:</strong> {{ cl.start_date }}
+            </div>
+            <div class="sv-class-info">
+              <strong>Số tuần:</strong> {{ cl.weeks }}
+            </div>
+             <div class="sv-class-info">
+              <strong>Sỉ số sinh viên ghi danh:</strong> {{ cl.student_count }}
+            </div>
+            <a href="/ghi_vao_lop/{{ cl.id }}" class="btn sv-class-register">
+              Ghi danh
+            </a>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+<script>
+  // Auto-rotate carousel every 5 seconds
+  document.addEventListener('DOMContentLoaded', function() {
+    const myCarousel = document.getElementById('svHeroCarousel');
+    if (myCarousel) {
+      const carousel = new bootstrap.Carousel(myCarousel, {
+        interval: 5000,
+        pause: 'hover',
+        wrap: true
+      });
+    }
+  });
+</script>
 
 {% endblock %}

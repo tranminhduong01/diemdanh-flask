@@ -531,6 +531,7 @@
       min-width: 20px;
       text-align: center;
     }
+    
 
 </style>
 
@@ -551,29 +552,47 @@
             </div>
         </div>
 
-        <div class="students-list">
-            {% for sv in danh_sach_sinh_vien %}
-                <div class="student"
-                     data-id="{{ sv.id }}"
-                     data-ten="{{ sv.name }}"
-                     onclick="chonSinhVien({{ sv.id }}, '{{ sv.name }}')">
-                    <span class="student-avatar">
-                      {% if sv.avatar %}
-                        <img src="{{ url_for('static', filename=sv.avatar) }}"
-                             alt="{{ sv.name }}"
-                             class="avatar-img">
-                      {% else %}
-                        {{ (sv.name or "?")[0].upper() }}
-                      {% endif %}
-                    </span>
-                  <span class="student-name">{{ sv.name }}</span>
-
-                  <span class="student-time"></span>
-                  <span class="student-unread badge"></span>
+        <!-- Trong phần students-list -->
+<div class="students-list" id="studentsList">
+    {% for sv in danh_sach_sinh_vien %}
+        <div class="student"
+             data-id="{{ sv.id }}"
+             data-ten="{{ sv.name }}"
+             onclick="chonSinhVien({{ sv.id }}, '{{ sv.name }}')">
+            <div class="student-avatar">
+                {% if sv.avatar %}
+                    <img src="{{ url_for('static', filename=sv.avatar) }}"
+                         alt="{{ sv.name }}"
+                         class="avatar-img">
+                {% else %}
+                    {{ (sv.name or "?")[0].upper() }}
+                {% endif %}
+            </div>
+            <div class="student-info">
+                <div class="student-name">{{ sv.name }}</div>
+                <div class="student-lastmsg" id="lastMsg-{{ sv.id }}">
+                    {% if sv.last_message %}
+                        {{ sv.last_message }}
+                    {% else %}
+                        Chưa có tin nhắn
+                    {% endif %}
                 </div>
-            {% endfor %}
-
+            </div>
+            <div class="student-meta">
+                <div class="student-time" id="lastTime-{{ sv.id }}">
+                    {% if sv.last_time %}
+                        {{ sv.last_time.strftime('%H:%M') if sv.last_time is string else sv.last_time }}
+                    {% endif %}
+                </div>
+                <div class="student-unread" id="unread-{{ sv.id }}">
+                    {% if sv.unread_count and sv.unread_count > 0 %}
+                        <span class="badge">{{ sv.unread_count }}</span>
+                    {% endif %}
+                </div>
+            </div>
         </div>
+    {% endfor %}
+</div>
     </div>
 
     <!-- Chat container -->

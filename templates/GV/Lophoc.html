@@ -33,19 +33,19 @@
         align-items: center;
         margin-bottom: 24px;
         padding-bottom: 16px;
-        border-bottom: 1px solid var(--border-color);
+        border-bottom: 1px solid #1F2937;
     }
 
     .page-title {
         font-size: 24px;
         font-weight: 700;
-        color: var(--text-primary);
+        color: #1F2937;
         margin: 0 0 6px 0;
     }
 
     .welcome-text {
         font-size: 14px;
-        color: var(--text-secondary);
+        color: #7f8c8d;
         margin: 0;
     }
 
@@ -241,30 +241,34 @@
     }
 
     .class-list {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        display: flex;
+        flex-wrap: wrap;
         gap: 16px;
+        justify-content: flex-start;
     }
 
     .class-card {
+        flex: 0 0 calc(33.333% - 11px);
+        height: fit-content;
         background: white;
-        border: 1px solid var(--border-color);
-        border-radius: var(--radius);
+        border: 1px solid #D1D5DB;
+        border-radius: 10px;
         overflow: hidden;
         transition: var(--transition);
-        height: fit-content;
+        box-sizing: border-box;
     }
 
     .class-card:hover {
         transform: translateY(-2px);
         box-shadow: var(--shadow);
-        border-color: var(--primary-color);
+        border-color: #3498db;
     }
+
 
     .class-header {
         padding: 16px;
         border-bottom: 1px solid var(--border-color);
-        background: var(--light-gray);
+        background: #F3F4F6;
     }
 
     .class-code {
@@ -290,6 +294,7 @@
 
     .class-body {
         padding: 16px;
+        flex: 1;
     }
 
     .class-detail {
@@ -297,14 +302,14 @@
         align-items: center;
         gap: 10px;
         margin-bottom: 10px;
-        font-size: 13px;
+        font-size: 14px;
         color: var(--text-secondary);
     }
 
     .class-detail i {
         width: 14px;
         color: var(--primary-color);
-        font-size: 13px;
+        font-size: 14px;
     }
 
     .class-actions {
@@ -312,6 +317,7 @@
         border-top: 1px solid var(--border-color);
         display: flex;
         gap: 10px;
+        margin-top: auto;
     }
 
     .class-btn {
@@ -320,7 +326,7 @@
         border-radius: 5px;
         font-size: 12px;
         font-weight: 500;
-        transition: var(--transition);
+        transition: all 0.2s ease;
         border: 1px solid var(--border-color);
         background: white;
         color: var(--text-primary);
@@ -340,11 +346,31 @@
     .edit-btn:hover {
         border-color: var(--primary-color);
         color: var(--primary-color);
+        background: var(--primary-light);
     }
 
-    .view-btn:hover {
-        border-color: var(--success-color);
-        color: var(--success-color);
+    .deleteClassBtn {
+        flex: 1;
+        padding: 8px 12px;
+        border-radius: 5px;
+        font-size: 12px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        border: 1px solid var(--accent-color);
+        background: white;
+        color: var(--accent-color);
+        cursor: pointer;
+        text-align: center;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+    }
+
+    .deleteClassBtn:hover {
+        background: var(--accent-color);
+        color: white;
     }
 
     .modal-content {
@@ -446,27 +472,18 @@
             align-items: flex-start;
             gap: 12px;
         }
+
+        .class-actions {
+            flex-direction: column;
+        }
     }
 </style>
 
 <div class="main-content">
     <div class="header">
         <div>
-            <h1 class="page-title">Dashboard Giảng Viên</h1>
-            <p class="welcome-text">Chào mừng trở lại, {{ session.get('username', 'Giáo viên') }}</p>
-        </div>
-        <div class="header-actions">
-            <div class="search-box">
-                <i class="fas fa-search"></i>
-                <input type="text" placeholder="Tìm kiếm...">
-            </div>
-            <div class="notification-btn">
-                <i class="fas fa-bell"></i>
-                <span class="notification-badge">3</span>
-            </div>
-            <div class="user-menu-btn">
-                <i class="fas fa-user"></i>
-            </div>
+            <h1 class="page-title">Chào mừng trở lại, giảng viên {{ teacher.name }}</h1>
+            <p class="welcome-text">Quản lý lớp học của bạn </p>
         </div>
     </div>
 
@@ -493,7 +510,6 @@
                  data-start-date="{{ c.start_date }}"
                  data-weeks="{{ c.weeks }}">
                 <div class="class-header">
-                    <div class="class-code">{{ c.class_code }}</div>
                     <h3 class="class-title">{{ c.class_name }}</h3>
                     <p class="class-teacher">{{ c.teacher_name }}</p>
                 </div>
@@ -515,8 +531,8 @@
                     <button class="class-btn edit-btn">
                         <i class="fas fa-edit"></i> Sửa
                     </button>
-                    <button type="button" class="btn btn-danger deleteClassBtn">
-                        <i class="fas fa-trash me-1"></i> Xóa
+                    <button class="class-btn delete-btn">
+                        <i class="fas fa-trash"></i> Xóa
                     </button>
                 </div>
             </div>
@@ -873,7 +889,7 @@
         // Xử lý xóa lớp
         // Lắng nghe click nút xoá trên mỗi thẻ lớp
         document.addEventListener("click", function(e) {
-        const deleteBtn = e.target.closest(".deleteClassBtn");
+        const deleteBtn = e.target.closest(".delete-btn");
         if (!deleteBtn) return;
 
         const card = deleteBtn.closest(".class-card");

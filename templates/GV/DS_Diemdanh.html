@@ -3,54 +3,357 @@
 {% block title %}Dashboard Giáo viên{% endblock %}
 
 {% block content %}
+<style>
+    :root {
+        --primary: #3498db;
+        --primary-dark: #1a252f;
+        --primary-light: #34495e;
+        --secondary: #95a5a6;
+        --accent: #e74c3c;
+        --success: #ffffff;
+        --warning: #f39c12;
+        --info: #3498db;
+        --light: #ecf0f1;
+        --dark: #2c3e50;
+        --gray-50: #f8f9fa;
+        --gray-100: #f1f2f6;
+        --gray-200: #e9ecef;
+        --gray-300: #dee2e6;
+        --gray-400: #ced4da;
+        --gray-500: #adb5bd;
+        --gray-600: #6c757d;
+        --gray-700: #495057;
+        --gray-800: #343a40;
+        --gray-900: #212529;
+        --border-radius: 8px;
+        --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        --transition: all 0.3s ease;
+    }
 
-   <!-- Main Content -->
-<div class="gv-dashboard-container">
+    .teacher-dashboard {
+        padding: 20px;
+        background-color: var(--gray-100);
+        min-height: calc(100vh - 70px);
+    }
+
+    .teacher-dashboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid #1F2937;
+    }
+
+    .teacher-page-title {
+        font-size: 24px;
+        font-weight: 700;
+        color: #1F2937;
+        margin: 0 0 6px 0;
+    }
+
+    .teacher-welcome-text {
+        color: #7f8c8d;
+        margin: 0;
+        font-size: 14px;
+    }
+
+    .teacher-header-actions {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .teacher-search-box {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .teacher-search-box i {
+        position: absolute;
+        left: 12px;
+        color: var(--gray-500);
+    }
+
+    .teacher-search-box input {
+        padding: 10px 16px 10px 40px;
+        border: 1px solid var(--gray-300);
+        border-radius: var(--border-radius);
+        width: 280px;
+        font-size: 14px;
+        transition: var(--transition);
+        background: white;
+    }
+
+    .teacher-search-box input:focus {
+        outline: none;
+        border-color: var(--gray-500);
+        box-shadow: 0 0 0 3px rgba(108, 117, 125, 0.15);
+    }
+
+
+    .teacher-content-section {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        border: 1px solid #e0e0e0;
+        margin-bottom: 24px;
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .section-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #2c3e50;
+        margin: 0;
+    }
+
+    .teacher-class-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+    }
+
+    .teacher-class-card {
+        background: white;
+        border: 1px solid #D1D5DB;
+        border-radius: 8px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        height: fit-content;
+    }
+
+    .teacher-class-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+        border-color: var(--gray-400);
+    }
+
+    .teacher-class-card-header {
+        padding: 16px;
+        border-bottom: 1px solid #D1D5DB;
+        background: #F3F4F6;
+    }
+
+    .teacher-class-code {
+        font-weight: 600;
+        color: var(--gray-700);
+        font-size: 14px;
+    }
+
+    .teacher-class-card-body {
+        padding: 16px;
+    }
+
+    .teacher-class-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--gray-800);
+        margin-bottom: 6px;
+    }
+
+    .teacher-class-teacher {
+        color: var(--gray-600);
+        font-size: 14px;
+        margin-bottom: 1px;
+    }
+
+    .teacher-class-details {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .teacher-class-detail-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--gray-600);
+        font-size: 14px;
+    }
+
+    .teacher-class-detail-item i {
+        width: 16px;
+        color: #3498db;
+    }
+
+    .teacher-class-card-footer {
+        padding: 16px;
+        border-top: 1px solid var(--gray-300);
+        display: flex;
+        gap: 10px;
+    }
+
+    .teacher-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 8px 16px;
+        border-radius: var(--border-radius);
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: var(--transition);
+        border: 1px solid var(--gray-300);
+        text-decoration: none;
+        background: white;
+        color: var(--gray-700);
+    }
+
+    .teacher-btn:hover {
+        background: var(--gray-100);
+        border-color: var(--gray-400);
+    }
+
+    .teacher-btn-primary {
+        background: white;
+        color: #2c3e50;
+        border-color: #D1D5DB;
+    }
+
+    .teacher-btn-primary:hover {
+        background: #3498db;
+        border-color: #3498db;
+        color: white;
+    }
+
+    .teacher-btn-success {
+        background: white;
+        color: ##2c3e50;
+        border-color: #D1D5DB;
+    }
+
+    .teacher-btn-success:hover {
+        background: #3498db;
+        color: white;
+        border-color: #3498db;
+    }
+
+    .teacher-view-class-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .teacher-modal-content {
+        border-radius: var(--border-radius);
+        border: 1px solid var(--gray-300);
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    .teacher-modal-header {
+        padding: 20px;
+        border-bottom: 1px solid var(--gray-300);
+        background: var(--gray-50);
+    }
+
+    .teacher-modal-title {
+        font-weight: 600;
+        color: var(--gray-800);
+        font-size: 18px;
+    }
+
+    .teacher-modal-body {
+        padding: 20px;
+    }
+
+    .teacher-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .teacher-table th {
+        background: var(--gray-50);
+        padding: 12px 16px;
+        text-align: left;
+        font-weight: 600;
+        color: var(--gray-700);
+        font-size: 14px;
+        border-bottom: 1px solid var(--gray-300);
+    }
+
+    .teacher-table td {
+        padding: 16px;
+        border-bottom: 1px solid var(--gray-300);
+        color: var(--gray-700);
+        font-size: 14px;
+    }
+
+    .teacher-table tr:hover {
+        background: var(--gray-50);
+    }
+
+    .teacher-btn-sm {
+        padding: 6px 12px;
+        font-size: 13px;
+    }
+
+    @media (max-width: 768px) {
+        .teacher-dashboard-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .teacher-header-actions {
+            width: 100%;
+            justify-content: space-between;
+        }
+
+        .teacher-search-box input {
+            width: 100%;
+        }
+
+        .teacher-class-grid {
+            grid-template-columns: 1fr;
+            padding: 16px;
+        }
+
+        .teacher-class-card-footer {
+            flex-direction: column;
+        }
+    }
+</style>
+
+<div class="teacher-dashboard">
     <!-- Header -->
-    <div class="gv-dashboard-header">
-        <div class="gv-header-info">
-            <h1>Dashboard Giảng Viên</h1>
-            <p>Chào mừng trở lại, TS. Nguyễn Văn A</p>
-        </div>
-        <div class="gv-header-actions">
-            <div class="gv-search-box">
-                <i class="fas fa-search"></i>
-                <input type="text" placeholder="Tìm kiếm..." />
-            </div>
-            <div class="gv-notification-btn">
-                <i class="fas fa-bell"></i>
-                <span class="gv-notification-badge">3</span>
-            </div>
-            <div class="gv-user-menu-btn">
-                <i class="fas fa-user-circle"></i>
-            </div>
+    <div class="teacher-dashboard-header">
+        <div>
+            <h1 class="teacher-page-title">Chào mừng trở lại, giảng viên {{ teacher.name }}</h1>
+            <p class="teacher-welcome-text">Điểm danh sinh viên của bạn</p>
         </div>
     </div>
 
     <!-- Class List Section -->
-    <div class="gv-section">
-        <div class="gv-section-header">
-            <h2 class="gv-section-title">Danh sách lớp học</h2>
+    <div class="teacher-content-section">
+        <div class="section-header">
+            <h2 class="section-title">Danh sách lớp học</h2>
         </div>
-        <div class="gv-section-content">
-            <div id="gvClassContainer" class="gv-class-grid">
-                {% for cls in classes %}
-                <div class="gv-class-card" data-class-id="{{ cls.id }}" data-class-name="{{ cls.class_name }}">
-                    <div class="gv-class-header">
-                        <div class="gv-class-code">{{ cls.id }}</div>
-                        <h3 class="gv-class-title">{{ cls.class_name }}</h3>
-                        <p class="gv-class-teacher">{{ cls.teacher_name }}</p>
-                    </div>
-                    <div class="gv-class-body">
-                        <div class="gv-class-detail">
+        <div class="teacher-class-grid">
+            {% for cls in classes %}
+            <div class="teacher-class-card" data-class-id="{{ cls.id }}" data-class-name="{{ cls.class_name }}">
+                <div class="teacher-class-card-header">
+                    <h3 class="teacher-class-title">{{ cls.class_name }}</h3>
+                    <p class="teacher-class-teacher">{{ cls.teacher_name }}</p>                </div>
+                <div class="teacher-class-card-body">
+                    <div class="teacher-class-details">
+                        <div class="teacher-class-detail-item">
                             <i class="fas fa-map-marker-alt"></i>
                             <span>{{ cls.room }}</span>
                         </div>
-                        <div class="gv-class-detail">
+                        <div class="teacher-class-detail-item">
                             <i class="fas fa-users"></i>
                             <span>{{ cls.max_students }} sinh viên</span>
                         </div>
-                        <div class="gv-class-detail">
+                        <div class="teacher-class-detail-item">
                             <i class="fas fa-calendar"></i>
                             <span>
                                 {{ cls.day_of_week }},
@@ -58,18 +361,17 @@
                             </span>
                         </div>
                     </div>
-                    <div class="gv-class-footer">
-                        <button class="gv-class-btn gv-view-sessions-btn">Xem buổi học</button>
-                        <button class="gv-class-btn gv-edit-btn">
-                            <a href="/xemlop/{{ cls.id }}" class="class-btn view-btn">
-                                <i class="fas fa-eye"></i> Xem
-                            </a>
-                        </button>
-                    </div>
                 </div>
-
-                {% endfor %}
+                <div class="teacher-class-card-footer">
+                    <button class="teacher-btn teacher-btn-primary teacher-view-sessions-btn" style="flex: 1;">
+                        <i class="fas fa-calendar-alt"></i> Xem buổi học
+                    </button>
+                    <a href="/xemlop/{{ cls.id }}" class="teacher-btn teacher-btn-success" style="flex: 1;">
+                        <i class="fas fa-eye"></i> Xem lớp
+                    </a>
+                </div>
             </div>
+            {% endfor %}
         </div>
     </div>
 </div>
@@ -77,14 +379,13 @@
 <!-- Modal hiển thị buổi học -->
 <div class="modal fade" id="sessionsModal" tabindex="-1" aria-labelledby="sessionsModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="sessionsModalLabel">Danh sách buổi học</h5>
+    <div class="modal-content teacher-modal-content">
+      <div class="modal-header teacher-modal-header">
+        <h5 class="modal-title teacher-modal-title" id="sessionsModalLabel">Danh sách buổi học</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
       </div>
-      <div class="modal-body">
+      <div class="modal-body teacher-modal-body">
         <div id="sessionsModalContent">
-          <!-- Nội dung buổi học sẽ load ở đây -->
           <p class="text-center text-muted">Đang tải dữ liệu...</p>
         </div>
       </div>
@@ -95,24 +396,21 @@
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- GV Dashboard JavaScript -->
 <script>
 document.addEventListener("DOMContentLoaded", () => {
     const sessionsModal = new bootstrap.Modal(document.getElementById("sessionsModal"));
     const sessionsModalLabel = document.getElementById("sessionsModalLabel");
     const sessionsModalContent = document.getElementById("sessionsModalContent");
 
-    document.querySelectorAll(".gv-view-sessions-btn").forEach(btn => {
+    document.querySelectorAll(".teacher-view-sessions-btn").forEach(btn => {
         btn.addEventListener("click", async function () {
-            let classCard = this.closest(".gv-class-card");
+            let classCard = this.closest(".teacher-class-card");
             let classId = classCard.dataset.classId;
             let className = classCard.dataset.className;
 
-            // Cập nhật tiêu đề modal
             sessionsModalLabel.textContent = `Danh sách buổi học - ${className}`;
             sessionsModalContent.innerHTML = `<p class="text-center text-muted">Đang tải dữ liệu...</p>`;
 
-            // Gọi API Flask lấy danh sách buổi học
             try {
                 let res = await fetch(`/api/buoi_hoc/${classId}`);
                 let sessions = await res.json();
@@ -125,8 +423,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 } else {
                     sessionsModalContent.innerHTML = `
                         <div class="table-responsive">
-                            <table class="table table-bordered table-striped">
-                                <thead class="table-dark">
+                            <table class="teacher-table">
+                                <thead>
                                     <tr>
                                         <th>STT</th>
                                         <th>Ngày</th>
@@ -141,7 +439,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                             <td>${s.date}</td>
                                             <td>${s.start_time} - ${s.end_time}</td>
                                             <td>
-                                                <a href="/diemdanh/${s.id}" class="btn btn-sm btn-success">
+                                                <a href="/diemdanh/${s.id}" class="teacher-btn teacher-btn-primary teacher-btn-sm">
                                                     <i class="fas fa-check"></i> Điểm danh
                                                 </a>
                                             </td>
@@ -156,402 +454,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 sessionsModalContent.innerHTML = `<p class="text-danger text-center">Không thể tải dữ liệu buổi học</p>`;
             }
 
-            // Hiện modal
             sessionsModal.show();
         });
     });
 });
 </script>
-
-
-    <style>
-    /* GV Dashboard Styles */
-    .gv-dashboard-container {
-        padding: 20px;
-        background-color: #f5f7f9;
-        min-height: 100vh;
-    }
-
-    .gv-dashboard-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 24px;
-        padding: 16px 24px;
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    }
-
-    .gv-header-info h1 {
-        font-size: 24px;
-        font-weight: 700;
-        color: #2d3748;
-        margin-bottom: 4px;
-    }
-
-    .gv-header-info p {
-        color: #718096;
-        margin: 0;
-    }
-
-    .gv-header-actions {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-    }
-
-    .gv-search-box {
-        position: relative;
-        display: flex;
-        align-items: center;
-    }
-
-    .gv-search-box i {
-        position: absolute;
-        left: 12px;
-        color: #a0aec0;
-    }
-
-    .gv-search-box input {
-        padding: 10px 12px 10px 36px;
-        border: 1px solid #e2e8f0;
-        border-radius: 8px;
-        background: #f7fafc;
-        width: 240px;
-    }
-
-    .gv-notification-btn {
-        position: relative;
-        width: 40px;
-        height: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: #f7fafc;
-        border-radius: 8px;
-        cursor: pointer;
-        color: #4a5568;
-    }
-
-    .gv-notification-badge {
-        position: absolute;
-        top: -5px;
-        right: -5px;
-        background: #e53e3e;
-        color: white;
-        font-size: 10px;
-        width: 18px;
-        height: 18px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .gv-user-menu-btn {
-        width: 40px;
-        height: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: #edf2f7;
-        border-radius: 8px;
-        cursor: pointer;
-        color: #4a5568;
-        font-size: 18px;
-    }
-
-    /* Stats Grid */
-    .gv-stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-        gap: 20px;
-        margin-bottom: 24px;
-    }
-
-    .gv-stat-card {
-        background: white;
-        border-radius: 12px;
-        padding: 20px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    }
-
-    .gv-stat-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 16px;
-    }
-
-    .gv-stat-content h3 {
-        font-size: 16px;
-        font-weight: 600;
-        color: #2d3748;
-        margin: 0 0 4px 0;
-    }
-
-    .gv-stat-content p {
-        font-size: 12px;
-        color: #718096;
-        margin: 0;
-    }
-
-    .gv-stat-icon {
-        width: 48px;
-        height: 48px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 20px;
-    }
-
-    .gv-classes-icon {
-        background: rgba(66, 153, 225, 0.1);
-        color: #4299e1;
-    }
-
-    .gv-students-icon {
-        background: rgba(72, 187, 120, 0.1);
-        color: #48bb78;
-    }
-
-    .gv-attendance-icon {
-        background: rgba(246, 173, 85, 0.1);
-        color: #f6ad55;
-    }
-
-    .gv-reports-icon {
-        background: rgba(159, 122, 234, 0.1);
-        color: #9f7aea;
-    }
-
-    .gv-stat-number {
-        font-size: 28px;
-        font-weight: 700;
-        color: #2d3748;
-    }
-
-    .gv-stat-progress {
-        margin-top: 12px;
-    }
-
-    .gv-progress-bar {
-        height: 8px;
-        background: #e2e8f0;
-        border-radius: 4px;
-        overflow: hidden;
-    }
-
-    .gv-progress-fill {
-        height: 100%;
-        background: #48bb78;
-        border-radius: 4px;
-    }
-
-    /* Section Styles */
-    .gv-section {
-        background: white;
-        border-radius: 12px;
-        overflow: hidden;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        margin-bottom: 24px;
-    }
-
-    .gv-section-header {
-        padding: 20px 24px;
-        border-bottom: 1px solid #e2e8f0;
-    }
-
-    .gv-section-title {
-        font-size: 18px;
-        font-weight: 600;
-        color: #2d3748;
-        margin: 0;
-    }
-
-    .gv-section-content {
-        padding: 24px;
-    }
-
-    /* Class Grid */
-    .gv-class-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 20px;
-    }
-
-    .gv-class-card {
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        overflow: hidden;
-        transition: transform 0.2s, box-shadow 0.2s;
-    }
-
-    .gv-class-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-    }
-
-    .gv-class-header {
-        padding: 16px;
-        background: #f7fafc;
-        border-bottom: 1px solid #e2e8f0;
-    }
-
-    .gv-class-code {
-        font-size: 12px;
-        color: #718096;
-        margin-bottom: 4px;
-    }
-
-    .gv-class-title {
-        font-size: 18px;
-        font-weight: 600;
-        color: #2d3748;
-        margin: 0 0 4px 0;
-    }
-
-    .gv-class-teacher {
-        font-size: 14px;
-        color: #718096;
-        margin: 0;
-    }
-
-    .gv-class-body {
-        padding: 16px;
-    }
-
-    .gv-class-detail {
-        display: flex;
-        align-items: center;
-        margin-bottom: 12px;
-        font-size: 14px;
-        color: #4a5568;
-    }
-
-    .gv-class-detail:last-child {
-        margin-bottom: 0;
-    }
-
-    .gv-class-detail i {
-        margin-right: 8px;
-        width: 16px;
-        color: #718096;
-    }
-
-    .gv-class-footer {
-        padding: 16px;
-        display: flex;
-        gap: 12px;
-        border-top: 1px solid #e2e8f0;
-    }
-
-    .gv-class-btn {
-        padding: 8px 16px;
-        border: none;
-        border-radius: 6px;
-        font-size: 14px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: background-color 0.2s;
-    }
-
-    .gv-view-sessions-btn {
-        background: #4299e1;
-        color: white;
-    }
-
-    .gv-view-sessions-btn:hover {
-        background: #3182ce;
-    }
-
-    .gv-edit-btn {
-        background: #e2e8f0;
-        color: #4a5568;
-    }
-
-    .gv-edit-btn:hover {
-        background: #cbd5e0;
-    }
-
-    /* Sessions List */
-    .gv-sessions-list {
-        border-top: 1px solid #e2e8f0;
-        padding: 16px;
-    }
-
-    .gv-no-sessions {
-        text-align: center;
-        padding: 20px;
-        color: #a0aec0;
-    }
-
-    .gv-sessions-table-container {
-        overflow-x: auto;
-    }
-
-    .gv-sessions-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    .gv-sessions-table th {
-        text-align: left;
-        padding: 12px;
-        background: #f7fafc;
-        font-weight: 600;
-        color: #4a5568;
-        border-bottom: 1px solid #e2e8f0;
-    }
-
-    .gv-sessions-table td {
-        padding: 12px;
-        border-bottom: 1px solid #e2e8f0;
-    }
-
-    .gv-attendance-link {
-        color: #4299e1;
-        text-decoration: none;
-        font-weight: 500;
-        display: inline-flex;
-        align-items: center;
-    }
-
-    .gv-attendance-link i {
-        margin-right: 4px;
-    }
-
-    .gv-attendance-link:hover {
-        color: #3182ce;
-        text-decoration: underline;
-    }
-
-    @media (max-width: 768px) {
-        .gv-dashboard-header {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 16px;
-        }
-
-        .gv-header-actions {
-            width: 100%;
-            justify-content: space-between;
-        }
-
-        .gv-search-box input {
-            width: 100%;
-        }
-
-        .gv-stats-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .gv-class-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-    </style>
 
 {% endblock %}

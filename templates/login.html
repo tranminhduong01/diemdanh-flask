@@ -10,47 +10,59 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body {
-            background: linear-gradient(120deg, #6a11cb 0%, #2575fc 100%);
-            height: 100vh;
+            background: linear-gradient(135deg, #4e54c8 0%, #8f94fb 100%);
+            min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
         }
 
         .login-container {
             width: 100%;
-            max-width: 430px;
+            max-width: 420px;
             background: #fff;
             border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
             overflow: hidden;
         }
 
         .login-header {
-            background: #4a6cf7;
+            background: linear-gradient(135deg, #4e54c8 0%, #8f94fb 100%);
             color: white;
             text-align: center;
             padding: 25px 20px;
         }
 
         .login-header h1 {
-            font-size: 28px;
-            font-weight: 600;
-            margin-bottom: 8px;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 6px;
         }
 
         .login-header p {
-            font-size: 15px;
+            font-size: 14px;
             opacity: 0.9;
+            margin: 0;
         }
 
         .login-form {
-            padding: 30px;
+            padding: 25px;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            display: block;
+            font-size: 14px;
         }
 
         .input-with-icon {
             position: relative;
+            margin-bottom: 18px;
         }
 
         .input-with-icon i {
@@ -58,111 +70,112 @@
             left: 15px;
             top: 50%;
             transform: translateY(-50%);
-            color: #777;
+            color: #667eea;
         }
 
         .input-with-icon input {
             padding-left: 45px;
+            border-radius: 8px;
+            border: 2px solid #e1e5ee;
+            transition: all 0.3s ease;
+            height: 46px;
+            font-size: 14px;
         }
 
-        .remember-forgot {
+        .input-with-icon input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .login-options {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
-            font-size: 14px;
+            font-size: 13px;
+        }
+
+        .form-check-input:checked {
+            background-color: #667eea;
+            border-color: #667eea;
         }
 
         .login-button {
             width: 100%;
             padding: 12px;
-            background: #4a6cf7;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
             border-radius: 8px;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 600;
-            transition: background 0.3s ease;
+            transition: all 0.3s ease;
+            margin-bottom: 18px;
         }
 
         .login-button:hover {
-            background: #3a5cd8;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
         }
 
-        .divider {
+        .register-link {
             text-align: center;
-            position: relative;
-            margin: 25px 0;
+            padding-top: 18px;
+            border-top: 1px solid #eee;
         }
 
-        .divider:before {
-            content: "";
-            position: absolute;
-            left: 0;
-            top: 50%;
-            width: 100%;
-            height: 1px;
-            background: #ddd;
-        }
-
-        .divider span {
-            background: #fff;
-            position: relative;
-            padding: 0 15px;
-            color: #777;
-            font-size: 14px;
-        }
-
-        .social-login {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-
-        .social-btn {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 18px;
-            cursor: pointer;
-            transition: transform 0.3s ease;
-        }
-
-        .social-btn:hover {
-            transform: translateY(-3px);
-        }
-
-        .facebook {
-            background: #3b5998;
-        }
-
-        .twitter {
-            background: #1da1f2;
-        }
-
-        .submit-file {
-            text-align: center;
-            margin-top: 10px;
-        }
-
-        .submit-file a {
-            color: #4a6cf7;
+        .register-link a {
+            color: #667eea;
             text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
             font-size: 14px;
         }
 
-        .submit-file a:hover {
+        .register-link a:hover {
+            color: #764ba2;
             text-decoration: underline;
         }
 
         .alert {
             border-radius: 8px;
+            margin-bottom: 18px;
+            border: none;
+            font-size: 13px;
+            padding: 10px 15px;
+        }
+
+        .forgot-password {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 13px;
+        }
+
+        .forgot-password:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+
+        .feature-list {
+            background: #f8f9ff;
+            border-radius: 8px;
+            padding: 16px;
             margin-bottom: 20px;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            color: #555;
+            font-size: 13px;
+        }
+
+        .feature-item i {
+            color: #667eea;
+            margin-right: 10px;
+            font-size: 14px;
         }
     </style>
 </head>
@@ -170,7 +183,7 @@
     <div class="login-container">
         <div class="login-header">
             <h1>Đăng Nhập Hệ Thống</h1>
-            <p>Bạn đã có tài khoản?</p>
+            <p>Kết nối với cộng đồng giáo dục của chúng tôi</p>
         </div>
 
         <div class="login-form">
@@ -185,6 +198,21 @@
                     {% endfor %}
                 {% endif %}
             {% endwith %}
+
+            <div class="feature-list">
+                <div class="feature-item">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Học tập mọi lúc, mọi nơi</span>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Tài liệu học tập phong phú</span>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Kết nối với giảng viên hàng đầu</span>
+                </div>
+            </div>
 
             <form method="POST" action="{{ url_for('login') }}">
                 <div class="mb-3">
@@ -203,7 +231,7 @@
                     </div>
                 </div>
 
-                <div class="remember-forgot">
+                <div class="login-options">
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" id="remember" name="remember">
                         <label class="form-check-label" for="remember">Ghi nhớ đăng nhập</label>
@@ -214,23 +242,10 @@
                 <button type="submit" class="btn login-button">ĐĂNG NHẬP</button>
             </form>
 
-            <div class="divider">
-                <span>Hoặc đăng nhập với</span>
-            </div>
-
-            <div class="social-login">
-                <div class="social-btn facebook">
-                    <i class="fab fa-facebook-f"></i>
-                </div>
-                <div class="social-btn twitter">
-                    <i class="fab fa-twitter"></i>
-                </div>
-            </div>
-
-            <div class="submit-file">
+            <div class="register-link">
                 <a href="/register">
-                    <i class="fas fa-file-export"></i>
-                    Bạn chưa có tài khoản ?????
+                    <i class="fas fa-user-plus me-2"></i>
+                    Đã có tài khoản? Đăng nhập ngay
                 </a>
             </div>
         </div>
@@ -250,18 +265,6 @@
                     bsAlert.close();
                 });
             }, 5000);
-
-            // Hiệu ứng focus cho input
-            const inputs = document.querySelectorAll('input');
-            inputs.forEach(input => {
-                input.addEventListener('focus', function() {
-                    this.parentElement.style.transform = 'scale(1.02)';
-                });
-
-                input.addEventListener('blur', function() {
-                    this.parentElement.style.transform = 'scale(1)';
-                });
-            });
         });
     </script>
 </body>

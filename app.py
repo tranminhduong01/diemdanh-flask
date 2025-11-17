@@ -1,8 +1,6 @@
-import traceback
 import mysql.connector
 import base64
 from flask import Flask, request, redirect, url_for, flash, session, render_template, jsonify, current_app, send_file
-import os
 from openpyxl.workbook import Workbook
 from werkzeug.utils import secure_filename
 import face_recognition
@@ -15,14 +13,16 @@ from werkzeug.security import check_password_hash, generate_password_hash
 import json
 from flask_apscheduler import APScheduler
 from flask_socketio import SocketIO, emit
-from ai import get_ai_response
 from google.genai import Client, types
 from email.message import EmailMessage
-import smtplib
-from email.mime.text import MIMEText
 from flask_mail import Mail, Message
 from itsdangerous import URLSafeTimedSerializer
 from dotenv import load_dotenv
+from flask import send_file
+import openpyxl
+from openpyxl.utils import get_column_letter
+from io import BytesIO
+
 
 # Nếu dùng PIL ở local, giữ lại dòng dưới:
 ImageFile.LOAD_TRUNCATED_IMAGES = True
@@ -305,6 +305,19 @@ def admin_dashboard():
         data_chart=data_chart
     )
 
+# app.py hoặc __init__.py
+@app.context_processor
+def inject_site_name():
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT setting_value FROM system_settings WHERE setting_key = 'site_name'")
+    result = cursor.fetchone()
+    site_name = result['setting_value'] if result else "Website Mặc định"
+    cursor.close()
+    conn.close()
+    return dict(site_name=site_name)
+
+
 def format_time(value):
     if isinstance(value, timedelta):
         total_seconds = int(value.total_seconds())
@@ -453,7 +466,6 @@ def teacher_dashboard():
 
 
 
-
 @app.route("/student")
 def student_dashboard():
     user_id = session.get("user_id")
@@ -463,7 +475,7 @@ def student_dashboard():
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
 
-    # 🔹 Lấy thông tin user (tên + avatar)
+    # 🔹 Lấy thông tin user
     cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
     user = cursor.fetchone()
 
@@ -474,7 +486,7 @@ def student_dashboard():
     # 🔹 Lấy 3 lớp có nhiều sinh viên ghi danh nhất + tên giảng viên
     query = """
         SELECT c.id, c.class_name, c.room, c.day_of_week, c.start_time, c.end_time,
-               c.max_students, c.start_date, COUNT(e.student_id) AS student_count,
+               c.max_students,c.weeks, c.start_date, COUNT(e.student_id) AS student_count,
                u.name AS teacher_name
         FROM classes c
         LEFT JOIN enrollments e ON c.id = e.class_id
@@ -486,14 +498,24 @@ def student_dashboard():
     cursor.execute(query)
     featured_classes = cursor.fetchall()
 
+    # 🔹 Lấy banner (chỉ banner active + category = 'home')
+    cursor.execute("""
+        SELECT * 
+        FROM panner 
+        WHERE is_active = 1 AND category = 'home' 
+        ORDER BY created_at DESC
+    """)
+    banners = cursor.fetchall()
+
     cursor.close()
     conn.close()
 
     return render_template(
         "HS/sinhvien.html",
-        user=user,  # ✅ Truyền object user
+        user=user,
         giang_vien=giang_vien,
-        classes=featured_classes
+        classes=featured_classes,
+        banners=banners  # ✅ Truyền banners xuống template
     )
 
 
@@ -1374,35 +1396,70 @@ def get_face_encoding(src, upsample=1, jitters=1, model="small"):
 @app.route("/api/diemdanh/thaydoi", methods=["PUT"])
 def update_attendance_status():
     data = request.json
-    print("📥 Dữ liệu nhận từ client:", data)  # 👈 Thêm dòng này
+    print("📥 Dữ liệu nhận từ client:", data)
+
     try:
         enrollment_id = data.get("enrollment_id")
         session_id = data.get("session_id")
-        field = data.get("field")
+        field = data.get("field")  # status_in hoặc status_out
         value = data.get("value")
-
-        print("📦 Debug:", enrollment_id, session_id, field, value)  # 👈 Thêm dòng này
 
         if field not in ["status_in", "status_out"]:
             return jsonify({"success": False, "error": "Trường không hợp lệ"}), 400
 
         conn = get_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(dictionary=True)
 
+        # 1️⃣ Lấy trạng thái hiện tại
+        cursor.execute("""
+            SELECT status_in, status_out
+            FROM attendance_records
+            WHERE enrollment_id = %s AND session_id = %s
+        """, (enrollment_id, session_id))
+
+        current = cursor.fetchone()
+        if not current:
+            return jsonify({"success": False, "error": "Không tìm thấy bản ghi"}), 404
+
+        # Cập nhật field vừa thay đổi
+        if field == "status_in":
+            current["status_in"] = value
+        else:
+            current["status_out"] = value
+
+        # 2️⃣ Tính điểm mới
+        # Điểm vào
+        if current["status_in"] == "present":
+            diem_vao = 5
+        elif current["status_in"] == "late":
+            diem_vao = 3
+        else:
+            diem_vao = 0
+
+        # Điểm ra
+        diem_ra = 5 if current["status_out"] == "checked_out" else 0
+
+        final_score = diem_vao + diem_ra
+
+        print(f"🎯 Điểm vào: {diem_vao}, Điểm ra: {diem_ra}, Tổng: {final_score}")
+
+        # 3️⃣ Cập nhật vào database
         cursor.execute(f"""
             UPDATE attendance_records
-            SET {field} = %s
+            SET {field} = %s, score = %s
             WHERE enrollment_id = %s AND session_id = %s
-        """, (value, enrollment_id, session_id))
+        """, (value, final_score, enrollment_id, session_id))
 
         conn.commit()
         cursor.close()
         conn.close()
 
-        return jsonify({"success": True})
+        return jsonify({"success": True, "new_score": final_score})
+
     except Exception as e:
-        print("❌ Lỗi khi cập nhật trạng thái:", e)
+        print("❌ Lỗi khi cập nhật:", e)
         return jsonify({"success": False, "error": str(e)}), 500
+
 
 
 
@@ -1413,39 +1470,36 @@ from datetime import datetime, timedelta, time as dtime
 def diem_danh(session_id, action):
     cursor = None
     conn = None
-    img_saved_path = None
+
     try:
         if action not in ["in", "out"]:
             return jsonify({"success": False, "message": "Action không hợp lệ (chỉ nhận 'in' hoặc 'out')"}), 400
 
+        # ===== Lấy file ảnh =====
         file = request.files.get("image")
         if not file:
             return jsonify({"success": False, "message": "Không tìm thấy ảnh trong request"}), 400
 
-        # Đọc dữ liệu ảnh
         try:
             file.stream.seek(0)
         except:
             pass
+
         file_bytes = file.read()
 
-        face_vec = get_face_encoding(file_bytes)
-        temp_folder = os.path.join(current_app.root_path, "static", "temp")
-        os.makedirs(temp_folder, exist_ok=True)
-        filename = secure_filename(file.filename or f"frame_{int(datetime.now().timestamp())}.jpg")
-        img_saved_path = os.path.join(temp_folder, filename)
+        # ===== Load ảnh thành numpy array =====
+        import face_recognition
+        import io
 
-        # Nếu chưa có vector thì xử lý lại qua PIL
-        if face_vec is None:
-            pil = _load_pil_image(file_bytes)
-            pil = ImageOps.exif_transpose(pil).convert("RGB")
-            pil.save(img_saved_path, format="JPEG", quality=90)
-            face_vec = get_face_encoding(img_saved_path)
+        img = face_recognition.load_image_file(io.BytesIO(file_bytes))
 
-        if face_vec is None:
-            return jsonify({"success": False, "message": "Không phát hiện được khuôn mặt nào trong ảnh"}), 400
+        # ===== Lấy tất cả mặt trong ảnh =====
+        encodings_in_frame = face_recognition.face_encodings(img)
 
-        # ====== Lấy thông tin buổi học và lớp ======
+        if len(encodings_in_frame) == 0:
+            return jsonify({"success": False, "message": "Không phát hiện khuôn mặt nào trong ảnh"}), 400
+
+        # ====== Lấy thông tin buổi học ======
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
         cursor.execute("""
@@ -1459,20 +1513,21 @@ def diem_danh(session_id, action):
         if not session:
             return jsonify({"success": False, "message": "Không tìm thấy buổi học"}), 404
 
-        class_name = session["class_name"]
         class_id = session["class_id"]
         session_number = session["session_number"]
         teacher_id = session["teacher_id"]
+        class_name = session["class_name"]
         session_start_time = session["start_time"]
 
+        # Chuyển timedelta → time
         if isinstance(session_start_time, timedelta):
-            seconds = session_start_time.total_seconds()
-            hours = int(seconds // 3600)
-            minutes = int((seconds % 3600) // 60)
-            secs = int(seconds % 60)
-            session_start_time = datetime.strptime(f"{hours:02}:{minutes:02}:{secs:02}", "%H:%M:%S").time()
+            sec = session_start_time.total_seconds()
+            session_start_time = datetime.strptime(
+                f"{int(sec//3600):02}:{int((sec%3600)//60):02}:{int(sec%60):02}",
+                "%H:%M:%S"
+            ).time()
 
-        # ====== Lấy danh sách sinh viên của lớp ======
+        # ====== Lấy danh sách sinh viên lớp này ======
         cursor.execute("""
             SELECT e.id AS enrollment_id, e.full_name, e.mssv, e.face_encoding, e.student_id
             FROM enrollments e
@@ -1480,156 +1535,147 @@ def diem_danh(session_id, action):
         """, (class_id,))
         students = cursor.fetchall()
 
-        matched = None
-        best_dist = float("inf")
-        threshold = 0.5
+        # ====== Tối ưu: convert toàn bộ face_encoding DB thành vector ======
+        db_students = []
         for sv in students:
             if sv.get("face_encoding"):
                 try:
-                    db_vec = np.array(json.loads(sv["face_encoding"]), dtype=float)
-                    dist = np.linalg.norm(face_vec - db_vec)
-                    if dist < threshold and dist < best_dist:
-                        best_dist = dist
-                        matched = sv
+                    enc = np.array(json.loads(sv["face_encoding"]), dtype=float)
+                    db_students.append({
+                        "info": sv,
+                        "encoding": enc
+                    })
                 except:
                     continue
 
-        if not matched:
-            return jsonify({"success": False, "message": "Không khớp với SV nào trong lớp"}), 404
+        # ====== Matching nhiều sinh viên ======
+        threshold = 0.5
+        matched_students = []
 
+        for face_vec in encodings_in_frame:
+            best_match = None
+            best_dist = float("inf")
+
+            for sv in db_students:
+                dist = np.linalg.norm(face_vec - sv["encoding"])
+                if dist < threshold and dist < best_dist:
+                    best_dist = dist
+                    best_match = sv["info"]
+
+            if best_match:
+                matched_students.append(best_match)
+
+        if len(matched_students) == 0:
+            return jsonify({"success": False, "message": "Không khớp với sinh viên nào trong lớp"}), 404
+
+        # ====== Xử lý check-in/check-out cho nhiều sinh viên ======
         today = datetime.today().date()
         now_dt = datetime.now()
         class_start = datetime.combine(today, session_start_time)
         grace_minutes = 15
+
         status = "present" if now_dt <= (class_start + timedelta(minutes=grace_minutes)) else "late"
 
-        # ====== Lấy record đã tạo sẵn khi ghi danh ======
-        cursor.execute("""
-            SELECT id, time_in, time_out, status_in, status_out
-            FROM attendance_records
-            WHERE enrollment_id = %s AND session_id = %s
-        """, (matched["enrollment_id"], session_id))
-        record = cursor.fetchone()
+        results = []
 
-        if not record:
-            return jsonify({"success": False, "message": "Không tìm thấy record điểm danh"}), 404
+        for matched in matched_students:
+            enrollment_id = matched["enrollment_id"]
 
-        # ---------- CHECK-IN ----------
-        if action == "in":
-            if record["time_in"]:
-                return jsonify({
-                    "success": True,
-                    "message": f"{matched['full_name']} đã check-in trước đó",
-                    "student": matched,
-                    "time_in": record["time_in"].strftime("%H:%M:%S") if record["time_in"] else None
-                })
-            else:
-                score = 5 if status == "present" else 2 if status == "late" else 0
-                cursor.execute("""
-                    UPDATE attendance_records
-                    SET time_in = %s, status_in = %s, score = %s
-                    WHERE id = %s
-                """, (now_dt, status, score, record["id"]))
-                conn.commit()
+            # Lấy record
+            cursor.execute("""
+                SELECT id, time_in, time_out, status_in, status_out, score
+                FROM attendance_records
+                WHERE enrollment_id = %s AND session_id = %s
+            """, (enrollment_id, session_id))
+            record = cursor.fetchone()
 
-                # Thông báo cho sinh viên
-                add_notification(
-                    matched["student_id"],
-                    "Điểm danh thành công",
-                    f"Bạn đã check-in vào buổi {session_number} của lớp {class_name} lúc {now_dt.strftime('%H:%M')}."
-                )
+            if not record:
+                continue
 
-                # Thông báo cho giáo viên
-                if teacher_id:
+            # ====== CHECK-IN ======
+            if action == "in":
+                if record["time_in"]:
+                    results.append({
+                        "student": matched,
+                        "message": "Đã check-in trước đó",
+                        "time_in": record["time_in"].strftime("%H:%M:%S")
+                    })
+                else:
+                    score = 5 if status == "present" else 2
+                    cursor.execute("""
+                        UPDATE attendance_records
+                        SET time_in = %s, status_in = %s, score = %s
+                        WHERE id = %s
+                    """, (now_dt, status, score, record["id"]))
+                    conn.commit()
+
+                    # Thông báo
                     add_notification(
-                        teacher_id,
-                        "Sinh viên điểm danh",
-                        f"Sinh viên {matched['full_name']} ({matched['mssv']}) đã check-in lúc {now_dt.strftime('%H:%M:%S')}."
+                        matched["student_id"],
+                        "Điểm danh thành công",
+                        f"Bạn đã check-in vào buổi {session_number} lúc {now_dt.strftime('%H:%M')}."
                     )
 
-                # ✅ Sau khi cập nhật, lấy danh sách sinh viên hiện tại trong bảng attendance_records
-                cursor.execute("""
-                    SELECT 
-                        ar.id AS record_id, 
-                        e.id AS enrollment_id,
-                        e.full_name, 
-                        e.mssv,
-                        ar.status_in, 
-                        ar.status_out,
-                        ar.time_in, 
-                        ar.time_out
-                    FROM attendance_records ar
-                    JOIN enrollments e ON ar.enrollment_id = e.id
-                    WHERE ar.session_id = %s
-                """, (session_id,))
-                attendance_list = cursor.fetchall()
+                    if teacher_id:
+                        add_notification(
+                            teacher_id,
+                            "Sinh viên điểm danh",
+                            f"{matched['full_name']} ({matched['mssv']}) đã check-in lúc {now_dt.strftime('%H:%M:%S')}."
+                        )
 
-                return jsonify({
-                    "success": True,
-                    "message": f"Check-in thành công cho {matched['full_name']}",
-                    "student": matched,
-                    "time_in": now_dt.strftime("%H:%M:%S"),
-                    "score": score,
-                    "attendance_list": attendance_list  # 👈 gửi danh sách mới nhất về client
-                })
+                    results.append({
+                        "student": matched,
+                        "message": "Check-in thành công",
+                        "time_in": now_dt.strftime("%H:%M:%S"),
+                        "score": score
+                    })
 
-        # ---------- CHECK-OUT ----------
-        elif action == "out":
-            if not record["time_in"]:
-                return jsonify({"success": False, "message": "Chưa check-in nên không thể check-out"}), 400
+            # ====== CHECK-OUT ======
+            elif action == "out":
+                if not record["time_in"]:
+                    results.append({
+                        "student": matched,
+                        "message": "Chưa check-in – không thể check-out"
+                    })
+                elif record["time_out"]:
+                    results.append({
+                        "student": matched,
+                        "message": "Đã check-out trước đó",
+                        "time_out": record["time_out"].strftime("%H:%M:%S")
+                    })
+                else:
+                    cursor.execute("""
+                        UPDATE attendance_records
+                        SET time_out = %s, status_out = %s, score = score + 5
+                        WHERE id = %s
+                    """, (now_dt, "checked_out", record["id"]))
+                    conn.commit()
 
-            if record["time_out"]:
-                return jsonify({
-                    "success": True,
-                    "message": f"{matched['full_name']} đã check-out trước đó",
-                    "student": matched,
-                    "time_out": record["time_out"].strftime("%H:%M:%S") if record["time_out"] else None
-                })
-            else:
-                cursor.execute("""
-                    UPDATE attendance_records
-                    SET time_out = %s, status_out = %s, score = score + 5
-                    WHERE id = %s
-                """, (now_dt, "checked_out", record["id"]))
-                conn.commit()
-
-                add_notification(
-                    matched["student_id"],
-                    "Hoàn tất buổi học",
-                    f"Bạn đã check-out khỏi buổi {session_number} của lớp {class_name} lúc {now_dt.strftime('%H:%M')}."
-                )
-
-                if teacher_id:
                     add_notification(
-                        teacher_id,
-                        "Sinh viên rời lớp",
-                        f"Sinh viên {matched['full_name']} ({matched['mssv']}) đã check-out lúc {now_dt.strftime('%H:%M:%S')}."
+                        matched["student_id"],
+                        "Hoàn tất buổi học",
+                        f"Bạn đã check-out khỏi buổi {session_number} lúc {now_dt.strftime('%H:%M')}."
                     )
 
-                # ✅ Sau khi check-out, cập nhật danh sách điểm danh
-                cursor.execute("""
-                    SELECT 
-                        ar.id AS record_id, 
-                        e.id AS enrollment_id,
-                        e.full_name, 
-                        e.mssv,
-                        ar.status_in, 
-                        ar.status_out,
-                        ar.time_in, 
-                        ar.time_out
-                    FROM attendance_records ar
-                    JOIN enrollments e ON ar.enrollment_id = e.id
-                    WHERE ar.session_id = %s
-                """, (session_id,))
-                attendance_list = cursor.fetchall()
+                    if teacher_id:
+                        add_notification(
+                            teacher_id,
+                            "Sinh viên rời lớp",
+                            f"{matched['full_name']} ({matched['mssv']}) đã check-out lúc {now_dt.strftime('%H:%M:%S')}."
+                        )
 
-                return jsonify({
-                    "success": True,
-                    "message": f"Check-out thành công cho {matched['full_name']} (+5 điểm)",
-                    "student": matched,
-                    "time_out": now_dt.strftime("%H:%M:%S"),
-                    "attendance_list": attendance_list
-                })
+                    results.append({
+                        "student": matched,
+                        "message": "Check-out thành công",
+                        "time_out": now_dt.strftime("%H:%M:%S")
+                    })
+
+        # ===== RETURN =====
+        return jsonify({
+            "success": True,
+            "message": f"Đã xử lý {len(results)} sinh viên",
+            "results": results
+        })
 
     except Exception as e:
         print("Lỗi route /api/diemdanh:", e)
@@ -1639,8 +1685,6 @@ def diem_danh(session_id, action):
         try:
             if cursor: cursor.close()
             if conn: conn.close()
-            if img_saved_path and os.path.exists(img_saved_path):
-                os.remove(img_saved_path)
         except:
             pass
 
@@ -2011,6 +2055,98 @@ def xuat_excel_don_nghi():
     )
 
 
+@app.route("/export_excel/<int:class_id>")
+def export_excel(class_id):
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # 1️⃣ Lấy danh sách sinh viên ghi danh
+    cursor.execute("""
+        SELECT id AS enrollment_id, student_id, full_name, mssv
+        FROM enrollments
+        WHERE class_id = %s
+    """, (class_id,))
+    sinh_vien_list = cursor.fetchall()
+
+    # 2️⃣ Lấy danh sách buổi học trong lớp
+    cursor.execute("""
+        SELECT id AS session_id, session_number
+        FROM sessions
+        WHERE class_id = %s
+        ORDER BY session_number ASC
+    """, (class_id,))
+    buoi_hoc_list = cursor.fetchall()
+
+    # 3️⃣ Lấy toàn bộ điểm chuyên cần / trạng thái
+    cursor.execute("""
+        SELECT enrollment_id, session_id, score, status_in, status_out
+        FROM attendance_records
+        WHERE enrollment_id IN (SELECT id FROM enrollments WHERE class_id = %s)
+    """, (class_id,))
+    attendance_data = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    # 4️⃣ Chuyển về dictionary cho dễ dùng
+    # attendance_dict[enrollment_id][session_id] = {score, status_in, status_out}
+    attendance_dict = {}
+    for rec in attendance_data:
+        eid = rec["enrollment_id"]
+        sid = rec["session_id"]
+        if eid not in attendance_dict:
+            attendance_dict[eid] = {}
+        attendance_dict[eid][sid] = {
+            "score": rec["score"],
+            "status_in": rec["status_in"],
+            "status_out": rec["status_out"]
+        }
+
+    # 5️⃣ Tạo file Excel
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "ChuyenCan"
+
+    # Header: MSSV, Họ tên + từng buổi + Tổng điểm
+    header = ["MSSV", "Họ tên"]
+    for b in buoi_hoc_list:
+        header.append(f"Buổi {b['session_number']}")
+    header.append("Tổng điểm")
+    ws.append(header)
+
+    # 6️⃣ Ghi dữ liệu từng sinh viên
+    for sv in sinh_vien_list:
+        row = [sv["mssv"], sv["full_name"]]
+        total_score = 0
+
+        for b in buoi_hoc_list:
+            session_id = b["session_id"]
+            att = attendance_dict.get(sv["enrollment_id"], {}).get(session_id, None)
+            score = att["score"] if att else 0
+            total_score += score
+            row.append(score)
+
+        row.append(total_score)
+        ws.append(row)
+
+    # 7️⃣ Auto width
+    for col in ws.columns:
+        max_length = 0
+        col_letter = get_column_letter(col[0].column)
+        for cell in col:
+            if cell.value:
+                max_length = max(max_length, len(str(cell.value)))
+        ws.column_dimensions[col_letter].width = max_length + 2
+
+    # 8️⃣ Trả file
+    excel_file = BytesIO()
+    wb.save(excel_file)
+    excel_file.seek(0)
+    return send_file(
+        excel_file,
+        download_name=f"Danh_sach_chuyen_can_lop_{class_id}.xlsx",
+        as_attachment=True
+    )
+
 
 @app.route("/update_status/<int:request_id>", methods=["POST"])
 def update_status(request_id):
@@ -2121,7 +2257,7 @@ def chat_sinh_vien():
 
     # ✅ Lấy danh sách giảng viên đã từng nhắn tin
     cursor.execute("""
-        SELECT DISTINCT u.id, u.name
+        SELECT DISTINCT u.id, u.name, CONCAT('/static/', u.avatar) AS avatar
         FROM users u
         JOIN messages m 
           ON (m.nguoi_gui_id = u.id AND m.nguoi_nhan_id = %s)
@@ -2555,7 +2691,6 @@ def thoikhoabieu():
     )
 
 
-# Xem buổi học -> danh sách sinh viên + trạng thái điểm danh
 # Xem lớp: hiển thị các buổi học
 @app.route("/xemlop/<int:class_id>")
 def xem_lop(class_id):
@@ -2586,7 +2721,7 @@ def xem_lop(class_id):
         s["end_time"] = str(s["end_time"])
 
     conn.close()
-    return render_template("GV/xemlop.html", lop=lop, sessions=sessions)
+    return render_template("GV/xemlop.html", lop=lop, sessions=sessions, class_id=class_id)
 
 
 @app.route("/api/buoi_hoc/<int:session_id>/sinhvien")
@@ -2679,6 +2814,59 @@ def edit_user(id):
     conn.commit()
     conn.close()
     return redirect(url_for("admin_users"))
+
+
+@app.route("/admin/features")
+def admin_features():
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM student_features")
+    features = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return render_template("Admin/QL_gioithieu.html", features=features)
+
+# API thêm feature
+@app.route("/admin/features/add", methods=["POST"])
+def add_feature():
+    data = request.json
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT INTO student_features (icon, title, description) VALUES (%s, %s, %s)",
+        (data["icon"], data["title"], data["description"])
+    )
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return jsonify({"success": True})
+
+# API sửa feature
+@app.route("/admin/features/edit/<int:id>", methods=["POST"])
+def edit_feature(id):
+    data = request.json
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "UPDATE student_features SET icon=%s, title=%s, description=%s WHERE id=%s",
+        (data["icon"], data["title"], data["description"], id)
+    )
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return jsonify({"success": True})
+
+# API xóa feature
+@app.route("/admin/features/delete/<int:id>", methods=["POST"])
+def delete_feature(id):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM student_features WHERE id=%s", (id,))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return jsonify({"success": True})
+
 
 # Trang danh sách lớp học
 @app.route("/admin/classes")
@@ -2887,20 +3075,24 @@ def admin_settings():
 @app.route("/admin/settings/save", methods=["POST"])
 def save_settings():
     conn = get_connection()
-    cursor = conn.cursor(dictionary=True)
-    for key, value in request.form.items():
-        if key.startswith("setting_"):
-            setting_id = key.split("_")[1]
-            cursor.execute("""
-                UPDATE system_settings
-                SET setting_value=%s, updated_by=%s, updated_at=NOW()
-                WHERE id=%s AND is_editable=1
-            """, (value, session.get("user_id") or 1, setting_id))
-    conn.commit()
-    cursor.close()
-    conn.close()
-    flash("Cập nhật cấu hình thành công!", "success")
+    cursor = conn.cursor()
+    try:
+        for key, value in request.form.items():
+            if key.startswith("setting_"):
+                setting_id = int(key.replace("setting_", ""))
+                cursor.execute(
+                    "UPDATE system_settings SET setting_value=%s WHERE id=%s",
+                    (value, setting_id)
+                )
+        conn.commit()
+        flash("Đã lưu các cấu hình!", "success")
+    except Exception as e:
+        flash(f"Lỗi: {e}", "danger")
+    finally:
+        cursor.close()
+        conn.close()
     return redirect(url_for("admin_settings"))
+
 
 @app.route("/admin/settings/add", methods=["POST"])
 def add_setting():
@@ -2926,7 +3118,7 @@ def add_setting():
     # ✅ Thêm mới
     cursor.execute("""
         INSERT INTO system_settings 
-        (category, setting_key, setting_value, description, note, is_editable, created_by, created_at)
+        (category, setting_key, setting_value, description, note, is_editable, updated_by, updated_at)
         VALUES (%s, %s, %s, %s, %s, 1, %s, NOW())
     """, (
         category, setting_key, setting_value,
@@ -2942,39 +3134,98 @@ def add_setting():
 
 @app.route("/admin/settings/edit/<int:id>", methods=["POST"])
 def edit_setting(id):
-    category = request.form["category"]
-    key = request.form["setting_key"]
-    value = request.form["setting_value"]
-    description = request.form.get("description", "")
-    note = request.form.get("note", "")
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute("""
-        UPDATE system_settings
-        SET category=%s, setting_key=%s, setting_value=%s, description=%s, note=%s, updated_at=NOW()
-        WHERE id=%s
-    """, (category, key, name, value, description, note, id))
-    conn.commit()
-    cursor.close()
-    conn.close()
-    flash("Chỉnh sửa cấu hình thành công!", "info")
-    return redirect(url_for("admin_settings"))
+    try:
+        category = request.form.get("category")
+        setting_key = request.form.get("setting_key")
+        setting_value = request.form.get("setting_value")
+        description = request.form.get("description")
+        note = request.form.get("note")
+
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE system_settings
+            SET category=%s, setting_key=%s, setting_value=%s, description=%s, note=%s
+            WHERE id=%s
+        """, (category, setting_key, setting_value, description, note, id))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)})
+
 
 @app.route("/admin/settings/delete/<int:id>", methods=["POST"])
 def delete_setting(id):
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM system_settings WHERE id=%s", (id,))
-    conn.commit()
-    cursor.close()
-    conn.close()
-    flash("Đã xóa cấu hình thành công!", "danger")
-    return redirect(url_for("admin_settings"))
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM system_settings WHERE id=%s", (id,))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)})
+
 
 
 @app.route("/gioithieu")
 def gioithieu():
-    return render_template("HS/gioithieu.html")
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # 🔹 Lấy banner
+    cursor.execute("""
+        SELECT * 
+        FROM panner 
+        WHERE is_active = 1 AND category = 'about'
+        ORDER BY created_at DESC
+    """)
+    banners = cursor.fetchall()
+
+    # 🔹 Thống kê số lớp học
+    cursor.execute("SELECT COUNT(*) AS total_classes FROM classes")
+    total_classes = cursor.fetchone()["total_classes"]
+
+    # 🔹 Thống kê số giảng viên (trong bảng users có role = 'teacher')
+    cursor.execute("SELECT COUNT(*) AS total_teachers FROM users WHERE role = 'teacher'")
+    total_teachers = cursor.fetchone()["total_teachers"]
+
+    # 🔹 Thống kê số sinh viên (trong bảng users có role = 'student')
+    cursor.execute("SELECT COUNT(*) AS total_students FROM users WHERE role = 'student'")
+    total_students = cursor.fetchone()["total_students"]
+
+    # 🔹 Tính độ chính xác trung bình (dựa vào cột score)
+    cursor.execute("""
+        SELECT 
+            ROUND(AVG(score) * 100, 2) AS accuracy
+        FROM attendance_records
+        WHERE score IS NOT NULL
+    """)
+    result = cursor.fetchone()
+    accuracy = result["accuracy"] if result["accuracy"] else 0
+
+    # 🔹 Lấy danh sách tính năng (student_features)
+    cursor.execute("SELECT * FROM student_features ORDER BY id ASC")
+    features = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    # ✅ Truyền tất cả dữ liệu vào template
+    return render_template(
+        "HS/gioithieu.html",
+        banners=banners,
+        total_classes=total_classes,
+        total_teachers=total_teachers,
+        total_students=total_students,
+        accuracy=accuracy,
+        features=features
+    )
+
+
 
 UPLOAD_FOLDER1 = os.path.join("static", "avatars")
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif"}
@@ -3637,6 +3888,82 @@ def delete_news(id):
     flash("Đã xóa tin tức!", "danger")
     return redirect("/admin/news")
 
+
+UPLOAD_FOLDER3 = 'static/panner'
+os.makedirs(UPLOAD_FOLDER3, exist_ok=True)
+
+@app.route('/admin/panner')
+def admin_panner():
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM panner ORDER BY created_at DESC")
+    pannners = cursor.fetchall()
+    conn.close()
+    return render_template('Admin/QL_panner.html', pannners=pannners)
+
+@app.route('/admin/panner/add', methods=['POST'])
+def add_panner():
+    title = request.form.get('title')
+    description = request.form.get('description')
+    category = request.form.get('category')
+    file = request.files.get('image')
+
+    if file:
+        filename = secure_filename(file.filename)
+        filepath = os.path.join(UPLOAD_FOLDER3, filename)
+        file.save(filepath)
+
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO panner (title, image_path, description, category)
+            VALUES (%s, %s, %s, %s)
+        """, (title, filepath, description, category))
+        conn.commit()
+        conn.close()
+
+    return redirect('/admin/panner')
+@app.route('/admin/panner/edit/<int:id>', methods=['POST'])
+def edit_panner(id):
+    title = request.form.get('title')
+    description = request.form.get('description')
+    category = request.form.get('category')
+    is_active = 1 if request.form.get('is_active') == 'on' else 0
+    file = request.files.get('image')
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    if file and file.filename:
+        filename = secure_filename(file.filename)
+        filepath = os.path.join(UPLOAD_FOLDER3, filename)
+        file.save(filepath)
+
+        cursor.execute("""
+            UPDATE panner
+            SET title = %s, description = %s, category = %s, is_active = %s, image_path = %s
+            WHERE id = %s
+        """, (title, description, category, is_active, filepath, id))
+    else:
+        cursor.execute("""
+            UPDATE panner
+            SET title = %s, description = %s, category = %s, is_active = %s
+            WHERE id = %s
+        """, (title, description, category, is_active, id))
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({'success': True})
+
+@app.route('/admin/panner/delete/<int:id>', methods=['POST'])
+def delete_panner(id):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM panner WHERE id = %s", (id,))
+    conn.commit()
+    conn.close()
+    return jsonify({'success': True})
 # 🧠 Quản lý FAQ
 @app.route('/admin/faq')
 def faq_list():
@@ -4293,7 +4620,7 @@ def delete_ticket(ticket_id):
     conn = get_connection()
     cursor = conn.cursor()
 
-    query = "DELETE FROM support_tickets WHERE id = %s AND teacher_id = %s"
+    query = "DELETE FROM support_tickets WHERE id = %s AND user_id = %s"
     cursor.execute(query, (ticket_id, session["user_id"]))
     conn.commit()
 

@@ -3,397 +3,328 @@
 {% block title %}Bảng điều khiển | Quản trị hệ thống{% endblock %}
 
 {% block content %}
-    <style>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 
+<div class="container mt-4">
+    <h3 class="mb-3">Quản lý lớp học</h3>
 
-        /* Form styling */
-        .adm-class-form {
-            background: white;
-            border-radius: 12px;
-            border: 1px solid var(--adm-border-color);
-            padding: 20px;
-            margin-bottom: 25px;
-        }
+    <table class="table table-bordered table-striped adm-data-table">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Tên lớp</th>
+                <th>Giảng viên</th>
+                <th>Phòng</th>
+                <th>Thứ</th>
+                <th>Giờ bắt đầu</th>
+                <th>Giờ kết thúc</th>
+                <th>Số lượng SV</th>
+                <th>Ngày bắt đầu</th>
+                <th>Tuần học</th>
+                <th>Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in classes %}
+            <tr>
+                <td>{{ c.id }}</td>
+                <td>{{ c.class_name }}</td>
+                <td>{{ c.teacher_name }}</td>
+                <td>{{ c.room }}</td>
+                <td>
+                    <span class="adm-badge-day adm-badge-{{ c.day_of_week.lower() }}">
+                        {{ c.day_of_week }}
+                    </span>
+                </td>
+                <td>{{ c.start_time }}</td>
+                <td>{{ c.end_time }}</td>
+                <td>{{ c.max_students }}</td>
+                <td>{{ c.start_date }}</td>
+                <td>{{ c.weeks }}</td>
+                <td>
+                    <div class="adm-action-buttons">
+                        <button class="btn btn-warning btn-sm adm-btn adm-edit-btn"
+                                data-bs-toggle="modal"
+                                data-bs-target="#editModal"
+                                data-id="{{ c.id }}"
+                                data-class-name="{{ c.class_name }}"
+                                data-teacher-name="{{ c.teacher_name }}"
+                                data-room="{{ c.room }}"
+                                data-day-of-week="{{ c.day_of_week }}"
+                                data-start-time="{{ c.start_time }}"
+                                data-end-time="{{ c.end_time }}"
+                                data-max-students="{{ c.max_students }}"
+                                data-start-date="{{ c.start_date }}"
+                                data-weeks="{{ c.weeks }}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <form action="{{ url_for('admin_delete_class', id=c.id) }}" method="POST" style="display:inline;">
+                            <button class="btn btn-danger btn-sm adm-btn" onclick="return confirm('Xóa lớp này?')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 
-        .adm-form-control, .adm-form-select {
-            border: 1px solid var(--adm-border-color);
-            border-radius: 8px;
-            padding: 10px 15px;
-        }
-
-        .adm-form-control:focus, .adm-form-select:focus {
-            border-color: var(--adm-primary);
-            box-shadow: 0 0 0 3px rgba(74, 108, 247, 0.1);
-        }
-
-        /* Table styling */
-        .adm-data-table {
-            background: white;
-            border-radius: 12px;
-            border: 1px solid var(--adm-border-color);
-            overflow: hidden;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
-        }
-
-        .adm-data-table thead th {
-            background-color: #f8fafc;
-            border-bottom: 1px solid var(--adm-border-color);
-            padding: 15px;
-            font-weight: 600;
-            color: var(--adm-text-primary);
-        }
-
-        .adm-data-table tbody td {
-            padding: 12px 15px;
-            vertical-align: middle;
-            border-color: var(--adm-border-color);
-        }
-
-        .adm-table-hover tbody tr:hover {
-            background-color: #f8fafc;
-        }
-
-        /* Button styling */
-        .adm-btn {
-            border-radius: 8px;
-            padding: 8px 16px;
-            font-weight: 500;
-        }
-
-        .adm-btn-sm {
-            padding: 5px 10px;
-            font-size: 0.875rem;
-        }
-
-        .adm-btn-primary {
-            background-color: var(--adm-primary);
-            border-color: var(--adm-primary);
-        }
-
-        .adm-btn-warning {
-            background-color: #f59e0b;
-            border-color: #f59e0b;
-            color: white;
-        }
-
-        .adm-btn-danger {
-            background-color: #ef4444;
-            border-color: #ef4444;
-        }
-
-        /* Edit mode styling */
-        .adm-edit-mode input, .adm-edit-mode select {
-            width: 100%;
-            padding: 6px 10px;
-            border: 1px solid var(--adm-border-color);
-            border-radius: 4px;
-            font-size: 0.9rem;
-        }
-
-        /* Responsive */
-        @media (max-width: 992px) {
-            .adm-table-responsive {
-                overflow-x: auto;
-            }
-        }
-
-        /* Badge for days of week */
-        .adm-badge-day {
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: 0.75rem;
-            font-weight: 500;
-        }
-
-        .adm-badge-mon { background-color: #e9f5ff; color: #0c6dfd; }
-        .adm-badge-tue { background-color: #fff4e6; color: #fd7e14; }
-        .adm-badge-wed { background-color: #f8e6ff; color: #9b32d9; }
-        .adm-badge-thu { background-color: #e6f7ee; color: #0ca678; }
-        .adm-badge-fri { background-color: #fff9e6; color: #f59f00; }
-        .adm-badge-sat { background-color: #ffe6e6; color: #fa5252; }
-        .adm-badge-sun { background-color: #fff0e6; color: #ff6b6b; }
-
-        /* Action buttons */
-        .adm-action-buttons {
-            display: flex;
-            gap: 8px;
-        }
-
-        /* View mode and edit mode */
-        .adm-view-mode, .adm-edit-mode {
-            display: none;
-        }
-
-        .adm-view-mode.active, .adm-edit-mode.active {
-            display: block;
-        }
-
-        /* Loading spinner */
-        .adm-spinner-border-sm {
-            width: 1rem;
-            height: 1rem;
-        }
-
-        /* Toast notification */
-        .adm-toast-container {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1100;
-        }
-
-        /* Highlight updated row */
-        .adm-updated-row {
-            animation: adm-highlight 2s ease;
-        }
-
-        @keyframes adm-highlight {
-            0% { background-color: rgba(76, 175, 80, 0.3); }
-            100% { background-color: transparent; }
-        }
-
-        /* Fix for table layout */
-        .adm-table-fixed {
-            table-layout: fixed;
-        }
-
-        .adm-table-fixed th:nth-child(1), .adm-table-fixed td:nth-child(1) { width: 5%; }
-        .adm-table-fixed th:nth-child(2), .adm-table-fixed td:nth-child(2) { width: 15%; }
-        .adm-table-fixed th:nth-child(3), .adm-table-fixed td:nth-child(3) { width: 12%; }
-        .adm-table-fixed th:nth-child(4), .adm-table-fixed td:nth-child(4) { width: 8%; }
-        .adm-table-fixed th:nth-child(5), .adm-table-fixed td:nth-child(5) { width: 10%; }
-        .adm-table-fixed th:nth-child(6), .adm-table-fixed td:nth-child(6) { width: 12%; }
-        .adm-table-fixed th:nth-child(7), .adm-table-fixed td:nth-child(7) { width: 8%; }
-        .adm-table-fixed th:nth-child(8), .adm-table-fixed td:nth-child(8) { width: 10%; }
-        .adm-table-fixed th:nth-child(9), .adm-table-fixed td:nth-child(9) { width: 8%; }
-        .adm-table-fixed th:nth-child(10), .adm-table-fixed td:nth-child(10) { width: 12%; }
-
-        /* Custom modal styling */
-        .adm-modal-header {
-            background-color: var(--adm-primary);
-            color: white;
-        }
-
-        .adm-modal-content {
-            border-radius: 12px;
-            border: 1px solid var(--adm-border-color);
-        }
-
-        /* Custom form labels */
-        .adm-form-label {
-            font-weight: 500;
-            color: var(--adm-text-primary);
-            margin-bottom: 8px;
-        }
-    </style>
-
-
-    <!-- Content -->
-    <div class="adm-content">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="adm-page-title mb-0">Quản Lý Lớp Học</h2>
-        </div>
-
-        <div class="container mt-3">
-            <table class="table table-bordered table-striped text-center align-middle adm-data-table">
-                <thead class="table-dark">
-                    <tr>
-                        <th>ID</th>
-                        <th>Tên lớp</th>
-                        <th>Giảng viên</th>
-                        <th>Phòng</th>
-                        <th>Thứ</th>
-                        <th>Giờ bắt đầu</th>
-                        <th>Giờ kết thúc</th>
-                        <th>Số lượng SV</th>
-                        <th>Ngày bắt đầu</th>
-                        <th>Tuần học</th>
-                        <th>Hành động</th>
-                    </tr>
-                </thead>
-                <tbody>
-                  {% for c in classes %}
-                  <tr>
-                    <td>{{ c.id }}</td>
-                    <td>{{ c.class_name }}</td>
-                    <td>{{ c.teacher_name }}</td>
-                    <td>{{ c.room }}</td>
-                    <td>{{ c.day_of_week }}</td>
-                    <td>{{ c.start_time }}</td>
-                    <td>{{ c.end_time }}</td>
-                    <td>{{ c.max_students }}</td>
-                    <td>{{ c.start_date }}</td>
-                    <td>{{ c.weeks }}</td>
-                    <td>
-                      <button class="btn btn-warning btn-sm adm-edit-btn" type="button"
-                      data-id="{{ c.id }}"
-                      data-class-name="{{ c.class_name }}"
-                      data-teacher-name="{{ c.teacher_name }}"
-                      data-teacher-id="{{ c.teacher_id }}"
-                      data-room="{{ c.room }}"
-                      data-day-of-week="{{ c.day_of_week }}"
-                      data-start-time="{{ c.start_time }}"
-                      data-end-time="{{ c.end_time }}"
-                      data-max-students="{{ c.max_students }}"
-                      data-start-date="{{ c.start_date }}"
-                      data-weeks="{{ c.weeks }}">
-                      <i class="bi bi-pencil"></i>
-                    </button>
-                      <form action="{{ url_for('admin_delete_class', id=c.id) }}" method="POST" style="display:inline;">
-                      <button type="submit" class="btn btn-danger btn-sm"
-                              onclick="return confirm('Bạn có chắc muốn xóa lớp này?');">
-                        <i class="bi bi-trash"></i>
-                      </button>
-                     </form>
-                    </td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- Edit Modal -->
-    <div class="modal fade" id="admEditClassModal" tabindex="-1">
-      <div class="modal-dialog modal-lg modal-dialog-centered">
+<!-- Edit Modal -->
+<div class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content adm-modal-content">
-          <div class="modal-header adm-modal-header">
-            <h5 class="modal-title">✏️ Chỉnh sửa lớp học</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body">
-            <form id="admEditClassForm" class="row g-3">
-              <input type="hidden" id="adm-edit-id">
+            <div class="modal-header adm-modal-header">
+                <h5 class="modal-title">✏️ Chỉnh sửa lớp học</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="admEditClassForm" method="POST">
+                <div class="modal-body">
+                    <input type="hidden" id="edit_id" name="id">
 
-              <div class="col-md-6">
-                <label class="adm-form-label">Tên lớp</label>
-                <input type="text" class="form-control adm-form-control" id="adm-edit-class_name">
-              </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="adm-form-label">Tên lớp</label>
+                            <input type="text" class="form-control adm-form-control" id="edit_class_name" name="class_name" required>
+                        </div>
 
-              <div class="col-md-6">
-                <label class="adm-form-label">Giảng viên</label>
-                <input type="text" class="form-control adm-form-control" id="adm-edit-teacher_name">
-              </div>
+                        <div class="col-md-6">
+                            <label class="adm-form-label">Giảng viên</label>
+                            <input type="text" class="form-control adm-form-control" id="edit_teacher_name" name="teacher_name" required>
+                        </div>
 
-              <div class="col-md-6">
-                <label class="adm-form-label">Phòng</label>
-                <input type="text" class="form-control adm-form-control" id="adm-edit-room">
-              </div>
+                        <div class="col-md-6">
+                            <label class="adm-form-label">Phòng</label>
+                            <input type="text" class="form-control adm-form-control" id="edit_room" name="room" required>
+                        </div>
 
-              <div class="col-md-6">
-                <label class="adm-form-label">Thứ</label>
-                <input type="text" class="form-control adm-form-control" id="adm-edit-day_of_week">
-              </div>
+                        <div class="col-md-6">
+                            <label class="adm-form-label">Thứ</label>
+                            <select class="form-select adm-form-select" id="edit_day_of_week" name="day_of_week" required>
+                                <option value="Mon">Thứ 2</option>
+                                <option value="Tue">Thứ 3</option>
+                                <option value="Wed">Thứ 4</option>
+                                <option value="Thu">Thứ 5</option>
+                                <option value="Fri">Thứ 6</option>
+                                <option value="Sat">Thứ 7</option>
+                                <option value="Sun">Chủ nhật</option>
+                            </select>
+                        </div>
 
-              <div class="col-md-6">
-                <label class="adm-form-label">Giờ bắt đầu</label>
-                <input type="time" class="form-control adm-form-control" id="adm-edit-start_time">
-              </div>
+                        <div class="col-md-6">
+                            <label class="adm-form-label">Giờ bắt đầu</label>
+                            <input type="time" class="form-control adm-form-control" id="edit_start_time" name="start_time" required>
+                        </div>
 
-              <div class="col-md-6">
-                <label class="adm-form-label">Giờ kết thúc</label>
-                <input type="time" class="form-control adm-form-control" id="adm-edit-end_time">
-              </div>
+                        <div class="col-md-6">
+                            <label class="adm-form-label">Giờ kết thúc</label>
+                            <input type="time" class="form-control adm-form-control" id="edit_end_time" name="end_time" required>
+                        </div>
 
-              <div class="col-md-6">
-                <label class="adm-form-label">Số lượng SV</label>
-                <input type="number" class="form-control adm-form-control" id="adm-edit-max_students">
-              </div>
+                        <div class="col-md-6">
+                            <label class="adm-form-label">Số lượng SV</label>
+                            <input type="number" class="form-control adm-form-control" id="edit_max_students" name="max_students" required>
+                        </div>
 
-              <div class="col-md-6">
-                <label class="adm-form-label">Ngày bắt đầu</label>
-                <input type="date" class="form-control adm-form-control" id="adm-edit-start_date">
-              </div>
+                        <div class="col-md-6">
+                            <label class="adm-form-label">Ngày bắt đầu</label>
+                            <input type="date" class="form-control adm-form-control" id="edit_start_date" name="start_date" required>
+                        </div>
 
-              <div class="col-md-6">
-                <label class="adm-form-label">Số tuần</label>
-                <input type="number" class="form-control adm-form-control" id="adm-edit-weeks">
-              </div>
+                        <div class="col-md-6">
+                            <label class="adm-form-label">Số tuần</label>
+                            <input type="number" class="form-control adm-form-control" id="edit_weeks" name="weeks" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success adm-btn">
+                        <i class="fas fa-save"></i> Lưu thay đổi
+                    </button>
+                    <button type="button" class="btn btn-secondary adm-btn" data-bs-dismiss="modal">Hủy</button>
+                </div>
             </form>
-          </div>
-          <div class="modal-footer">
-            <button type="button" id="adm-save-edit-btn" class="btn btn-success">
-              <i class="bi bi-save"></i> Lưu
-            </button>
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-          </div>
         </div>
-      </div>
     </div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      if (typeof bootstrap === "undefined") {
-        console.error("Bootstrap JS chưa được nạp.");
-        return;
-      }
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Edit modal handling
+    const editModal = document.getElementById('editModal');
+    if (editModal) {
+        editModal.addEventListener('show.bs.modal', function(event) {
+            const button = event.relatedTarget;
 
-      const editModal = new bootstrap.Modal(document.getElementById("admEditClassModal"));
+            document.getElementById('edit_id').value = button.getAttribute('data-id');
+            document.getElementById('edit_class_name').value = button.getAttribute('data-class-name');
+            document.getElementById('edit_teacher_name').value = button.getAttribute('data-teacher-name');
+            document.getElementById('edit_room').value = button.getAttribute('data-room');
+            document.getElementById('edit_day_of_week').value = button.getAttribute('data-day-of-week');
 
-      document.querySelectorAll(".adm-edit-btn").forEach(btn => {
-        btn.addEventListener("click", () => {
-          document.getElementById("adm-edit-id").value = btn.dataset.id || "";
-          document.getElementById("adm-edit-class_name").value = btn.dataset.className || "";
-          document.getElementById("adm-edit-teacher_name").value = btn.dataset.teacherName || "";
-          document.getElementById("adm-edit-room").value = btn.dataset.room || "";
-          document.getElementById("adm-edit-day_of_week").value = btn.dataset.dayOfWeek || "";
+            // Format time for time inputs
+            const startTime = button.getAttribute('data-start-time');
+            const endTime = button.getAttribute('data-end-time');
+            document.getElementById('edit_start_time').value = startTime ? startTime.substring(0, 5) : '';
+            document.getElementById('edit_end_time').value = endTime ? endTime.substring(0, 5) : '';
 
-          const st = btn.dataset.startTime || "";
-          const et = btn.dataset.endTime || "";
-          document.getElementById("adm-edit-start_time").value = (st.length === 8 ? st.slice(0,5) : (st.length===5? st : ""));
-          document.getElementById("adm-edit-end_time").value = (et.length === 8 ? et.slice(0,5) : (et.length===5? et : ""));
-
-          document.getElementById("adm-edit-max_students").value = btn.dataset.maxStudents || "";
-          document.getElementById("adm-edit-start_date").value = btn.dataset.startDate || "";
-          document.getElementById("adm-edit-weeks").value = btn.dataset.weeks || "";
-
-          editModal.show();
+            document.getElementById('edit_max_students').value = button.getAttribute('data-max-students');
+            document.getElementById('edit_start_date').value = button.getAttribute('data-start-date');
+            document.getElementById('edit_weeks').value = button.getAttribute('data-weeks');
         });
-      });
 
-      document.getElementById("adm-save-edit-btn").addEventListener("click", async () => {
-        const id = document.getElementById("adm-edit-id").value;
-        const payload = {
-          class_name: document.getElementById("adm-edit-class_name").value,
-          teacher_name: document.getElementById("adm-edit-teacher_name").value,
-          room: document.getElementById("adm-edit-room").value,
-          day_of_week: document.getElementById("adm-edit-day_of_week").value,
-          start_time: (() => { const v = document.getElementById("adm-edit-start_time").value; return v ? (v.length===5? v + ":00": v) : null; })(),
-          end_time: (() => { const v = document.getElementById("adm-edit-end_time").value; return v ? (v.length===5? v + ":00": v) : null; })(),
-          max_students: document.getElementById("adm-edit-max_students").value,
-          start_date: document.getElementById("adm-edit-start_date").value,
-          weeks: document.getElementById("adm-edit-weeks").value
-        };
+        // Form submission
+        document.getElementById('admEditClassForm').addEventListener('submit', function(e) {
+            e.preventDefault();
 
-        try {
-          const res = await fetch(`/admin/classes/update/${id}`, {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify(payload)
-          });
+            const formData = new FormData(this);
+            const id = formData.get('id');
 
-          const contentType = res.headers.get("content-type") || "";
-          const text = await res.text();
+            fetch(`/admin/classes/update/${id}`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('✅ Cập nhật thành công!');
+                    location.reload();
+                } else {
+                    alert('❌ Lỗi: ' + (data.message || 'Cập nhật thất bại'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('❌ Lỗi kết nối');
+            });
+        });
+    }
+});
+</script>
 
-          if (contentType.includes("application/json")) {
-            const data = JSON.parse(text);
-            if (data.success) {
-              alert("✅ Cập nhật thành công!");
-              location.reload();
-            } else {
-              alert("❌ Lỗi khi cập nhật: " + (data.message || data.error || JSON.stringify(data)));
-              console.error("Server JSON error:", data);
-            }
-          } else {
-            console.error("Server trả về non-JSON response:", text);
-            alert("❌ Server trả về HTML/ lỗi. Mở DevTools → Network → xem response để biết chi tiết.");
-          }
-        } catch (err) {
-          alert("❌ Lỗi mạng or JS: " + err.message);
-          console.error(err);
-        }
-      });
-    });
-    </script>
+<style>
+/* Form styling */
+.adm-class-form {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid var(--adm-border-color);
+    padding: 20px;
+    margin-bottom: 25px;
+}
+
+.adm-form-control, .adm-form-select {
+    border: 1px solid var(--adm-border-color);
+    border-radius: 8px;
+    padding: 10px 15px;
+}
+
+.adm-form-control:focus, .adm-form-select:focus {
+    border-color: var(--adm-primary);
+    box-shadow: 0 0 0 3px rgba(74, 108, 247, 0.1);
+}
+
+/* Table styling */
+.adm-data-table {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid var(--adm-border-color);
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.adm-data-table thead th {
+    background-color: #f8fafc;
+    border-bottom: 1px solid var(--adm-border-color);
+    padding: 15px;
+    font-weight: 600;
+    color: var(--adm-text-primary);
+}
+
+.adm-data-table tbody td {
+    padding: 12px 15px;
+    vertical-align: middle;
+    border-color: var(--adm-border-color);
+}
+
+.adm-table-hover tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+/* Button styling */
+.adm-btn {
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-weight: 500;
+}
+
+.adm-btn-sm {
+    padding: 5px 10px;
+    font-size: 0.875rem;
+}
+
+.adm-btn-primary {
+    background-color: var(--adm-primary);
+    border-color: var(--adm-primary);
+}
+
+.adm-btn-warning {
+    background-color: #f59e0b;
+    border-color: #f59e0b;
+    color: white;
+}
+
+.adm-btn-danger {
+    background-color: #ef4444;
+    border-color: #ef4444;
+}
+
+/* Badge for days of week */
+.adm-badge-day {
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.adm-badge-mon { background-color: #e9f5ff; color: #0c6dfd; }
+.adm-badge-tue { background-color: #fff4e6; color: #fd7e14; }
+.adm-badge-wed { background-color: #f8e6ff; color: #9b32d9; }
+.adm-badge-thu { background-color: #e6f7ee; color: #0ca678; }
+.adm-badge-fri { background-color: #fff9e6; color: #f59f00; }
+.adm-badge-sat { background-color: #ffe6e6; color: #fa5252; }
+.adm-badge-sun { background-color: #fff0e6; color: #ff6b6b; }
+
+/* Action buttons */
+.adm-action-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+/* Custom modal styling */
+.adm-modal-header {
+    background-color: var(--adm-primary);
+    color: white;
+}
+
+.adm-modal-content {
+    border-radius: 12px;
+    border: 1px solid var(--adm-border-color);
+}
+
+/* Custom form labels */
+.adm-form-label {
+    font-weight: 500;
+    color: var(--adm-text-primary);
+    margin-bottom: 8px;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+    .adm-table-responsive {
+        overflow-x: auto;
+    }
+}
+</style>
 {% endblock %}

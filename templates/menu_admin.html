@@ -430,6 +430,7 @@
           <span>Dashboard</span>
         </a>
       </div>
+
       <div class="adm-nav-item">
         <a href="/admin/users" class="adm-nav-link {% if request.path == '/admin/users' %}adm-active{% endif %}">
           <i class="bi bi-people"></i>
@@ -442,30 +443,49 @@
           <span>Quản lý Lớp học</span>
         </a>
       </div>
+
       <div class="adm-nav-item">
         <a href="/admin/news" class="adm-nav-link {% if request.path == '/admin/news' %}adm-active{% endif %}">
           <i class="bi bi-newspaper"></i>
           <span>Quản lý tin tức</span>
         </a>
       </div>
+
+      <div class="adm-nav-item">
+        <a href="/admin/panner" class="adm-nav-link {% if request.path == '/admin/panner' %}adm-active{% endif %}">
+          <i class="bi bi-image"></i>
+          <span>Quản lý Panner</span>
+        </a>
+      </div>
+
       <div class="adm-nav-item">
         <a href="/admin/support" class="adm-nav-link {% if request.path == '/admin/support' %}adm-active{% endif %}">
           <i class="bi bi-headset"></i>
           <span>Quản lý support</span>
         </a>
       </div>
+
       <div class="adm-nav-item">
         <a href="/admin/faq" class="adm-nav-link {% if request.path == '/admin/faq' %}adm-active{% endif %}">
           <i class="bi bi-robot"></i>
           <span>Quản lý chat bot</span>
         </a>
       </div>
+
+      <div class="adm-nav-item">
+        <a href="/admin/features" class="adm-nav-link {% if request.path == '/admin/features' %}adm-active{% endif %}">
+            <i class="bi bi-grid-1x2"></i>  <!-- icon bạn muốn, có thể thay -->
+            <span>Quản lý Features</span>
+        </a>
+    </div>
+
       <div class="adm-nav-item">
         <a href="/admin/baocao" class="adm-nav-link {% if request.path == '/admin/baocao' %}adm-active{% endif %}">
           <i class="bi bi-graph-up"></i>
           <span>Báo cáo</span>
         </a>
       </div>
+
       <div class="adm-nav-item">
         <a href="/admin/caidat" class="adm-nav-link {% if request.path == '/admin/caidat' %}adm-active{% endif %}">
           <i class="bi bi-gear"></i>
@@ -555,10 +575,9 @@
 
     // Logout function
     function logout() {
-      if (confirm('Bạn có chắc muốn đăng xuất?')) {
         // Thực hiện đăng xuất - thay đổi URL này theo route đăng xuất của bạn
         window.location.href = '/logout';
-      }
+
     }
   </script>
 

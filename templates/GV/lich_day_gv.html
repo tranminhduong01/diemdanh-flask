@@ -1,56 +1,354 @@
 {% extends "menu_gv.html" %}
 
-{% block title %}Dashboard Giáo viên{% endblock %}
+{% block title %}Lịch dạy giáo viên{% endblock %}
 
 {% block content %}
-<head>
-  <title>Lịch dạy của giáo viên</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>
-    body { background-color: #f8f9fa; }
-    .table-schedule th, .table-schedule td {
-      text-align: center;
-      vertical-align: middle;
-      min-width: 140px;
-      height: 70px;
+<style>
+  :root {
+    --primary-color: #3498db;
+    --primary-light: #e8f4fc;
+    --secondary-color: #2c3e50;
+    --accent-color: #e74c3c;
+    --success-color: #27ae60;
+    --warning-color: #f39c12;
+    --light-gray: #f8f9fa;
+    --border-color: #e0e0e0;
+    --text-primary: #2c3e50;
+    --text-secondary: #7f8c8d;
+    --text-light: #95a5a6;
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --radius: 6px;
+    --transition: all 0.3s ease;
+  }
+
+  .schedule-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 15px;
+    background-color: #f5f7fa;
+    min-height: calc(100vh - 80px);
+  }
+
+  .schedule-header {
+    background: white;
+    border-radius: var(--radius);
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+  }
+
+  .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .page-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .week-info {
+    font-size: 14px;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  .week-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .nav-btn {
+    padding: 6px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    background: white;
+    color: var(--text-primary);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .nav-btn:hover {
+    background: var(--primary-light);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+  }
+
+  .today-btn {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+  }
+
+  .today-btn:hover {
+    background: #2980b9;
+    border-color: #2980b9;
+    color: white;
+  }
+
+  /* Schedule Table - Adjusted for better size */
+  .schedule-table-container {
+    background: white;
+    border-radius: var(--radius);
+    padding: 0;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+  }
+
+  .schedule-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0;
+    font-size: 12px;
+  }
+
+  .schedule-table th {
+    background: var(--primary-color);
+    color: white;
+    font-weight: 600;
+    padding: 8px 6px;
+    text-align: center;
+    border: 1px solid #2980b9;
+    font-size: 12px;
+  }
+
+  .schedule-table td {
+    padding: 4px;
+    border: 1px solid var(--border-color);
+    text-align: center;
+    vertical-align: top;
+    height: 35px;
+    min-width: 100px;
+  }
+
+  .time-slot {
+    background: var(--light-gray);
+    font-weight: 600;
+    color: var(--text-primary);
+    width: 50px;
+    padding: 8px 4px;
+    font-size: 11px;
+  }
+
+  .class-cell {
+    background: var(--primary-light);
+    border: 1px solid var(--primary-color);
+    border-radius: 4px;
+    padding: 6px 4px;
+    margin: 2px;
+    height: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: var(--transition);
+    overflow: hidden;
+  }
+
+  .class-cell:hover {
+    background: #d4e6f1;
+    transform: scale(1.02);
+  }
+
+  .class-name {
+    font-weight: 600;
+    font-size: 11px;
+    color: var(--text-primary);
+    line-height: 1.2;
+    margin-bottom: 2px;
+    text-align: center;
+  }
+
+  .class-details {
+    font-size: 10px;
+    color: var(--text-secondary);
+    line-height: 1.2;
+    text-align: center;
+  }
+
+  .class-room {
+    font-weight: 500;
+    color: var(--primary-color);
+  }
+
+  .class-time {
+    font-size: 9px;
+    color: var(--text-light);
+    margin-top: 1px;
+  }
+
+  .empty-cell {
+    background: #fafafa;
+    color: var(--text-light);
+    font-style: italic;
+    font-size: 11px;
+  }
+
+  /* Current day highlight */
+  .current-day {
+    background-color: rgba(52, 152, 219, 0.05);
+  }
+
+  .current-day-header {
+    background: #2980b9 !important;
+  }
+
+  /* Compact view for mobile */
+  .compact-schedule {
+    display: none;
+    background: white;
+    border-radius: var(--radius);
+    padding: 12px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+    margin-bottom: 15px;
+  }
+
+  .day-card {
+    margin-bottom: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .day-header {
+    background: var(--primary-color);
+    color: white;
+    padding: 10px 12px;
+    font-weight: 600;
+    font-size: 13px;
+  }
+
+  .day-sessions {
+    padding: 10px;
+  }
+
+  .session-item {
+    background: var(--primary-light);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 8px;
+    margin-bottom: 8px;
+  }
+
+  .session-time {
+    font-weight: 600;
+    color: var(--primary-color);
+    font-size: 12px;
+  }
+
+  .session-class {
+    font-weight: 600;
+    font-size: 13px;
+    margin: 2px 0;
+  }
+
+  .session-room {
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .schedule-table-container {
+      display: none;
     }
-    .class-cell {
-      background-color: #e7f1ff;
-      border-radius: 8px;
-      padding: 6px;
+
+    .compact-schedule {
+      display: block;
     }
-    .class-name {
-      font-weight: 600;
+
+    .schedule-container {
+      padding: 10px;
     }
-    .class-info {
-      font-size: 13px;
-      color: #555;
-    }
-    .week-nav {
-      display: flex;
-      justify-content: center;
-      align-items: center;
+
+    .header-content {
+      flex-direction: column;
+      align-items: stretch;
       gap: 10px;
-      margin-bottom: 15px;
     }
-  </style>
-</head>
-<body>
-  <div class="container mt-4">
-    <h4 class="text-center mb-4">📘 Lịch dạy trong tuần</h4>
 
-    <!-- Thanh điều hướng tuần -->
-    <div class="week-nav">
-      <a href="{{ url_for('lich_day_gv', week_offset=week_offset - 1) }}" class="btn btn-outline-primary">Tuần trước</a>
-      <h5>Tuần {{ week_start }} - {{ week_end }}</h5>
-      <a href="{{ url_for('lich_day_gv', week_offset=week_offset + 1) }}" class="btn btn-outline-primary">Tuần sau</a>
-      <a href="{{ url_for('lich_day_gv') }}" class="btn btn-primary">Hôm nay</a>
+    .week-nav {
+      justify-content: center;
+    }
+
+    .page-title {
+      justify-content: center;
+      text-align: center;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .schedule-container {
+      padding: 8px;
+    }
+
+    .schedule-header {
+      padding: 12px;
+    }
+
+    .nav-btn {
+      padding: 6px 10px;
+      font-size: 12px;
+    }
+
+    .page-title {
+      font-size: 18px;
+    }
+  }
+</style>
+
+<div class="schedule-container">
+  <!-- Header -->
+  <div class="schedule-header">
+    <div class="header-content">
+      <div>
+        <h1 class="page-title">
+          <i class="fas fa-calendar-alt"></i>
+          Lịch dạy tuần
+        </h1>
+        <div class="week-info">Tuần {{ week_start }} - {{ week_end }}</div>
+      </div>
+
+      <div class="week-nav">
+        <a href="{{ url_for('lich_day_gv', week_offset=week_offset - 1) }}" class="nav-btn">
+          <i class="fas fa-chevron-left"></i>
+          Tuần trước
+        </a>
+        <a href="{{ url_for('lich_day_gv') }}" class="nav-btn today-btn">
+          <i class="fas fa-calendar-day"></i>
+          Hôm nay
+        </a>
+        <a href="{{ url_for('lich_day_gv', week_offset=week_offset + 1) }}" class="nav-btn">
+          Tuần sau
+          <i class="fas fa-chevron-right"></i>
+        </a>
+      </div>
     </div>
+  </div>
 
-
-    <!-- Bảng thời khóa biểu -->
-    <table class="table table-bordered table-schedule bg-white">
-      <thead class="table-primary">
+  <!-- Desktop Schedule Table -->
+  <div class="schedule-table-container">
+    <table class="schedule-table">
+      <thead>
         <tr>
           <th>Tiết</th>
           <th>Thứ 2</th>
@@ -65,19 +363,33 @@
       <tbody>
         {% for tiet in range(1, 11) %}
         <tr>
-          <td><strong>Tiết {{ tiet }}</strong></td>
+          <td class="time-slot">Tiết {{ tiet }}</td>
 
-          {% for thu in ['Thứ 2','Thứ 3','Thứ 4','Thứ 5','Thứ 6','Thứ 7','Chủ Nhật'] %}
+          {% for thu_index in range(7) %}
+          {% set thu_list = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ Nhật'] %}
+          {% set thu = thu_list[thu_index] %}
           <td>
-            {% for buoi in schedule[thu] %}
-              {% if tiet >= buoi.tiet_bat_dau and tiet <= buoi.tiet_ket_thuc %}
-              <div class="class-cell">
-                <div class="class-name">{{ buoi.class_name }}</div>
-                <div class="class-info">{{ buoi.room }} | {{ buoi.session_start }} - {{ buoi.session_end }}</div>
-                <div class="class-info text-muted"><em>Giáo viên: {{ teacher_name }}</em></div>
-              </div>
-              {% endif %}
-            {% endfor %}
+            {% set found_class = false %}
+            {% if schedule and schedule[thu] %}
+              {% for buoi in schedule[thu] %}
+                {% if buoi.tiet_bat_dau <= tiet and buoi.tiet_ket_thuc >= tiet %}
+                  {% if not found_class %}
+                    {% set found_class = true %}
+                    <div class="class-cell" title="{{ buoi.class_name }} - {{ buoi.room }} - {{ buoi.session_start }} - {{ buoi.session_end }}">
+                      <div class="class-name">{{ buoi.class_name }}</div>
+                      <div class="class-details">
+                        <span class="class-room">{{ buoi.room }}</span>
+                      </div>
+                      <div class="class-time">{{ buoi.session_start }} - {{ buoi.session_end }}</div>
+                    </div>
+                  {% endif %}
+                {% endif %}
+              {% endfor %}
+            {% endif %}
+
+            {% if not found_class %}
+              <div class="empty-cell">-</div>
+            {% endif %}
           </td>
           {% endfor %}
         </tr>
@@ -85,8 +397,52 @@
       </tbody>
     </table>
   </div>
-</body>
-</html>
 
+  <!-- Mobile Compact Schedule -->
+  <div class="compact-schedule">
+    {% for thu in ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ Nhật'] %}
+      {% if schedule and schedule[thu] %}
+        <div class="day-card">
+          <div class="day-header">{{ thu }}</div>
+          <div class="day-sessions">
+            {% for buoi in schedule[thu] %}
+              <div class="session-item">
+                <div class="session-time">
+                  Tiết {{ buoi.tiet_bat_dau }}-{{ buoi.tiet_ket_thuc }} ({{ buoi.session_start }} - {{ buoi.session_end }})
+                </div>
+                <div class="session-class">{{ buoi.class_name }}</div>
+                <div class="session-room">Phòng: {{ buoi.room }}</div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+</div>
 
+<script>
+  // Highlight current day
+  document.addEventListener('DOMContentLoaded', function() {
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+
+    // Adjust for Vietnamese week (Monday = 0)
+    let currentDayIndex = dayOfWeek - 1;
+    if (currentDayIndex === -1) currentDayIndex = 6; // Sunday
+
+    const dayHeaders = document.querySelectorAll('.schedule-table th');
+    const dayCells = document.querySelectorAll('.schedule-table td');
+
+    // Highlight header
+    if (dayHeaders[currentDayIndex + 1]) {
+      dayHeaders[currentDayIndex + 1].classList.add('current-day-header');
+    }
+
+    // Highlight cells for current day
+    for (let i = currentDayIndex; i < dayCells.length; i += 7) {
+      dayCells[i].classList.add('current-day');
+    }
+  });
+</script>
 {% endblock %}

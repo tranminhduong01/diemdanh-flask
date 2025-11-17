@@ -5,16 +5,16 @@
 {% block content %}
 <style>
     :root {
-        --primary: #4361ee;
-        --primary-light: #eef2ff;
-        --secondary: #6c757d;
-        --success: #28a745;
-        --danger: #dc3545;
-        --warning: #ffc107;
+        --primary: #3498db;
+        --primary-dark: #2980b9;
+        --primary-light: #e8f4fc;
+        --secondary: #2c3e50;
+        --accent: #e74c3c;
+        --success: #27ae60;
+        --warning: #f39c12;
         --info: #17a2b8;
-        --light: #f8f9fa;
-        --dark: #343a40;
-        --gray-100: #f8f9fa;
+        --gray-50: #f8f9fa;
+        --gray-100: #f1f2f6;
         --gray-200: #e9ecef;
         --gray-300: #dee2e6;
         --gray-400: #ced4da;
@@ -23,585 +23,615 @@
         --gray-700: #495057;
         --gray-800: #343a40;
         --gray-900: #212529;
+        --text-primary: var(--gray-800);
+        --text-secondary: var(--gray-600);
+        --text-light: var(--gray-500);
+        --bg-primary: white;
+        --bg-secondary: var(--gray-50);
+        --bg-light: var(--gray-100);
+        --border-color: var(--gray-300);
         --border-radius: 8px;
-        --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        --border-radius-sm: 6px;
+        --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+        --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+        --space-xs: 4px;
+        --space-sm: 8px;
+        --space-md: 16px;
+        --space-lg: 24px;
+        --space-xl: 32px;
+        --font-size-xs: 12px;
+        --font-size-sm: 14px;
+        --font-size-md: 16px;
+        --font-size-lg: 18px;
+        --font-size-xl: 24px;
+        --font-size-2xl: 32px;
         --transition: all 0.3s ease;
+        --transition-fast: all 0.15s ease;
     }
 
-    .teacher-dashboard {
+    .main-content {
         padding: 20px;
-        background-color: var(--gray-100);
-        min-height: calc(100vh - 70px);
+        background-color: #f5f7fa;
+        min-height: calc(100vh - 80px);
     }
 
-    .teacher-dashboard-header {
+    .header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 24px;
-        background: white;
-        padding: 20px;
-        border-radius: var(--border-radius);
-        box-shadow: var(--box-shadow);
+        padding-bottom: 16px;
+        border-bottom: 1px solid #1F2937;
     }
 
-    .teacher-page-title {
+    .page-title {
         font-size: 24px;
-        font-weight: 600;
-        color: var(--gray-800);
+        font-weight: 700;
+        color: #1F2937;
+        margin: 0 0 6px 0;
+    }
+
+    .welcome-text {
+        font-size: 14px;
+        color: #7f8c8d;
         margin: 0;
     }
 
-    .teacher-header-actions {
+    .gv-header-actions {
         display: flex;
         align-items: center;
-        gap: 16px;
+        gap: var(--space-sm);
     }
 
-    .teacher-search-box {
+    .gv-search-box {
         position: relative;
         display: flex;
         align-items: center;
     }
 
-    .teacher-search-box i {
+    .gv-search-box i {
         position: absolute;
         left: 12px;
-        color: var(--gray-500);
+        color: var(--text-light);
+        z-index: 1;
+        font-size: var(--font-size-sm);
     }
 
-    .teacher-search-box input {
-        padding: 10px 16px 10px 40px;
-        border: 1px solid var(--gray-300);
-        border-radius: var(--border-radius);
-        width: 280px;
-        font-size: 14px;
+    .gv-search-box input {
+        padding: 10px 12px 10px 36px;
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        width: 240px;
+        font-size: var(--font-size-sm);
         transition: var(--transition);
+        background: var(--bg-primary);
+        color: var(--text-primary);
     }
 
-    .teacher-search-box input:focus {
+    .gv-search-box input:focus {
         outline: none;
         border-color: var(--primary);
-        box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+        box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
     }
 
-    .teacher-notification-btn, .teacher-user-menu-btn {
-        position: relative;
-        width: 40px;
-        height: 40px;
+    .gv-notification-btn, .gv-user-menu-btn {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        background: var(--gray-100);
-        border-radius: 50%;
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
         cursor: pointer;
         transition: var(--transition);
+        position: relative;
+        font-size: var(--font-size-sm);
     }
 
-    .teacher-notification-btn:hover, .teacher-user-menu-btn:hover {
-        background: var(--gray-200);
+    .gv-notification-btn:hover, .gv-user-menu-btn:hover {
+        background: var(--bg-light);
+        border-color: var(--primary);
     }
 
-    .teacher-notification-badge {
+    .gv-notification-badge {
         position: absolute;
-        top: -2px;
-        right: -2px;
-        background: var(--danger);
+        top: -3px;
+        right: -3px;
+        background: var(--accent);
         color: white;
-        font-size: 10px;
+        border-radius: 50%;
         width: 18px;
         height: 18px;
-        border-radius: 50%;
+        font-size: var(--font-size-xs);
         display: flex;
         align-items: center;
         justify-content: center;
+        font-weight: 600;
     }
 
-    .teacher-content-section {
+    .gv-content-section {
         background: white;
-        border-radius: var(--border-radius);
-        box-shadow: var(--box-shadow);
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        border: 1px solid #e0e0e0;
         margin-bottom: 24px;
-        overflow: hidden;
     }
 
-    .teacher-section-header {
-        padding: 20px;
-        border-bottom: 1px solid var(--gray-200);
+    .section-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
+        margin-bottom: 20px;
     }
 
-    .teacher-section-title-group {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-    }
-
-    .teacher-btn-back {
-        width: 36px;
-        height: 36px;
-        border-radius: var(--border-radius);
-        border: 1px solid var(--gray-300);
-        background: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: var(--transition);
-    }
-
-    .teacher-btn-back:hover {
-        background: var(--gray-100);
-    }
-
-    .teacher-section-title {
+    .section-title {
         font-size: 18px;
         font-weight: 600;
-        color: var(--gray-800);
+        color: #2c3e50;
+        margin: 0;
     }
-
-    .teacher-section-actions {
-        display: flex;
-        gap: 12px;
-    }
-
-    /* Buttons */
-    .teacher-btn {
+    .gv-btn {
+        padding: 8px 12px;
+        border-radius: 5px;
+        border: 1px solid #3498db;
+        font-weight: 500;
+        transition: var(--transition);
+        cursor: pointer;
         display: inline-flex;
         align-items: center;
-        justify-content: center;
-        gap: 8px;
-        padding: 8px 16px;
-        border-radius: var(--border-radius);
-        font-size: 14px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: var(--transition);
-        border: 1px solid transparent;
+        gap: var(--space-xs);
+        text-decoration: none;
+        font-size: 13;
+        font-family: inherit;
     }
 
-    .teacher-btn-primary {
-        background: var(--primary);
+    .gv-btn-primary {
+        background: white ;
+        color: #2c3e50;
+        border-color: #D1D5DB;
+    }
+
+    .gv-btn-primary:hover {
+        background: #3498db;
+        transform: translateY(-1px);
+        color: white;
+        box-shadow: var(--shadow);
+    }
+
+    .gv-btn-secondary {
+        background: var(--gray-600);
         color: white;
     }
 
-    .teacher-btn-primary:hover {
-        background: #3651d4;
+    .gv-btn-secondary:hover {
+        background: var(--gray-700);
     }
 
-    .teacher-btn-secondary {
-        background: white;
-        color: var(--gray-700);
-        border-color: var(--gray-300);
+    .gv-btn-outline {
+        background: transparent;
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
     }
 
-    .teacher-btn-secondary:hover {
-        background: var(--gray-100);
+    .gv-btn-outline:hover {
+        background: var(--bg-light);
+        border-color: var(--primary);
+        color: var(--primary);
     }
 
-    .teacher-btn-filter {
-        background: white;
-        color: var(--gray-700);
-        border-color: var(--gray-300);
+    .gv-btn-back {
+        width: 36px;
+        height: 36px;
+        border-radius: var(--border-radius-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+        cursor: pointer;
+        transition: var(--transition);
     }
 
-    .teacher-btn-filter:hover {
-        background: var(--gray-100);
+    .gv-btn-back:hover {
+        background: var(--bg-light);
+        border-color: var(--primary);
+        color: var(--primary);
     }
 
-    .teacher-class-grid {
+    .gv-section-title-group {
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+    }
+
+    .gv-class-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 20px;
-        padding: 20px;
+        gap: var(--space-md);
     }
 
-    .teacher-class-card {
-        background: white;
+    .gv-class-card {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
         border-radius: var(--border-radius);
         overflow: hidden;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
         transition: var(--transition);
-        border: 1px solid var(--gray-200);
+        height: fit-content;
     }
 
-    .teacher-class-card:hover {
-        transform: translateY(-5px);
-        box-shadow: var(--box-shadow);
+    .gv-class-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+        border-color: var(--primary);
     }
 
-    .teacher-class-card-header {
-        padding: 16px;
-        background: var(--primary-light);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+    .gv-class-header {
+        padding: var(--space-md);
+        border-bottom: 1px solid var(--border-color);
+        background: var(--bg-light);
     }
 
-    .teacher-class-code {
+    .gv-class-code {
+        font-size: var(--font-size-xs);
+        color: var(--text-light);
+        font-weight: 500;
+        margin-bottom: var(--space-xs);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .gv-class-title {
+        font-size: var(--font-size-md);
         font-weight: 600;
-        color: var(--primary);
-        font-size: 14px;
+        color: var(--text-primary);
+        margin: 0 0 var(--space-xs) 0;
+        line-height: 1.3;
     }
 
-    .teacher-class-actions-menu {
-        color: var(--gray-500);
-        cursor: pointer;
-        padding: 4px;
+    .gv-class-teacher {
+        font-size: var(--font-size-sm);
+        color: var(--text-secondary);
+        margin: 0;
     }
 
-    .teacher-class-card-body {
-        padding: 16px;
+    .gv-class-body {
+        padding: var(--space-md);
     }
 
-    .teacher-class-title {
-        font-size: 16px;
-        font-weight: 600;
-        color: var(--gray-800);
-        margin-bottom: 4px;
-    }
-
-    .teacher-class-teacher {
-        color: var(--gray-600);
-        font-size: 14px;
-        margin-bottom: 16px;
-    }
-
-    .teacher-class-details {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-    }
-
-    .teacher-class-detail-item {
+    .gv-class-detail {
         display: flex;
         align-items: center;
-        gap: 10px;
-        color: var(--gray-600);
+        gap: var(--space-sm);
+        margin-bottom: var(--space-sm);
         font-size: 14px;
+        color: var(--text-secondary);
     }
 
-    .teacher-class-detail-item i {
+    .gv-class-detail i {
         width: 16px;
-        color: var(--gray-500);
+        color: var(--primary);
+        font-size: var(--font-size-sm);
     }
 
-    .teacher-class-card-footer {
-        padding: 16px;
-        border-top: 1px solid var(--gray-200);
+    .gv-class-footer {
+        padding: var(--space-md);
+        border-top: 1px solid var(--border-color);
     }
 
-    .teacher-view-class-btn {
+    .gv-view-class-btn {
         width: 100%;
         justify-content: center;
     }
 
-    .teacher-table-container {
+    .gv-table-container {
         overflow-x: auto;
-        padding: 0 20px 20px;
+        border-radius: var(--border-radius);
+        border: 1px solid var(--border-color);
     }
 
-    .teacher-data-table {
+    .gv-data-table {
         width: 100%;
         border-collapse: collapse;
+        background: var(--bg-primary);
     }
 
-    .teacher-data-table th {
-        background: var(--gray-100);
+    .gv-data-table th {
+        background: var(--bg-light);
         padding: 12px 16px;
         text-align: left;
         font-weight: 600;
-        color: var(--gray-700);
-        font-size: 14px;
+        color: var(--text-primary);
+        font-size: var(--font-size-sm);
+        border-bottom: 1px solid var(--border-color);
     }
 
-    .teacher-data-table td {
+    .gv-data-table td {
         padding: 16px;
-        border-bottom: 1px solid var(--gray-200);
-        color: var(--gray-700);
-        font-size: 14px;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-primary);
+        font-size: var(--font-size-sm);
     }
 
-    .teacher-data-table tr:hover {
-        background: var(--gray-100);
+    .gv-data-table tr:hover {
+        background: var(--bg-light);
     }
 
-    .teacher-student-info {
+    .gv-student-info {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: var(--space-sm);
     }
 
-    .teacher-student-avatar {
+    .gv-student-avatar {
         width: 40px;
         height: 40px;
         border-radius: 50%;
         object-fit: cover;
+        border: 2px solid var(--border-color);
     }
 
-    .teacher-student-name {
+    .gv-student-name {
         font-weight: 500;
-        color: var(--gray-800);
+        color: var(--text-primary);
     }
 
-    .teacher-student-id {
-        font-size: 12px;
-        color: var(--gray-600);
+    .gv-student-id {
+        font-size: var(--font-size-xs);
+        color: var(--text-secondary);
     }
 
-    .teacher-action-btn {
+    .gv-action-btn {
         padding: 6px 12px;
-        background: var(--primary-light);
-        color: var(--primary);
-        border: none;
-        border-radius: 6px;
-        font-size: 13px;
+        border-radius: var(--border-radius-sm);
+        font-size: var(--font-size-xs);
+        font-weight: 500;
         cursor: pointer;
         transition: var(--transition);
-    }
-
-    .teacher-action-btn:hover {
-        background: #dfe7ff;
-    }
-
-    /* Modal */
-    .teacher-modal {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5);
+        border: 1px solid var(--border-color);
+        background: var(--bg-primary);
+        color: #2c3e50;
+        display: inline-flex;
         align-items: center;
-        justify-content: center;
-        z-index: 1000;
+        gap: var(--space-xs);
     }
 
-    .teacher-modal-dialog {
-        background: white;
+    .gv-action-btn:hover {
+        background: var(--bg-light);
+    }
+
+    .gv-edit-btn {
+        border-color: var(--primary);
+        color: var(--primary);
+    }
+
+    .gv-edit-btn:hover {
+        background: var(--primary);
+        color: white;
+    }
+
+    .gv-chat-btn {
+        border-color: var(--success);
+        color: var(--success);
+    }
+
+    .gv-chat-btn:hover {
+        background: var(--success);
+        color: white;
+    }
+
+    .gv-filter-section {
+        display: flex;
+        gap: var(--space-sm);
+        align-items: center;
+        margin-bottom: var(--space-md);
+        flex-wrap: wrap;
+    }
+
+    .gv-filter-input {
+        padding: 8px 12px;
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-sm);
+        font-size: var(--font-size-sm);
+        transition: var(--transition);
+        background: var(--bg-primary);
+        color: var(--text-primary);
+    }
+
+    .gv-filter-input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+    }
+
+    .gv-modal-content {
         border-radius: var(--border-radius);
-        width: 100%;
-        max-width: 600px;
-        overflow: hidden;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        border: none;
+        box-shadow: var(--shadow-lg);
     }
 
-    .teacher-modal-header {
-        padding: 20px;
-        border-bottom: 1px solid var(--gray-200);
+    .gv-modal-header {
+        padding: var(--space-lg);
+        border-bottom: 1px solid var(--border-color);
+        background: var(--bg-light);
+    }
+
+    .gv-modal-title {
+        font-weight: 600;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+        font-size: var(--font-size-lg);
+    }
+
+    .gv-modal-body {
+        padding: var(--space-lg);
+    }
+
+    .gv-modal-footer {
+        padding: var(--space-md) var(--space-lg);
+        border-top: 1px solid var(--border-color);
+        background: var(--bg-light);
         display: flex;
         justify-content: space-between;
         align-items: center;
     }
 
-    .teacher-modal-header h3 {
-        font-size: 18px;
-        font-weight: 600;
-        color: var(--gray-800);
+    .gv-form-label {
+        font-weight: 500;
+        color: var(--text-primary);
+        margin-bottom: var(--space-xs);
+        font-size: var(--font-size-sm);
     }
 
-    .teacher-close-btn {
-        font-size: 24px;
-        cursor: pointer;
-        color: var(--gray-500);
+    .gv-form-control {
+        padding: 10px 12px;
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-sm);
+        font-size: var(--font-size-sm);
         transition: var(--transition);
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        width: 100%;
     }
 
-    .teacher-close-btn:hover {
-        color: var(--gray-700);
+    .gv-form-control:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        outline: none;
     }
 
-    .teacher-modal-body {
-        padding: 20px;
-    }
-
-    .teacher-form-row {
+    .gv-form-row {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 16px;
-        margin-bottom: 16px;
+        gap: var(--space-md);
+        margin-bottom: var(--space-md);
     }
 
-    .teacher-form-group {
+    .gv-form-group {
         display: flex;
         flex-direction: column;
     }
 
-    .teacher-form-group label {
-        font-size: 14px;
-        color: var(--gray-700);
-        margin-bottom: 8px;
-        font-weight: 500;
-    }
-
-    .teacher-form-group input {
-        padding: 10px 12px;
-        border: 1px solid var(--gray-300);
-        border-radius: var(--border-radius);
-        font-size: 14px;
-        transition: var(--transition);
-    }
-
-    .teacher-form-group input:focus {
-        outline: none;
-        border-color: var(--primary);
-        box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
-    }
-
-    .teacher-modal-footer {
-        padding: 20px;
-        border-top: 1px solid var(--gray-200);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .teacher-footer-actions {
-        display: flex;
-        gap: 12px;
-    }
-
-    .teacher-btn-danger {
-        padding: 8px 16px;
-        border: 1px solid var(--danger);
-        background: white;
-        color: var(--danger);
-        border-radius: var(--border-radius);
-        font-size: 14px;
-        cursor: pointer;
-        transition: var(--transition);
-    }
-
-    .teacher-btn-danger:hover {
-        background: var(--danger);
+    .gv-btn-danger {
+        background: var(--accent);
         color: white;
     }
 
-    #teacherStudentSection {
+    .gv-btn-danger:hover {
+        background: #c0392b;
+    }
+
+    .gv-footer-actions {
+        display: flex;
+        gap: var(--space-sm);
+    }
+
+    #gvStudentSection {
         display: none;
     }
 
-    /* Responsive Design */
-    @media (max-width: 992px) {
-        .teacher-dashboard-header {
+    @media (max-width: 768px) {
+        .gv-header {
             flex-direction: column;
             align-items: flex-start;
-            gap: 16px;
+            gap: var(--space-md);
         }
 
-        .teacher-header-actions {
+        .gv-header-actions {
             width: 100%;
             justify-content: space-between;
         }
 
-        .teacher-search-box input {
-            width: 100%;
+        .gv-search-box input {
+            width: 180px;
         }
 
-        .teacher-form-row {
+        .gv-class-grid {
             grid-template-columns: 1fr;
         }
-    }
 
-    @media (max-width: 768px) {
-        .teacher-dashboard {
-            padding: 16px;
-        }
-
-        .teacher-class-grid {
-            grid-template-columns: 1fr;
-            padding: 16px;
-        }
-
-        .teacher-section-header {
+        .gv-section-header {
             flex-direction: column;
             align-items: flex-start;
-            gap: 16px;
+            gap: var(--space-md);
         }
 
-        .teacher-section-actions {
+        .gv-filter-section {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .gv-form-row {
+            grid-template-columns: 1fr;
+        }
+
+        .gv-modal-footer {
+            flex-direction: column;
+            gap: var(--space-sm);
+        }
+
+        .gv-footer-actions {
             width: 100%;
-            flex-wrap: wrap;
         }
 
-        .teacher-table-container {
-            padding: 0 16px 16px;
-        }
-
-        .teacher-modal-dialog {
-            margin: 16px;
-            width: calc(100% - 32px);
+        .gv-footer-actions .gv-btn {
+            flex: 1;
         }
     }
 
-    @media (max-width: 576px) {
-        .teacher-modal-footer {
-            flex-direction: column;
-            gap: 16px;
+    @media (max-width: 480px) {
+        .gv-dashboard {
+            padding: var(--space-md);
         }
 
-        .teacher-footer-actions {
-            width: 100%;
+        .gv-data-table {
+            font-size: var(--font-size-xs);
         }
 
-        .teacher-btn-danger {
-            width: 100%;
+        .gv-data-table th,
+        .gv-data-table td {
+            padding: 12px 8px;
         }
     }
 </style>
 
-<div class="teacher-dashboard">
-    <div id="teacherPage" data-user-id="{{ teacher.id }}">
-    <div class="teacher-dashboard-header">
-        <h1 class="teacher-page-title">Chào mừng trở lại, {{ ten }}</h1>
-        <div class="teacher-header-actions">
-            <div class="teacher-search-box">
-                <i class="fas fa-search"></i>
-                <input type="text" placeholder="Tìm kiếm lớp học, sinh viên...">
-            </div>
-            <div class="teacher-notification-btn">
-                <i class="fas fa-bell"></i>
-                <span class="teacher-notification-badge">3</span>
-            </div>
-            <div class="teacher-user-menu-btn">
-                <i class="fas fa-user"></i>
-            </div>
+<div class="main-content">
+    <div id="gvPage" data-user-id="{{ session['user_id'] }}"></div>
+    <div class="header">
+        <div>
+            <h1 class="page-title">Chào mừng trở lại, giảng viên {{ ten }}</h1>
+            <p class="welcome-text">Quản lý lớp học và sinh viên của bạn</p>
         </div>
     </div>
 
-    <!-- Class List Section -->
-    <div class="teacher-content-section" id="teacherClassSection">
-        <div class="teacher-section-header">
-            <h2 class="teacher-section-title">Danh sách lớp học</h2>
-            <div class="teacher-section-actions">
-                <button class="teacher-btn teacher-btn-filter">
-                    <i class="fas fa-filter"></i> Lọc
-                </button>
+        <!-- Class List Section -->
+        <div class="gv-content-section" id="gvClassSection">
+            <div class="section-header">
+                <h2 class="section-title">
+                    Danh sách lớp học
+                </h2>
             </div>
-        </div>
 
-        <div id="teacherClassContainer" class="teacher-class-grid">
-            {% for c in classes %}
-            <div class="teacher-class-card" data-id="{{ c.id }}">
-                <div class="teacher-class-card-header">
-                    <div class="teacher-class-code">{{ c.class_code or 'N/A' }}</div>
-                    <div class="teacher-class-actions-menu">
-                        <i class="fas fa-ellipsis-v"></i>
-                    </div>
-                </div>
-                <div class="teacher-class-card-body">
-                    <h3 class="teacher-class-title">{{ c.class_name }}</h3>
-                    <p class="teacher-class-teacher">{{ c.teacher_name }}</p>
+            <div id="gvClassContainer" class="gv-class-grid">
+                {% for c in classes %}
+                <div class="gv-class-card" data-id="{{ c.id }}">
+                    <div class="gv-class-header">
+                        <h3 class="gv-class-title">{{ c.class_name }}</h3>
+                        <p class="gv-class-teacher">{{ c.teacher_name }}</p>                    </div>
+                    <div class="gv-class-body">
 
-                    <div class="teacher-class-details">
-                        <div class="teacher-class-detail-item">
+
+                        <div class="gv-class-detail">
                             <i class="fas fa-map-marker-alt"></i>
                             <span>{{ c.room or 'Chưa cập nhật' }}</span>
                         </div>
-                        <div class="teacher-class-detail-item">
+                        <div class="gv-class-detail">
                             <i class="fas fa-clock"></i>
                             <span>
                                 {{ c.day_of_week or '' }}
@@ -610,129 +640,151 @@
                                 {% endif %}
                             </span>
                         </div>
-                        <div class="teacher-class-detail-item">
+                        <div class="gv-class-detail">
                             <i class="fas fa-users"></i>
-                            <span>{{ c.student_count or 0 }} sinh viên</span>
+                        <span>{{ c.max_students or 0 }} sinh viên</span>
                         </div>
                     </div>
+                    <div class="gv-class-footer">
+                        <button class="gv-btn gv-btn-primary gv-view-class-btn" style="width: 100%; justify-content: center;">
+                            <i class="fas fa-eye"></i> Xem chi tiết
+                        </button>
+                    </div>
                 </div>
-                <div class="teacher-class-card-footer">
-                    <button class="teacher-btn teacher-btn-primary teacher-view-class-btn">Xem chi tiết</button>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Student List Section (Hidden by default) -->
+        <div class="gv-content-section" id="gvStudentSection">
+            <div class="gv-section-header">
+                <div class="gv-section-title-group">
+                    <button class="gv-btn-back" id="gvBackToClassesBtn">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <h2 class="gv-section-title">
+                        <i class="fas fa-user-graduate"></i>
+                        Danh sách sinh viên - <span id="gvCurrentClassName"></span>
+                    </h2>
                 </div>
             </div>
-            {% endfor %}
-        </div>
-    </div>
 
-    <!-- Student List Section (Hidden by default) -->
-    <div class="teacher-content-section" id="teacherStudentSection">
-        <div class="teacher-section-header">
-            <div class="teacher-section-title-group">
-                <button class="teacher-btn-back" id="teacherBackToClassesBtn">
-                    <i class="fas fa-arrow-left"></i>
+            <!-- Filter Section -->
+            <div class="gv-filter-section">
+                <input type="text" class="gv-filter-input" id="gvFilterMSSV" placeholder="Nhập MSSV..." style="min-width: 150px;">
+                <input type="text" class="gv-filter-input" id="gvFilterName" placeholder="Nhập tên..." style="min-width: 150px;">
+                <button class="gv-btn gv-btn-outline" id="gvApplyFilterBtn">
+                    <i class="fas fa-filter"></i> Lọc
                 </button>
-                <h2 class="teacher-section-title">Danh sách sinh viên - <span id="teacherCurrentClassName"></span></h2>
+                <button class="gv-btn gv-btn-outline" id="gvClearFilterBtn">
+                    <i class="fas fa-times"></i> Xóa lọc
+                </button>
             </div>
-            <div class="teacher-section-actions">
-                <div style="margin-bottom: 10px;">
-                    <input type="text" id="filterMSSV" placeholder="Nhập MSSV..." />
-                    <input type="text" id="filterName" placeholder="Nhập tên..." />
-                    <button id="applyFilterBtn">Lọc</button>
-                    <button id="clearFilterBtn">Xóa lọc</button>
+
+            <div class="gv-table-container">
+                <table class="gv-data-table gv-student-table">
+                    <thead>
+                        <tr>
+                            <th>Sinh viên</th>
+                            <th>Mã SV</th>
+                            <th>Email</th>
+                            <th>SĐT</th>
+                            <th>Chuyên ngành</th>
+                            <th>Lớp</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Student data will be loaded dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Modal chỉnh sửa sinh viên -->
+        <div class="modal fade" id="gvEditStudentModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content gv-modal-content">
+                    <div class="modal-header gv-modal-header">
+                        <h5 class="modal-title gv-modal-title">
+                            <i class="fas fa-user-edit"></i>
+                            Thông tin sinh viên
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body gv-modal-body">
+                        <form id="gvEditStudentForm">
+                            <input type="hidden" id="gvEditStudentId">
+
+                            <div class="gv-form-row">
+                                <div class="gv-form-group">
+                                    <label class="gv-form-label">Họ tên</label>
+                                    <input type="text" class="gv-form-control" id="gvEditFullName" required>
+                                </div>
+                                <div class="gv-form-group">
+                                    <label class="gv-form-label">Mã SV</label>
+                                    <input type="text" class="gv-form-control" id="gvEditMSSV" required>
+                                </div>
+                            </div>
+
+                            <div class="gv-form-row">
+                                <div class="gv-form-group">
+                                    <label class="gv-form-label">Email</label>
+                                    <input type="email" class="gv-form-control" id="gvEditEmail">
+                                </div>
+                                <div class="gv-form-group">
+                                    <label class="gv-form-label">SĐT</label>
+                                    <input type="text" class="gv-form-control" id="gvEditPhone">
+                                </div>
+                            </div>
+
+                            <div class="gv-form-row">
+                                <div class="gv-form-group">
+                                    <label class="gv-form-label">Chuyên ngành</label>
+                                    <input type="text" class="gv-form-control" id="gvEditChuyenNganh">
+                                </div>
+                                <div class="gv-form-group">
+                                    <label class="gv-form-label">Lớp</label>
+                                    <input type="text" class="gv-form-control" id="gvEditLop">
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer gv-modal-footer">
+                        <button class="gv-btn gv-btn-danger" id="gvDeleteStudentBtn">
+                            <i class="fas fa-trash"></i> Xóa sinh viên
+                        </button>
+                        <div class="gv-footer-actions">
+                            <button class="gv-btn gv-btn-secondary" id="gvCancelEdit" data-bs-dismiss="modal">
+                                <i class="fas fa-times"></i> Hủy
+                            </button>
+                            <button type="submit" form="gvEditStudentForm" class="gv-btn gv-btn-primary">
+                                <i class="fas fa-save"></i> Lưu thay đổi
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-
-        <div class="teacher-table-container">
-            <table class="teacher-data-table teacher-student-table">
-                <thead>
-                    <tr>
-                        <th>Sinh viên</th>
-                        <th>Mã SV</th>
-                        <th>Email</th>
-                        <th>SĐT</th>
-                        <th>Chuyên ngành</th>
-                        <th>Lớp</th>
-                        <th>Thao tác</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Student data will be loaded dynamically -->
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- Modal chỉnh sửa sinh viên -->
-    <div class="teacher-modal" id="teacherEditStudentModal">
-        <div class="teacher-modal-dialog">
-            <div class="teacher-modal-header">
-                <h3>Thông tin sinh viên</h3>
-                <span class="teacher-close-btn" id="teacherCloseEditModal">&times;</span>
-            </div>
-            <div class="teacher-modal-body">
-                <form id="teacherEditStudentForm">
-                    <input type="hidden" id="teacherEditStudentId">
-
-                    <div class="teacher-form-row">
-                        <div class="teacher-form-group">
-                            <label>Họ tên</label>
-                            <input type="text" id="teacherEditFullName" required>
-                        </div>
-                        <div class="teacher-form-group">
-                            <label>Mã SV</label>
-                            <input type="text" id="teacherEditMSSV" required>
-                        </div>
-                    </div>
-
-                    <div class="teacher-form-row">
-                        <div class="teacher-form-group">
-                            <label>Email</label>
-                            <input type="email" id="teacherEditEmail">
-                        </div>
-                        <div class="teacher-form-group">
-                            <label>SĐT</label>
-                            <input type="text" id="teacherEditPhone">
-                        </div>
-                    </div>
-
-                    <div class="teacher-form-row">
-                        <div class="teacher-form-group">
-                            <label>Chuyên ngành</label>
-                            <input type="text" id="teacherEditChuyenNganh">
-                        </div>
-                        <div class="teacher-form-group">
-                            <label>Lớp</label>
-                            <input type="text" id="teacherEditLop">
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="teacher-modal-footer">
-                <button class="teacher-btn teacher-btn-danger" id="teacherDeleteStudentBtn">Xóa sinh viên</button>
-                <div class="teacher-footer-actions">
-                    <button class="teacher-btn teacher-btn-secondary" id="teacherCancelEdit">Hủy</button>
-                    <button type="submit" form="teacherEditStudentForm" class="teacher-btn teacher-btn-primary">Lưu thay đổi</button>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
     document.addEventListener("DOMContentLoaded", () => {
-        const classContainer = document.getElementById("teacherClassContainer");
-        const classSection = document.getElementById("teacherClassSection");
-        const studentSection = document.getElementById("teacherStudentSection");
-        const backBtn = document.getElementById("teacherBackToClassesBtn");
-        const currentClassName = document.getElementById("teacherCurrentClassName");
+        const classContainer = document.getElementById("gvClassContainer");
+        const classSection = document.getElementById("gvClassSection");
+        const studentSection = document.getElementById("gvStudentSection");
+        const backBtn = document.getElementById("gvBackToClassesBtn");
+        const currentClassName = document.getElementById("gvCurrentClassName");
         const studentTableBody = studentSection.querySelector("tbody");
 
-        const editModal = document.getElementById("teacherEditStudentModal");
-        const closeEditModal = document.getElementById("teacherCloseEditModal");
-        const editForm = document.getElementById("teacherEditStudentForm");
-        const deleteBtn = document.getElementById("teacherDeleteStudentBtn");
-        const cancelEdit = document.getElementById("teacherCancelEdit");
+        const editModal = new bootstrap.Modal(document.getElementById('gvEditStudentModal'));
+        const editForm = document.getElementById("gvEditStudentForm");
+        const deleteBtn = document.getElementById("gvDeleteStudentBtn");
+        const cancelEdit = document.getElementById("gvCancelEdit");
 
         let currentClassId = null;
 
@@ -764,18 +816,16 @@
                         `<tr><td colspan="7" class="text-center text-muted">Chưa có sinh viên nào</td></tr>`;
                 } else {
                     students.forEach(sv => {
-                    console.log("SV DATA:", sv);
-                    console.log("FIELDS:", Object.keys(sv));
-
-
                         const row = `
                             <tr data-id="${sv.enrollment_id}">
                                 <td>
-                                    <div class="teacher-student-info">
-                                    <img src="${sv.face_image_url}" class="teacher-student-avatar">
+                                    <div class="gv-student-info">
+                                        <img src="${sv.face_image_url || '/static/images/default-avatar.png'}"
+                                             class="gv-student-avatar"
+                                             onerror="this.src='/static/images/default-avatar.png'">
                                         <div>
-                                            <div class="teacher-student-name">${sv.full_name}</div>
-                                            <div class="teacher-student-id">${sv.mssv}</div>
+                                            <div class="gv-student-name">${sv.full_name}</div>
+                                            <div class="gv-student-id">${sv.mssv}</div>
                                         </div>
                                     </div>
                                 </td>
@@ -784,54 +834,57 @@
                                 <td>${sv.phone || '-'}</td>
                                 <td>${sv.major || '-'}</td>
                                 <td>${sv.lop || '-'}</td>
-                                <td class="text-center">
-                                    <button class="teacher-action-btn teacher-edit-btn-sm teacher-view-btn-sm"
-                                            data-student='${encodeURIComponent(JSON.stringify(sv))}'>
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-
-                                    <!-- ✅ Nút Chat -->
-                                    <button class="teacher-action-btn teacher-chat-btn-sm"
-                                            onclick="chatVoiSinhVien(${sv.student_id})">
-                                        <i class="fas fa-comments"></i>
-                                    </button>
+                                <td>
+                                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                        <button class="gv-action-btn gv-edit-btn"
+                                                data-student='${encodeURIComponent(JSON.stringify(sv))}'>
+                                            <i class="fas fa-edit"></i> Sửa
+                                        </button>
+                                        <button class="gv-action-btn gv-chat-btn"
+                                                onclick="chatVoiSinhVien(${sv.student_id})">
+                                            <i class="fas fa-comments"></i> Chat
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>`;
                         studentTableBody.insertAdjacentHTML("beforeend", row);
                     });
 
                     // Gắn lại sự kiện edit
-                    studentTableBody.querySelectorAll(".teacher-edit-btn-sm").forEach(btn => {
+                    studentTableBody.querySelectorAll(".gv-edit-btn").forEach(btn => {
                         btn.addEventListener("click", (e) => {
                             const raw = e.currentTarget.getAttribute("data-student");
                             const student = JSON.parse(decodeURIComponent(raw));
 
-                            document.getElementById("teacherEditStudentId").value = student.id;
-                            document.getElementById("teacherEditFullName").value = student.full_name || "";
-                            document.getElementById("teacherEditMSSV").value = student.mssv || "";
-                            document.getElementById("teacherEditEmail").value = student.email || "";
-                            document.getElementById("teacherEditPhone").value = student.phone || "";
-                            document.getElementById("teacherEditChuyenNganh").value = student.major || "";
-                            document.getElementById("teacherEditLop").value = student.lop || "";
+                            document.getElementById("gvEditStudentId").value = student.enrollment_id;
+                            document.getElementById("gvEditFullName").value = student.full_name || "";
+                            document.getElementById("gvEditMSSV").value = student.mssv || "";
+                            document.getElementById("gvEditEmail").value = student.email || "";
+                            document.getElementById("gvEditPhone").value = student.phone || "";
+                            document.getElementById("gvEditChuyenNganh").value = student.major || "";
+                            document.getElementById("gvEditLop").value = student.lop || "";
 
-                            editModal.style.display = "flex";
+                            editModal.show();
                         });
                     });
                 }
             } catch (err) {
-                alert(err.message);
+                Swal.fire({
+                    title: "Lỗi!",
+                    text: err.message,
+                    icon: "error",
+                    confirmButtonColor: "#e74c3c"
+                });
             }
-
         }
 
-
         // Khi click vào class -> load sinh viên
-        document.querySelectorAll(".teacher-view-class-btn").forEach((btn, index) => {
+        document.querySelectorAll(".gv-view-class-btn").forEach((btn, index) => {
             btn.addEventListener("click", async (e) => {
                 e.stopPropagation();
-                const card = btn.closest(".teacher-class-card");
+                const card = btn.closest(".gv-class-card");
                 currentClassId = card.dataset.id;
-                currentClassName.textContent = card.querySelector(".teacher-class-title").textContent;
+                currentClassName.textContent = card.querySelector(".gv-class-title").textContent;
 
                 await loadStudents(currentClassId);
 
@@ -840,43 +893,33 @@
             });
         });
 
-        // Nút Lọc (✅ ĐÃ CHUYỂN VÀO TRONG)
-        document.getElementById("applyFilterBtn").addEventListener("click", async () => {
-            console.log("Nút lọc đã được bấm ✅");
+        // Nút Lọc
+        document.getElementById("gvApplyFilterBtn").addEventListener("click", async () => {
             const params = {
-                mssv: document.getElementById("filterMSSV").value.trim(),
-                name: document.getElementById("filterName").value.trim()
+                mssv: document.getElementById("gvFilterMSSV").value.trim(),
+                name: document.getElementById("gvFilterName").value.trim()
             };
-            console.log("Filter gửi đi:", params);
             await loadStudents(currentClassId, params);
         });
 
-        // Nút Xóa lọc (✅ ĐÃ CHUYỂN VÀO TRONG)
-        document.getElementById("clearFilterBtn").addEventListener("click", async () => {
-            document.getElementById("filterMSSV").value = "";
-            document.getElementById("filterName").value = "";
+        // Nút Xóa lọc
+        document.getElementById("gvClearFilterBtn").addEventListener("click", async () => {
+            document.getElementById("gvFilterMSSV").value = "";
+            document.getElementById("gvFilterName").value = "";
             await loadStudents(currentClassId);
         });
-
-        // Đóng modal
-        const closeModal = () => {
-            editModal.style.display = "none";
-        };
-
-        closeEditModal.addEventListener("click", closeModal);
-        cancelEdit.addEventListener("click", closeModal);
 
         // Lưu thay đổi (PUT)
         editForm.addEventListener("submit", async (e) => {
             e.preventDefault();
-            const id = document.getElementById("teacherEditStudentId").value;
+            const id = document.getElementById("gvEditStudentId").value;
             const data = {
-                full_name: document.getElementById("teacherEditFullName").value,
-                mssv: document.getElementById("teacherEditMSSV").value,
-                email: document.getElementById("teacherEditEmail").value,
-                phone: document.getElementById("teacherEditPhone").value,
-                major: document.getElementById("teacherEditChuyenNganh").value,
-                lop: document.getElementById("teacherEditLop").value
+                full_name: document.getElementById("gvEditFullName").value,
+                mssv: document.getElementById("gvEditMSSV").value,
+                email: document.getElementById("gvEditEmail").value,
+                phone: document.getElementById("gvEditPhone").value,
+                major: document.getElementById("gvEditChuyenNganh").value,
+                lop: document.getElementById("gvEditLop").value
             };
 
             try {
@@ -887,28 +930,64 @@
                 });
                 if (!result.success) throw new Error(result.error || "Cập nhật thất bại");
 
-                alert("Cập nhật thành công!");
-                closeModal();
-                await loadStudents(currentClassId); // reload lại bảng
+                Swal.fire({
+                    title: "Thành công!",
+                    text: "Cập nhật thông tin sinh viên thành công",
+                    icon: "success",
+                    confirmButtonColor: "#27ae60",
+                    timer: 1500
+                });
+
+                editModal.hide();
+                await loadStudents(currentClassId);
             } catch (err) {
-                alert(err.message);
+                Swal.fire({
+                    title: "Lỗi!",
+                    text: err.message,
+                    icon: "error",
+                    confirmButtonColor: "#e74c3c"
+                });
             }
         });
 
         // Xóa enrollment (DELETE)
         deleteBtn.addEventListener("click", async () => {
-            const id = document.getElementById("teacherEditStudentId").value;
-            if (!confirm("Bạn có chắc muốn xóa sinh viên này khỏi lớp?")) return;
+            const id = document.getElementById("gvEditStudentId").value;
+
+            const result = await Swal.fire({
+                title: "Xác nhận xóa?",
+                text: "Bạn có chắc muốn xóa sinh viên này khỏi lớp?",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#e74c3c",
+                cancelButtonColor: "#95a5a6",
+                confirmButtonText: "Xóa",
+                cancelButtonText: "Hủy"
+            });
+
+            if (!result.isConfirmed) return;
 
             try {
                 const result = await fetchJSON(`/api/enrollment/${id}`, { method: "DELETE" });
                 if (!result.success) throw new Error(result.error || "Xóa thất bại");
 
-                alert("Đã xóa!");
-                closeModal();
-                await loadStudents(currentClassId); // reload lại bảng
+                Swal.fire({
+                    title: "Đã xóa!",
+                    text: "Sinh viên đã được xóa khỏi lớp",
+                    icon: "success",
+                    confirmButtonColor: "#27ae60",
+                    timer: 1500
+                });
+
+                editModal.hide();
+                await loadStudents(currentClassId);
             } catch (err) {
-                alert(err.message);
+                Swal.fire({
+                    title: "Lỗi!",
+                    text: err.message,
+                    icon: "error",
+                    confirmButtonColor: "#e74c3c"
+                });
             }
         });
 
@@ -917,33 +996,24 @@
             studentSection.style.display = "none";
             classSection.style.display = "block";
         });
-
-        // Đóng modal khi click bên ngoài
-        window.addEventListener("click", (e) => {
-            if (e.target === editModal) {
-                closeModal();
-            }
-        });
     });
-</script>
-<script>
-function chatVoiSinhVien(id_sv) {
-    const teacherElement = document.getElementById("teacherPage");
-    const teacher_id = teacherElement ? teacherElement.dataset.userId : null;
 
-    if (!teacher_id) {
-        console.error("❌ Không lấy được teacher_id");
-        alert("Không xác định được giáo viên. Hãy thử đăng nhập lại.");
-        return;
+    function chatVoiSinhVien(id_sv) {
+        const teacherElement = document.getElementById("gvPage");
+        const teacher_id = teacherElement ? teacherElement.dataset.userId : null;
+
+        if (!teacher_id) {
+            Swal.fire({
+                title: "Lỗi!",
+                text: "Không xác định được giáo viên. Hãy thử đăng nhập lại.",
+                icon: "error",
+                confirmButtonColor: "#e74c3c"
+            });
+            return;
+        }
+
+        window.location.href = `/chat_gv/${teacher_id}?sv=${id_sv}`;
     }
-
-
-    window.location.href = `/chat_gv/${teacher_id}?sv=${id_sv}`;
-}
-
 </script>
-
-
-
 
 {% endblock %}

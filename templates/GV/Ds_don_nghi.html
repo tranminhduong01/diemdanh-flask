@@ -30,8 +30,8 @@
 
     .main-content {
         padding: 20px;
-        background-color: var(--gray-100);
-        min-height: calc(100vh - 70px);
+        background-color: #f5f7fa;
+        min-height: calc(100vh - 80px);
     }
 
     .header {
@@ -39,16 +39,20 @@
         justify-content: space-between;
         align-items: center;
         margin-bottom: 24px;
-        background: white;
-        padding: 20px;
-        border-radius: var(--border-radius);
-        box-shadow: var(--box-shadow);
+        padding-bottom: 16px;
+        border-bottom: 1px solid #1F2937;
     }
 
     .page-title {
         font-size: 24px;
-        font-weight: 600;
-        color: var(--gray-800);
+        font-weight: 700;
+        color: #1F2937;
+        margin: 0 0 6px 0;
+    }
+
+    .welcome-text {
+        font-size: 14px;
+        color: #7f8c8d;
         margin: 0;
     }
 
@@ -473,7 +477,10 @@
 
 <div class="main-content">
     <div class="header">
-        <h1 class="page-title">Quản Lý Đơn Nghỉ Học</h1>
+        <div>
+            <h1 class="page-title">Chào mừng trở lại, giảng viên {{ teacher.name }}</h1>
+            <p class="welcome-text">Danh sách đơn xin phép nghỉ của sinh viên</p>
+        </div>
     </div>
 
     <!-- Filter Section -->
@@ -645,15 +652,11 @@
         </div>
 
         <div class="pagination-container">
-            <div class="pagination-info">
-                Hiển thị 1-5 của 23 kết quả
+            <div class="pagination-info" id="pagination-info">
+                Hiển thị 1-5
             </div>
-            <ul class="pagination">
-                <li class="page-item disabled"><a class="page-link" href="#"><i class="fas fa-chevron-left"></i></a></li>
-                <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                <li class="page-item"><a class="page-link" href="#">2</a></li>
-                <li class="page-item"><a class="page-link" href="#">3</a></li>
-                <li class="page-item"><a class="page-link" href="#"><i class="fas fa-chevron-right"></i></a></li>
+            <ul class="pagination" id="pagination">
+                <!-- Phần trang sẽ được tạo động -->
             </ul>
         </div>
     </div>
@@ -735,5 +738,80 @@
     document.addEventListener('DOMContentLoaded', function() {
         filterTable();
     });
+</script>
+<script>
+const data = Array.from({length: 23}, (_, i) => `Item ${i+1}`); // Dữ liệu mẫu
+const itemsPerPage = 5;
+let currentPage = 1;
+
+function renderList() {
+    const listContainer = document.getElementById("data-list");
+    listContainer.innerHTML = "";
+
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    const pageItems = data.slice(start, end);
+
+    pageItems.forEach(item => {
+        const div = document.createElement("div");
+        div.textContent = item;
+        listContainer.appendChild(div);
+    });
+
+    // Cập nhật thông tin phân trang
+    const paginationInfo = document.getElementById("pagination-info");
+    paginationInfo.textContent = `Hiển thị ${start+1}-${Math.min(end, data.length)} của ${data.length} kết quả`;
+}
+
+function renderPagination() {
+    const pagination = document.getElementById("pagination");
+    pagination.innerHTML = "";
+
+    const totalPages = Math.ceil(data.length / itemsPerPage);
+
+    // Nút Previous
+    const prevLi = document.createElement("li");
+    prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+    prevLi.innerHTML = `<a class="page-link" href="#"><i class="fas fa-chevron-left"></i></a>`;
+    prevLi.addEventListener("click", () => {
+        if(currentPage > 1) {
+            currentPage--;
+            update();
+        }
+    });
+    pagination.appendChild(prevLi);
+
+    // Các nút số trang
+    for(let i = 1; i <= totalPages; i++) {
+        const li = document.createElement("li");
+        li.className = `page-item ${currentPage === i ? 'active' : ''}`;
+        li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+        li.addEventListener("click", () => {
+            currentPage = i;
+            update();
+        });
+        pagination.appendChild(li);
+    }
+
+    // Nút Next
+    const nextLi = document.createElement("li");
+    nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+    nextLi.innerHTML = `<a class="page-link" href="#"><i class="fas fa-chevron-right"></i></a>`;
+    nextLi.addEventListener("click", () => {
+        if(currentPage < totalPages) {
+            currentPage++;
+            update();
+        }
+    });
+    pagination.appendChild(nextLi);
+}
+
+function update() {
+    renderList();
+    renderPagination();
+}
+
+// Khởi tạo
+update();
 </script>
 {% endblock %}

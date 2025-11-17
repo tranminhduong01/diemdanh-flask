@@ -40,20 +40,19 @@
                 <ul class="list-group">
                     {% for t in tickets %}
                     <li class="list-group-item">
-                         <div>
-                            <b>{{ t.title }}</b> — <span class="badge bg-info">{{ t.status }}</span><br>
-                            {{ t.description }}<br>
-                            <small class="text-muted">{{ t.created_at }}</small>
-                        </div>
+                      <div>
+                        <b>{{ t.title }}</b> — <span class="badge bg-info">{{ t.status }}</span><br>
+                        {{ t.description }}<br>
+                        <small class="text-muted">{{ t.created_at }}</small>
+                      </div>
 
-                        <!-- Nút mở modal xác nhận -->
-                        <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#confirmDelete{{ t.id }}">
-                            <i class="fas fa-trash"></i>
-                        </button>
+                      <!-- Nút mở modal xác nhận -->
+                      <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#confirmDelete{{ t.id }}">
+                          <i class="fas fa-trash"></i>
+                      </button>
                     </li>
-                    {% else %}
-                    <li class="list-group-item text-muted">Chưa có yêu cầu nào.</li>
-                    <!-- Modal Xác Nhận Xóa -->
+
+                    <!-- ✅ Modal nằm TRONG vòng lặp -->
                     <div class="modal fade" id="confirmDelete{{ t.id }}" tabindex="-1">
                       <div class="modal-dialog modal-dialog-centered">
                         <div class="modal-content">
@@ -80,7 +79,10 @@
                         </div>
                       </div>
                     </div>
+                    {% else %}
+                    <li class="list-group-item text-muted">Chưa có yêu cầu nào.</li>
                     {% endfor %}
+
                 </ul>
             </div>
         </div>

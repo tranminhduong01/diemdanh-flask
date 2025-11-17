@@ -5,16 +5,287 @@
 {% block content %}
 {% include "chat_bot.html" %}
 
+<style>
+  /* Biến hệ thống đơn giản */
+  :root {
+    --primary: #3b82f6;
+    --primary-dark: #2563eb;
+    --primary-light: #60a5fa;
+    --secondary: #64748b;
+    --success: #10b981;
+    --white: #ffffff;
+    --gray-50: #f8fafc;
+    --gray-100: #f1f5f9;
+    --gray-200: #e2e8f0;
+    --gray-300: #cbd5e1;
+    --gray-400: #94a3b8;
+    --gray-500: #64748b;
+    --gray-600: #475569;
+    --gray-700: #334155;
+    --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --radius: 8px;
+    --radius-lg: 12px;
+  }
+
+  /* Reset và full height */
+  .dslh-full-page {
+    min-height: 100vh;
+    background: var(--gray-50);
+    padding: 0;
+    margin: 0;
+  }
+
+  /* Header đơn giản */
+ .dslh-page-header {
+    background: #ffffff; /* nền trắng thật */
+    border-bottom: 1px solid var(--gray-200);
+    padding: 1.5rem 0;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    overflow: hidden;
+  }
+
+  /* lớp nền hiệu ứng lưới */
+  .dslh-page-header::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.10'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    opacity: 0.9; /* đậm hơn */
+    z-index: 0;
+    pointer-events: none;
+
+    /* hiệu ứng mờ dần */
+    -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1), rgba(0,0,0,0));
+    mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1), rgba(0,0,0,0));
+  }
+
+
+  .dslh-page-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+     color: #2563eb;
+    margin-bottom: 0.25rem;
+  }
+
+  .dslh-page-subtitle {
+     color: #2563eb;
+    font-size: 1rem;
+  }
+
+  /* Container chính */
+  .dslh-main-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+  }
+
+  /* Thanh tìm kiếm */
+  .dslh-search-container {
+    margin-bottom: 2rem;
+  }
+
+  .dslh-search-box {
+    position: relative;
+    max-width: 400px;
+  }
+
+  .dslh-search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--gray-400);
+  }
+
+  .dslh-search-input {
+    width: 100%;
+    padding: 0.875rem 1rem 0.875rem 2.75rem;
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-lg);
+    font-size: 1rem;
+    background: var(--white);
+    transition: all 0.2s;
+  }
+
+  .dslh-search-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+
+  /* Grid lớp học */
+  .dslh-classes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+  }
+
+  /* Card lớp học đơn giản */
+  .dslh-class-card {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--gray-200);
+    transition: all 0.2s;
+    overflow: hidden;
+  }
+
+  .dslh-class-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+  }
+
+  .dslh-class-header {
+    padding: 1.25rem 1.25rem 1rem;
+    border-bottom: 1px solid var(--gray-100);
+  }
+
+  .dslh-class-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--gray-800);
+    margin-bottom: 0.5rem;
+  }
+
+  .dslh-class-badge {
+    background: var(--primary);
+    color: var(--white);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .dslh-class-body {
+    padding: 1.25rem;
+  }
+
+  .dslh-class-info {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 0.875rem;
+    font-size: 0.875rem;
+  }
+
+  .dslh-info-icon {
+    color: var(--primary);
+    margin-right: 0.75rem;
+    width: 16px;
+    text-align: center;
+    margin-top: 0.125rem;
+  }
+
+  .dslh-info-label {
+    font-weight: 500;
+    color: var(--gray-600);
+    margin-right: 0.25rem;
+  }
+
+  .dslh-info-text {
+    color: var(--gray-700);
+  }
+
+  .dslh-class-actions {
+    margin-top: 1.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--gray-100);
+  }
+
+  /* Nút đơn giản */
+  .dslh-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 0.75rem 1.5rem;
+    background: var(--primary);
+    color: var(--white);
+    border: none;
+    border-radius: var(--radius);
+    font-weight: 600;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+
+  .dslh-btn:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+  }
+
+  .dslh-btn-icon {
+    margin-right: 0.5rem;
+  }
+
+  /* Empty state */
+  .dslh-empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--gray-500);
+  }
+
+  .dslh-empty-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+  }
+
+  .dslh-empty-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--gray-600);
+  }
+
+  .dslh-empty-text {
+    font-size: 0.875rem;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .dslh-main-container {
+      padding: 1.5rem 1rem;
+    }
+
+    .dslh-classes-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .dslh-page-header {
+      padding: 1rem 0;
+    }
+
+    .dslh-page-title {
+      font-size: 1.5rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dslh-class-card {
+      margin: 0 -0.5rem;
+      border-radius: 0;
+      border-left: none;
+      border-right: none;
+    }
+  }
+</style>
+
+<div class="dslh-full-page">
   <!-- HEADER TRANG -->
   <div class="dslh-page-header">
-    <div class="dslh-container">
+    <div class="dslh-main-container">
       <h1 class="dslh-page-title">Danh sách lớp học</h1>
       <p class="dslh-page-subtitle">Chọn lớp học để ghi danh tham gia</p>
     </div>
   </div>
 
   <!-- NỘI DUNG CHÍNH -->
-  <div class="dslh-container dslh-py-4">
+  <div class="dslh-main-container">
     <!-- Thanh tìm kiếm -->
     <div class="dslh-search-container">
       <div class="dslh-search-box">
@@ -35,41 +306,31 @@
           <div class="dslh-class-body">
             <div class="dslh-class-info">
               <i class="fas fa-chalkboard-teacher dslh-info-icon"></i>
-              <div class="dslh-info-content">
-                <span class="dslh-info-label">Giáo viên:</span>
-                <span class="dslh-info-text">{{ lop.teacher_name }}</span>
-              </div>
+              <span class="dslh-info-label">Giáo viên:</span>
+              <span class="dslh-info-text">{{ lop.teacher_name }}</span>
             </div>
             <div class="dslh-class-info">
               <i class="fas fa-map-marker-alt dslh-info-icon"></i>
-              <div class="dslh-info-content">
-                <span class="dslh-info-label">Phòng:</span>
-                <span class="dslh-info-text">{{ lop.room }}</span>
-              </div>
+              <span class="dslh-info-label">Phòng:</span>
+              <span class="dslh-info-text">{{ lop.room }}</span>
             </div>
             <div class="dslh-class-info">
               <i class="fas fa-calendar-alt dslh-info-icon"></i>
-              <div class="dslh-info-content">
-                <span class="dslh-info-label">Lịch học:</span>
-                <span class="dslh-info-text">{{ lop.day_of_week }} ({{ lop.start_time }} - {{ lop.end_time }})</span>
-              </div>
+              <span class="dslh-info-label">Lịch học:</span>
+              <span class="dslh-info-text">{{ lop.day_of_week }} ({{ lop.start_time }} - {{ lop.end_time }})</span>
             </div>
             <div class="dslh-class-info">
               <i class="fas fa-clock dslh-info-icon"></i>
-              <div class="dslh-info-content">
-                <span class="dslh-info-label">Bắt đầu:</span>
-                <span class="dslh-info-text">{{ lop.start_date }}</span>
-              </div>
+              <span class="dslh-info-label">Bắt đầu:</span>
+              <span class="dslh-info-text">{{ lop.start_date }}</span>
             </div>
             <div class="dslh-class-info">
               <i class="fas fa-calendar-week dslh-info-icon"></i>
-              <div class="dslh-info-content">
-                <span class="dslh-info-label">Số tuần:</span>
-                <span class="dslh-info-text">{{ lop.weeks }}</span>
-              </div>
+              <span class="dslh-info-label">Số tuần:</span>
+              <span class="dslh-info-text">{{ lop.weeks }}</span>
             </div>
             <div class="dslh-class-actions">
-              <a href="{{ url_for('ghi_vao_lop', class_id=lop.id) }}" class="dslh-btn dslh-btn-primary">
+              <a href="{{ url_for('ghi_vao_lop', class_id=lop.id) }}" class="dslh-btn">
                 <i class="fas fa-user-plus dslh-btn-icon"></i>Ghi danh
               </a>
             </div>
@@ -85,320 +346,29 @@
       {% endif %}
     </div>
   </div>
+</div>
 
-  <style>
-    /* Biến hệ thống */
-    :root {
-      --dslh-primary: #3498db;
-      --dslh-primary-dark: #2980b9;
-      --dslh-secondary: #6c757d;
-      --dslh-success: #28a745;
-      --dslh-info: #17a2b8;
-      --dslh-warning: #ffc107;
-      --dslh-danger: #dc3545;
-      --dslh-light: #f8f9fa;
-      --dslh-dark: #343a40;
-      --dslh-white: #ffffff;
-      --dslh-gray: #6c757d;
-      --dslh-gray-light: #e9ecef;
-      --dslh-gray-lighter: #f8f9fa;
-      --dslh-border-radius: 12px;
-      --dslh-card-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
-      --dslh-hover-shadow: 0 15px 30px rgba(0, 0, 0, 0.12);
-      --dslh-transition: all 0.3s ease;
-    }
+<script>
+  // Chức năng tìm kiếm lớp học - GIỮ NGUYÊN
+  document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('dslhSearchInput');
+    const classCards = document.querySelectorAll('.dslh-class-card');
 
-    /* Layout styles */
-    .dslh-container {
-      width: 100%;
-      padding-right: 15px;
-      padding-left: 15px;
-      margin-right: auto;
-      margin-left: auto;
-    }
+    searchInput.addEventListener('input', function() {
+      const searchTerm = this.value.toLowerCase().trim();
 
-    @media (min-width: 576px) {
-      .dslh-container {
-        max-width: 540px;
-      }
-    }
+      classCards.forEach(card => {
+        const className = card.querySelector('.dslh-class-title').textContent.toLowerCase();
+        const teacherName = card.querySelectorAll('.dslh-info-text')[0].textContent.toLowerCase();
+        const room = card.querySelectorAll('.dslh-info-text')[1].textContent.toLowerCase();
 
-    @media (min-width: 768px) {
-      .dslh-container {
-        max-width: 720px;
-      }
-    }
-
-    @media (min-width: 992px) {
-      .dslh-container {
-        max-width: 960px;
-      }
-    }
-
-    @media (min-width: 1200px) {
-      .dslh-container {
-        max-width: 1140px;
-      }
-    }
-
-    /* Header styles */
-    .dslh-page-header {
-      background: linear-gradient(135deg, var(--dslh-primary) 0%, var(--dslh-primary-dark) 100%);
-      color: var(--dslh-white);
-      padding: 2.5rem 0;
-      margin-bottom: 2rem;
-    }
-
-    .dslh-page-title {
-      font-size: 2.5rem;
-      font-weight: 700;
-      margin-bottom: 0.5rem;
-    }
-
-    .dslh-page-subtitle {
-      font-size: 1.2rem;
-      opacity: 0.9;
-      margin-bottom: 0;
-    }
-
-    /* Spacing utilities */
-    .dslh-py-4 {
-      padding-top: 2rem;
-      padding-bottom: 2rem;
-    }
-
-    /* Search styles */
-    .dslh-search-container {
-      margin-bottom: 2.5rem;
-    }
-
-    .dslh-search-box {
-      position: relative;
-      max-width: 500px;
-      margin: 0 auto;
-    }
-
-    .dslh-search-icon {
-      position: absolute;
-      left: 1rem;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--dslh-gray);
-      z-index: 2;
-    }
-
-    .dslh-search-input {
-      width: 100%;
-      padding: 1rem 1rem 1rem 3rem;
-      font-size: 1rem;
-      border: 2px solid var(--dslh-gray-light);
-      border-radius: 50px;
-      transition: var(--dslh-transition);
-      background-color: var(--dslh-white);
-    }
-
-    .dslh-search-input:focus {
-      outline: none;
-      border-color: var(--dslh-primary);
-      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
-    }
-
-    /* Classes grid */
-    .dslh-classes-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-      gap: 1.5rem;
-    }
-
-    /* Class card styles */
-    .dslh-class-card {
-      background: var(--dslh-white);
-      border-radius: var(--dslh-border-radius);
-      box-shadow: var(--dslh-card-shadow);
-      overflow: hidden;
-      transition: var(--dslh-transition);
-      border: 1px solid var(--dslh-gray-light);
-    }
-
-    .dslh-class-card:hover {
-      transform: translateY(-5px);
-      box-shadow: var(--dslh-hover-shadow);
-    }
-
-    .dslh-class-header {
-      padding: 1.5rem 1.5rem 1rem;
-      border-bottom: 1px solid var(--dslh-gray-light);
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-    }
-
-    .dslh-class-title {
-      font-size: 1.25rem;
-      font-weight: 600;
-      color: var(--dslh-dark);
-      margin: 0;
-      flex: 1;
-    }
-
-    .dslh-class-badge {
-      background: linear-gradient(135deg, var(--dslh-primary) 0%, var(--dslh-primary-dark) 100%);
-      color: var(--dslh-white);
-      padding: 0.25rem 0.75rem;
-      border-radius: 20px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      margin-left: 0.5rem;
-    }
-
-    .dslh-class-body {
-      padding: 1.5rem;
-    }
-
-    .dslh-class-info {
-      display: flex;
-      align-items: flex-start;
-      margin-bottom: 1rem;
-    }
-
-    .dslh-info-icon {
-      color: var(--dslh-primary);
-      margin-right: 0.75rem;
-      margin-top: 0.2rem;
-      width: 16px;
-      text-align: center;
-    }
-
-    .dslh-info-content {
-      flex: 1;
-    }
-
-    .dslh-info-label {
-      font-weight: 600;
-      color: var(--dslh-dark);
-      margin-right: 0.25rem;
-    }
-
-    .dslh-info-text {
-      color: var(--dslh-gray);
-    }
-
-    .dslh-class-actions {
-      margin-top: 1.5rem;
-      padding-top: 1.5rem;
-      border-top: 1px solid var(--dslh-gray-light);
-      text-align: center;
-    }
-
-    /* Button styles */
-    .dslh-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 600;
-      text-align: center;
-      vertical-align: middle;
-      cursor: pointer;
-      user-select: none;
-      background-color: transparent;
-      border: 2px solid transparent;
-      padding: 0.75rem 1.5rem;
-      font-size: 1rem;
-      line-height: 1.5;
-      border-radius: 50px;
-      transition: var(--dslh-transition);
-      text-decoration: none;
-    }
-
-    .dslh-btn-primary {
-      color: var(--dslh-white);
-      background: linear-gradient(135deg, var(--dslh-primary) 0%, var(--dslh-primary-dark) 100%);
-      border-color: var(--dslh-primary);
-    }
-
-    .dslh-btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 15px rgba(52, 152, 219, 0.3);
-    }
-
-    .dslh-btn-icon {
-      margin-right: 0.5rem;
-    }
-
-    /* Empty state styles */
-    .dslh-empty-state {
-      grid-column: 1 / -1;
-      text-align: center;
-      padding: 4rem 2rem;
-      background-color: var(--dslh-gray-lighter);
-      border-radius: var(--dslh-border-radius);
-      margin: 2rem 0;
-    }
-
-    .dslh-empty-icon {
-      font-size: 4rem;
-      color: var(--dslh-gray);
-      margin-bottom: 1.5rem;
-      opacity: 0.5;
-    }
-
-    .dslh-empty-title {
-      font-size: 1.5rem;
-      color: var(--dslh-dark);
-      margin-bottom: 1rem;
-    }
-
-    .dslh-empty-text {
-      color: var(--dslh-gray);
-      margin-bottom: 0;
-    }
-
-    /* Responsive adjustments */
-    @media (max-width: 768px) {
-      .dslh-classes-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .dslh-page-title {
-        font-size: 2rem;
-      }
-
-      .dslh-page-subtitle {
-        font-size: 1.1rem;
-      }
-
-      .dslh-class-header {
-        flex-direction: column;
-        gap: 0.5rem;
-      }
-
-      .dslh-class-badge {
-        align-self: flex-start;
-      }
-    }
-  </style>
-
-  <script>
-    // Chức năng tìm kiếm lớp học
-    document.addEventListener('DOMContentLoaded', function() {
-      const searchInput = document.getElementById('dslhSearchInput');
-      const classCards = document.querySelectorAll('.dslh-class-card');
-
-      searchInput.addEventListener('input', function() {
-        const searchTerm = this.value.toLowerCase().trim();
-
-        classCards.forEach(card => {
-          const className = card.querySelector('.dslh-class-title').textContent.toLowerCase();
-          const teacherName = card.querySelector('.dslh-info-text').textContent.toLowerCase();
-          const room = card.querySelectorAll('.dslh-info-text')[1].textContent.toLowerCase();
-
-          if (className.includes(searchTerm) || teacherName.includes(searchTerm) || room.includes(searchTerm)) {
-            card.style.display = 'block';
-          } else {
-            card.style.display = 'none';
-          }
-        });
+        if (className.includes(searchTerm) || teacherName.includes(searchTerm) || room.includes(searchTerm)) {
+          card.style.display = 'block';
+        } else {
+          card.style.display = 'none';
+        }
       });
     });
-  </script>
+  });
+</script>
 {% endblock %}

@@ -5,6 +5,9 @@
 {% block content %}
 {% include "chat_bot.html" %}
 
+<!-- Đưa Font Awesome lên đầu để đảm bảo load sớm -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
 <style>
     :root {
         --primary: #4361ee;
@@ -37,33 +40,51 @@
 
     /* Hero Section */
     .student-hero {
-        background: linear-gradient(135deg, var(--primary) 0%, #3a0ca3 100%);
-        color: white;
-        padding: 60px 0;
-        text-align: center;
+        background: #ffffff;
+        color: #111;
+        padding: 80px 0 60px;
+        position: relative;
+        overflow: hidden;
     }
 
+    /* Hiệu ứng dấu cộng đen mờ dần */
+    .student-hero::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.06'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        opacity: 0.7;
+        z-index: 0;
+    }
+
+    /* Nội dung hiển thị trên nền */
     .student-hero-content {
         max-width: 800px;
         margin: 0 auto;
         padding: 0 20px;
+        position: relative;
+        z-index: 1;
+        text-align: center;
     }
 
     .student-hero h1 {
         font-size: 2.5rem;
         font-weight: 700;
         margin-bottom: 16px;
+        line-height: 1.2;
     }
 
     .student-hero .lead {
         font-size: 1.2rem;
         opacity: 0.9;
         line-height: 1.6;
+        margin-bottom: 30px;
     }
 
     /* Features Section */
     .student-features {
-        padding: 60px 0;
+        padding: 80px 0;
     }
 
     .student-container {
@@ -77,58 +98,68 @@
         font-size: 2rem;
         font-weight: 700;
         color: var(--gray-800);
-        margin-bottom: 40px;
+        margin-bottom: 50px;
+        position: relative;
+    }
+
+    .student-section-heading::after {
+        content: '';
+        display: block;
+        width: 60px;
+        height: 4px;
+        background: var(--primary);
+        margin: 16px auto 0;
+        border-radius: 2px;
     }
 
     .student-feature-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 24px;
+        gap: 30px;
         margin-bottom: 40px;
     }
 
+    /* Sửa lại CSS cho feature card - chỉ giữ một định nghĩa */
     .student-feature-card {
         background: white;
         border-radius: var(--border-radius);
-        padding: 30px;
+        padding: 40px 30px;
         box-shadow: var(--box-shadow);
         transition: var(--transition);
         height: 100%;
         display: flex;
         flex-direction: column;
+        text-align: center;
+        border-top: 4px solid transparent;
     }
 
     .student-feature-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        transform: translateY(-8px);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
     }
 
+    /* Sửa lại CSS cho icon - chỉ giữ một định nghĩa */
     .student-feature-icon {
-        width: 60px;
-        height: 60px;
-        border-radius: 12px;
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-bottom: 20px;
-        font-size: 24px;
+        margin: 0 auto 25px;
+        font-size: 32px;
         color: white;
-    }
-
-    .student-feature-icon.target {
         background: linear-gradient(135deg, #4361ee, #3a0ca3);
     }
 
-    .student-feature-icon.gear {
-        background: linear-gradient(135deg, #f72585, #7209b7);
-    }
-
-    .student-feature-icon.rocket {
-        background: linear-gradient(135deg, #4cc9f0, #4895ef);
+    /* Đảm bảo icon hiển thị đúng */
+    .student-feature-icon i {
+        font-size: 32px !important;
+        color: white !important;
     }
 
     .student-feature-title {
-        font-size: 1.25rem;
+        font-size: 1.4rem;
         font-weight: 600;
         color: var(--gray-800);
         margin-bottom: 16px;
@@ -136,25 +167,26 @@
 
     .student-feature-text {
         color: var(--gray-600);
-        line-height: 1.6;
+        line-height: 1.7;
         flex-grow: 1;
     }
 
     .student-feature-list {
         list-style: none;
         padding: 0;
-        margin: 0;
+        margin: 20px 0 0;
+        text-align: left;
     }
 
     .student-feature-list li {
-        padding: 4px 0;
+        padding: 8px 0;
         color: var(--gray-600);
         position: relative;
-        padding-left: 20px;
+        padding-left: 24px;
     }
 
     .student-feature-list li:before {
-        content: "•";
+        content: "✓";
         color: var(--primary);
         font-weight: bold;
         position: absolute;
@@ -163,14 +195,14 @@
 
     .student-cta-section {
         text-align: center;
-        margin-top: 40px;
+        margin-top: 50px;
     }
 
     .student-btn {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        padding: 12px 24px;
+        padding: 14px 32px;
         border-radius: var(--border-radius);
         font-size: 1rem;
         font-weight: 500;
@@ -178,6 +210,7 @@
         transition: var(--transition);
         border: none;
         cursor: pointer;
+        box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
     }
 
     .student-btn-primary {
@@ -188,12 +221,63 @@
     .student-btn-primary:hover {
         background: #3651d4;
         transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(67, 97, 238, 0.4);
+        color: white;
+    }
+
+    /* Stats Section */
+    .student-stats {
+        background: white;
+        padding: 60px 0;
+        border-top: 1px solid var(--gray-200);
+        border-bottom: 1px solid var(--gray-200);
+    }
+
+    .student-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 30px;
+    }
+
+    .student-stat-card {
+        text-align: center;
+        padding: 30px 20px;
+    }
+
+    .student-stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--primary);
+        margin-bottom: 10px;
+    }
+
+    .student-stat-label {
+        color: var(--gray-600);
+        font-size: 1rem;
+    }
+
+    /* Carousel styling */
+    .carousel-control-prev,
+    .carousel-control-next {
+        width: 50px;
+        height: 50px;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 50%;
+        top: 50%;
+        transform: translateY(-50%);
+        opacity: 0.7;
+    }
+
+    .carousel-control-prev:hover,
+    .carousel-control-next:hover {
+        background: rgba(0, 0, 0, 0.4);
+        opacity: 1;
     }
 
     /* Responsive Design */
     @media (max-width: 768px) {
         .student-hero {
-            padding: 40px 0;
+            padding: 60px 0 40px;
         }
 
         .student-hero h1 {
@@ -205,7 +289,7 @@
         }
 
         .student-features {
-            padding: 40px 0;
+            padding: 60px 0;
         }
 
         .student-section-heading {
@@ -214,10 +298,28 @@
 
         .student-feature-grid {
             grid-template-columns: 1fr;
+            gap: 24px;
         }
 
         .student-feature-card {
-            padding: 24px;
+            padding: 30px 24px;
+        }
+
+        .student-stats {
+            padding: 40px 0;
+        }
+
+        .student-stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .student-stat-card {
+            padding: 20px 15px;
+        }
+
+        .student-stat-number {
+            font-size: 2rem;
         }
     }
 
@@ -231,9 +333,17 @@
         }
 
         .student-feature-icon {
-            width: 50px;
-            height: 50px;
-            font-size: 20px;
+            width: 60px;
+            height: 60px;
+            font-size: 24px;
+        }
+
+        .student-feature-icon i {
+            font-size: 24px !important;
+        }
+
+        .student-stats-grid {
+            grid-template-columns: 1fr;
         }
     }
 </style>
@@ -242,61 +352,91 @@
     <!-- HERO SECTION -->
     <section class="student-hero">
         <div class="student-hero-content">
-            <h1>Giới thiệu về Hệ thống</h1>
-            <p class="lead">Hệ thống điểm danh bằng khuôn mặt được phát triển nhằm hiện đại hóa và tối ưu hoá công tác quản lý sinh viên.</p>
+            <h1>Hệ thống Quản lý Học tập</h1>
+            <p class="lead">Nền tảng học tập thông minh với công nghệ điểm danh bằng khuôn mặt, giúp tối ưu hóa trải nghiệm học tập và quản lý lớp học.</p>
+            <a href="#features" class="student-btn student-btn-primary">
+                <i class="fas fa-rocket me-2"></i>Khám phá ngay
+            </a>
+        </div>
+    </section>
+
+    <!-- STATS SECTION -->
+    <section class="student-stats">
+        <div class="student-container">
+            <div class="student-stats-grid">
+                <div class="student-stat-card">
+                    <div class="student-stat-number">{{ total_classes }}+</div>
+                    <div class="student-stat-label">Lớp học</div>
+                </div>
+                <div class="student-stat-card">
+                    <div class="student-stat-number">{{ total_teachers }}+</div>
+                    <div class="student-stat-label">Giảng viên</div>
+                </div>
+                <div class="student-stat-card">
+                    <div class="student-stat-number">{{ total_students }}+</div>
+                    <div class="student-stat-label">Sinh viên</div>
+                </div>
+                <div class="student-stat-card">
+                    <div class="student-stat-number">{{ accuracy }}%</div>
+                    <div class="student-stat-label">Độ chính xác</div>
+                </div>
+            </div>
         </div>
     </section>
 
     <!-- FEATURES SECTION -->
-    <section class="student-features">
+    <section class="student-features" id="features">
         <div class="student-container">
-            <h2 class="student-section-heading">Tính năng nổi bật</h2>
+            <h2 class="student-section-heading">Giải pháp Toàn diện</h2>
 
-            <div class="student-feature-grid">
-                <!-- Feature Card 1 -->
-                <div class="student-feature-card">
-                    <div class="student-feature-icon target">
-                        <i class="fas fa-bullseye"></i>
+            <div id="featureCarousel" class="carousel slide" data-bs-ride="carousel">
+                <div class="carousel-inner">
+                    {% for i in range(0, features|length, 3) %}
+                    <div class="carousel-item {% if i == 0 %}active{% endif %}">
+                        <div class="row justify-content-center">
+                            {% for f in features[i:i+3] %}
+                            <div class="col-md-4 mb-4">
+                                <div class="student-feature-card text-center">
+                                    <div class="student-feature-icon">
+                                        <i class="{{ f.icon }}"></i>
+                                    </div>
+                                    <h3 class="student-feature-title">{{ f.title }}</h3>
+                                    <p class="student-feature-text">{{ f.description }}</p>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
                     </div>
-                    <h3 class="student-feature-title">Mục tiêu</h3>
-                    <p class="student-feature-text">
-                        Giúp giảng viên và nhà trường tiết kiệm thời gian, hạn chế gian lận trong điểm danh và quản lý lớp học hiệu quả hơn.
-                    </p>
+                    {% endfor %}
                 </div>
 
-                <!-- Feature Card 2 -->
-                <div class="student-feature-card">
-                    <div class="student-feature-icon gear">
-                        <i class="fas fa-cog"></i>
-                    </div>
-                    <h3 class="student-feature-title">Tính năng</h3>
-                    <ul class="student-feature-list">
-                        <li>Điểm danh bằng khuôn mặt</li>
-                        <li>Quản lý lớp học và lịch học</li>
-                        <li>Nộp đơn nghỉ học trực tuyến</li>
-                        <li>Thống kê, báo cáo chi tiết</li>
-                    </ul>
-                </div>
-
-                <!-- Feature Card 3 -->
-                <div class="student-feature-card">
-                    <div class="student-feature-icon rocket">
-                        <i class="fas fa-rocket"></i>
-                    </div>
-                    <h3 class="student-feature-title">Tương lai</h3>
-                    <p class="student-feature-text">
-                        Phát triển thêm mobile app, tích hợp AI để phân tích dữ liệu học tập, hỗ trợ học tập cá nhân hoá cho sinh viên.
-                    </p>
-                </div>
-            </div>
-
-            <div class="student-cta-section">
-                <a href="/" class="student-btn student-btn-primary">
-                    Quay lại trang chủ
-                </a>
+                <!-- Nút điều hướng -->
+                {% if features|length > 3 %}
+                <button class="carousel-control-prev" type="button" data-bs-target="#featureCarousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Trước</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#featureCarousel" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Sau</span>
+                </button>
+                {% endif %}
             </div>
         </div>
     </section>
 </div>
+
+<script>
+// Đảm bảo carousel hoạt động
+document.addEventListener('DOMContentLoaded', function() {
+    var featureCarousel = document.getElementById('featureCarousel');
+    if (featureCarousel) {
+        var carousel = new bootstrap.Carousel(featureCarousel, {
+            interval: 5000,
+            wrap: true
+        });
+    }
+});
+</script>
 
 {% endblock %}

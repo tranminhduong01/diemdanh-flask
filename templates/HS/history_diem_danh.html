@@ -2,108 +2,295 @@
 {% block content %}
 {% include "chat_bot.html" %}
 
-<div class="container mt-5">
-    <h3 class="text-center mb-4">
-        🧾 Lịch sử điểm danh
-    </h3>
+<!-- Sử dụng tên riêng biệt để tránh xung đột -->
+<div class="attendance-history-wrapper">
+  <div class="container-fluid py-4">
+    <div class="attendance-history-card border-0 shadow-sm rounded-3">
+      <!-- Header được thiết kế lại -->
+      <div class="attendance-history-header bg-white border-bottom py-4">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h4 class="attendance-history-title fw-bold mb-1 text-dark">
+              <i class="fas fa-calendar-check me-2 text-primary"></i>Lịch sử điểm danh
+            </h4>
+            <p class="attendance-history-subtitle text-muted small mb-0">
+              Tổng số: <span class="fw-semibold text-primary">{{ attendance_list|length }}</span> buổi học
+            </p>
+          </div>
+        </div>
+      </div>
 
-    <!-- Bọc toàn bộ trong form -->
-<form method="GET" action="/lich_su_diem_danh">
-  <div class="row g-3">
+      <!-- Form lọc -->
+      <form method="GET" action="/lich_su_diem_danh">
+        <div class="attendance-history-filter card-body border-bottom bg-light-subtle py-4">
+          <div class="row g-3">
+            <!-- Tháng -->
+            <div class="col-xl-3 col-md-6">
+              <label class="attendance-history-label form-label fw-medium text-dark small">
+                <i class="fas fa-calendar me-1"></i>Tháng
+              </label>
+              <select name="month" class="attendance-history-select form-select form-select-sm">
+                <option value="">Tất cả tháng</option>
+                {% for i in range(1, 13) %}
+                <option value="{{ i }}" {% if request.args.get('month')|int == i %}selected{% endif %}>
+                  Tháng {{ i }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
 
-    <!-- Tháng -->
-    <div class="col-xl-3 col-md-6">
-      <label class="form-label">Tháng</label>
-      <select name="month" class="form-select form-select-sm">
-        <option value="">Tất cả tháng</option>
-        {% for i in range(1, 13) %}
-        <option value="{{ i }}" {% if request.args.get('month')|int == i %}selected{% endif %}>
-          Tháng {{ i }}
-        </option>
-        {% endfor %}
-      </select>
-    </div>
+            <!-- Năm -->
+            <div class="col-xl-3 col-md-6">
+              <label class="attendance-history-label form-label fw-medium text-dark small">
+                <i class="fas fa-calendar-alt me-1"></i>Năm
+              </label>
+              <select name="year" class="attendance-history-select form-select form-select-sm">
+                <option value="">Tất cả năm</option>
+                {% for y in range(2020, 2031) %}
+                <option value="{{ y }}" {% if request.args.get('year')|int == y %}selected{% endif %}>
+                  {{ y }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
 
-    <!-- Năm -->
-    <div class="col-xl-3 col-md-6">
-      <label class="form-label">Năm</label>
-      <select name="year" class="form-select form-select-sm">
-        <option value="">Tất cả năm</option>
-        {% for y in range(2020, 2031) %}
-        <option value="{{ y }}" {% if request.args.get('year')|int == y %}selected{% endif %}>
-          {{ y }}
-        </option>
-        {% endfor %}
-      </select>
-    </div>
+            <!-- Trạng thái -->
+            <div class="col-xl-3 col-md-6">
+              <label class="attendance-history-label form-label fw-medium text-dark small">
+                <i class="fas fa-tag me-1"></i>Trạng thái
+              </label>
+              <select name="status" class="attendance-history-select form-select form-select-sm">
+                <option value="">Tất cả</option>
+                <option value="present" {% if request.args.get('status') == 'present' %}selected{% endif %}>Có mặt</option>
+                <option value="late" {% if request.args.get('status') == 'late' %}selected{% endif %}>Đi trễ</option>
+                <option value="absent_excused" {% if request.args.get('status') == 'absent_excused' %}selected{% endif %}>Vắng có phép</option>
+                <option value="absent_unexcused" {% if request.args.get('status') == 'absent_unexcused' %}selected{% endif %}>Vắng không phép</option>
+              </select>
+            </div>
 
-    <!-- Trạng thái -->
-    <div class="col-xl-3 col-md-6">
-      <label class="form-label">Trạng thái</label>
-      <select name="status" class="form-select form-select-sm">
-        <option value="">Tất cả</option>
-        <option value="present" {% if request.args.get('status') == 'present' %}selected{% endif %}>Có mặt</option>
-        <option value="late" {% if request.args.get('status') == 'late' %}selected{% endif %}>Đi trễ</option>
-        <option value="absent_excused" {% if request.args.get('status') == 'absent_excused' %}selected{% endif %}>Vắng có phép</option>
-        <option value="absent_unexcused" {% if request.args.get('status') == 'absent_unexcused' %}selected{% endif %}>Vắng không phép</option>
-      </select>
-    </div>
+            <!-- Nút lọc -->
+            <div class="col-xl-3 col-md-6 d-flex align-items-end">
+              <button class="attendance-history-filter-btn btn btn-primary w-100 fw-medium btn-sm" type="submit">
+                <i class="fas fa-filter me-1"></i>Lọc
+              </button>
+            </div>
+          </div>
+        </div>
+      </form>
 
-    <!-- Nút lọc -->
-    <div class="col-xl-3 col-md-6 d-flex align-items-end">
-      <button class="btn btn-primary w-100" type="submit">
-        <i class="fas fa-filter me-2"></i>Lọc
-      </button>
-    </div>
-
-  </div>
-</form>
-
-
-
-    <div class="table-responsive">
-        <table class="table table-hover table-bordered shadow-sm">
-            <thead class="table-primary text-center">
-                <tr>
-                    <th>Mã</th>
-                    <th>Lớp học</th>
-                    <th>Buổi học</th>
-                    <th>Ngày</th>
-                    <th>Giờ vào</th>
-                    <th>Giờ ra</th>
-                    <th>Trạng thái</th>
-                    <th>Điểm</th>
-                </tr>
+      <!-- Bảng dữ liệu -->
+      <div class="attendance-history-table card-body p-0">
+        {% if attendance_list %}
+        <div class="table-responsive">
+          <table class="attendance-history-table-main table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th class="ps-4 fw-medium text-muted small">Mã</th>
+                <th class="fw-medium text-muted small">Lớp học</th>
+                <th class="fw-medium text-muted small">Buổi học</th>
+                <th class="fw-medium text-muted small">Ngày</th>
+                <th class="fw-medium text-muted small">Giờ vào</th>
+                <th class="fw-medium text-muted small">Giờ ra</th>
+                <th class="fw-medium text-muted small">Trạng thái</th>
+                <th class="fw-medium text-muted small">Điểm</th>
+              </tr>
             </thead>
             <tbody>
-                {% for item in attendance_list %}
-                <tr class="text-center">
-                    <td>{{ item.id }}</td>
-                    <td>{{ item.class_name }}</td>
-                    <td>{{ item.session_name }}</td>
-                    <td>{{ item.date.strftime("%d/%m/%Y") }}</td>
-                    <td>{{ item.time_in or "-" }}</td>
-                    <td>{{ item.time_out or "-" }}</td>
-                    <td>
-                        {% if item.status_in == "present" %}
-                            <span class="badge bg-success">Có mặt</span>
-                        {% elif item.status_in == "late" %}
-                            <span class="badge bg-warning text-dark">Đi trễ</span>
-                        {% else %}
-                            <span class="badge bg-danger">Vắng</span>
-                        {% endif %}
-                    </td>
-                    <td>{{ "%.1f"|format(item.score) }}</td>
-                </tr>
-                {% endfor %}
+              {% for item in attendance_list %}
+              <tr class="border-bottom attendance-history-row">
+                <td class="ps-4">
+                  <span class="fw-semibold text-dark">#{{ item.id }}</span>
+                </td>
+                <td>
+                  <span class="text-dark">{{ item.class_name }}</span>
+                </td>
+                <td>
+                  <span class="text-dark">{{ item.session_name }}</span>
+                </td>
+                <td>
+                  <span class="text-dark">{{ item.date.strftime("%d/%m/%Y") }}</span>
+                </td>
+                <td>
+                  <span class="text-dark">{{ item.time_in or "-" }}</span>
+                </td>
+                <td>
+                  <span class="text-dark">{{ item.time_out or "-" }}</span>
+                </td>
+                <td>
+                  {% if item.status_in == "present" %}
+                  <span class="attendance-history-badge badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">
+                    <i class="fas fa-check-circle me-1"></i>Có mặt
+                  </span>
+                  {% elif item.status_in == "late" %}
+                  <span class="attendance-history-badge badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25">
+                    <i class="fas fa-clock me-1"></i>Đi trễ
+                  </span>
+                  {% elif item.status_in == "absent_excused" %}
+                  <span class="attendance-history-badge badge bg-info bg-opacity-10 text-info border border-info border-opacity-25">
+                    <i class="fas fa-user-clock me-1"></i>Vắng có phép
+                  </span>
+                  {% else %}
+                  <span class="attendance-history-badge badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25">
+                    <i class="fas fa-times-circle me-1"></i>Vắng
+                  </span>
+                  {% endif %}
+                </td>
+                <td>
+                  <span class="attendance-history-score fw-semibold {% if item.score >= 8 %}text-success{% elif item.score >= 5 %}text-warning{% else %}text-danger{% endif %}">
+                    {{ "%.1f"|format(item.score) }}
+                  </span>
+                </td>
+              </tr>
+              {% endfor %}
             </tbody>
-        </table>
+          </table>
+        </div>
+        {% else %}
+        <!-- State khi không có dữ liệu -->
+        <div class="attendance-history-empty text-center py-5">
+          <div class="py-4">
+            <i class="fas fa-calendar-times fa-2x text-muted mb-3 opacity-50"></i>
+            <h6 class="fw-medium text-muted mb-2">Không có dữ liệu</h6>
+            <p class="text-muted small mb-3">Không tìm thấy lịch sử điểm danh nào phù hợp</p>
+            <a href="/lich_su_diem_danh" class="btn btn-outline-primary btn-sm attendance-history-refresh-btn">
+              <i class="fas fa-refresh me-1"></i>Xem tất cả
+            </a>
+          </div>
+        </div>
+        {% endif %}
+      </div>
     </div>
-
-    {% if attendance_list|length == 0 %}
-    <div class="alert alert-info text-center mt-4">
-        Bạn chưa có dữ liệu điểm danh nào.
-    </div>
-    {% endif %}
+  </div>
 </div>
+
+<style>
+/* FIX SCROLLBAR ISSUE */
+.attendance-history-wrapper {
+  min-height: calc(100vh - 100px);
+  overflow-x: hidden;
+}
+
+/* Tổng thể */
+.attendance-history-card {
+  border: 1px solid #e9ecef;
+  background: #fff;
+}
+
+.attendance-history-header {
+  background: #f8f9fa !important;
+  border-bottom: 1px solid #e9ecef;
+}
+
+/* Bảng */
+.attendance-history-table-main {
+  margin-bottom: 0;
+}
+
+.attendance-history-table-main th {
+  font-weight: 500;
+  font-size: 0.85rem;
+  padding: 1rem 0.75rem;
+  border-bottom: 1px solid #e9ecef;
+  background: #f8f9fa;
+}
+
+.attendance-history-table-main td {
+  padding: 1rem 0.75rem;
+  vertical-align: middle;
+  border-bottom: 1px solid #f1f3f4;
+}
+
+.attendance-history-table-main tbody .attendance-history-row:hover {
+  background-color: #f8f9fa;
+}
+
+/* Badge trạng thái */
+.attendance-history-badge {
+  font-weight: 500;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.75rem;
+  border-radius: 6px;
+}
+
+/* Điểm số */
+.attendance-history-score {
+  font-size: 0.9rem;
+}
+
+/* Nút */
+.attendance-history-filter-btn,
+.attendance-history-refresh-btn {
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.attendance-history-filter-btn {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+.attendance-history-filter-btn:hover {
+  background-color: #0b5ed7;
+  border-color: #0a58ca;
+}
+
+.attendance-history-refresh-btn {
+  color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+.attendance-history-refresh-btn:hover {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+/* Form controls */
+.attendance-history-select {
+  border-radius: 6px;
+  border: 1px solid #dee2e6;
+  font-size: 0.875rem;
+}
+
+.attendance-history-select:focus {
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.attendance-history-label {
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .attendance-history-header .d-flex {
+    flex-direction: column;
+    align-items: start !important;
+    gap: 1rem;
+  }
+
+  .attendance-history-table .table-responsive {
+    font-size: 0.875rem;
+  }
+
+  .attendance-history-badge {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+  }
+}
+
+/* Màu điểm số */
+.attendance-history-score.text-success { color: #198754 !important; }
+.attendance-history-score.text-warning { color: #ffc107 !important; }
+.attendance-history-score.text-danger { color: #dc3545 !important; }
+
+/* Đảm bảo container-fluid không tạo scroll ngang */
+.attendance-history-wrapper .container-fluid {
+  max-width: 100%;
+  padding-right: var(--bs-gutter-x, 0.75rem);
+  padding-left: var(--bs-gutter-x, 0.75rem);
+}
+</style>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 {% endblock %}

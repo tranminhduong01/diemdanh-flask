@@ -2,138 +2,169 @@
 {% block content %}
 {% include "chat_bot.html" %}
 
-<div class="container-fluid py-4">
-  <div class="card border-0 shadow-sm rounded-4">
-    <!-- Tiêu đề -->
-    <div class="card-header bg-white border-0 text-center py-4">
-      <h4 class="fw-bold mb-0 text-primary">
-        📋 LỊCH SỬ ĐƠN NGHỈ PHÉP
-      </h4>
-      <p class="text-muted small mb-0">
-        Tổng số: <strong>{{ requests|length }}</strong> đơn
-      </p>
-    </div>
-
-  <!-- Bọc toàn bộ trong form -->
-<form method="GET" action="/lich_su_nghi_phep">
-  <!-- Bộ lọc -->
-  <div class="card-body border-top border-bottom bg-light py-4">
-    <div class="row g-3">
-      <div class="col-xl-3 col-md-6">
-        <label class="form-label fw-semibold text-dark">
-          <i class="fas fa-calendar-month me-2"></i>Tháng
-        </label>
-        <select class="form-select form-select-sm rounded-3" id="month" name="month">
-          <option value="">Tất cả tháng</option>
-          {% for i in range(1, 13) %}
-          <option value="{{ i }}" {% if request.args.get('month')|int == i %}selected{% endif %}>Tháng {{ i }}</option>
-          {% endfor %}
-        </select>
+<!-- Sử dụng tên riêng biệt để tránh xung đột -->
+<div class="leave-history-wrapper">
+  <div class="container-fluid py-4">
+    <div class="leave-history-card border-0 shadow-sm rounded-3">
+      <!-- Tiêu đề -->
+      <div class="leave-history-header bg-white border-bottom py-4">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h4 class="leave-history-title fw-bold mb-1 text-dark">
+              <i class="fas fa-history me-2 text-primary"></i>Lịch sử đơn nghỉ phép
+            </h4>
+            <p class="leave-history-subtitle text-muted small mb-0">
+              Tổng số: <span class="fw-semibold text-primary">{{ requests|length }}</span> đơn
+            </p>
+          </div>
+          <div class="text-end">
+            <a href="{{ url_for('don_nghi_hoc') }}" class="btn btn-primary btn-sm leave-history-new-btn">
+              <i class="fas fa-plus me-1"></i>Tạo đơn mới
+            </a>
+          </div>
+        </div>
       </div>
 
-      <div class="col-xl-3 col-md-6">
-        <label class="form-label fw-semibold text-dark">
-          <i class="fas fa-calendar-alt me-2"></i>Năm
-        </label>
-        <select class="form-select form-select-sm rounded-3" id="year" name="year">
-          <option value="">Tất cả năm</option>
-          {% for year in range(2020, 2031) %}
-          <option value="{{ year }}" {% if request.args.get('year')|int == year %}selected{% endif %}>Năm {{ year }}</option>
-          {% endfor %}
-        </select>
-      </div>
+      <!-- Form lọc -->
+      <form method="GET" action="/lich_su_nghi_phep">
+        <div class="leave-history-filter card-body border-bottom bg-light-subtle py-4">
+          <div class="row g-3">
+            <div class="col-xl-3 col-md-6">
+              <label class="leave-history-label form-label fw-medium text-dark small">
+                <i class="fas fa-calendar me-1"></i>Tháng
+              </label>
+              <select class="leave-history-select form-select form-select-sm" id="month" name="month">
+                <option value="">Tất cả tháng</option>
+                {% for i in range(1, 13) %}
+                <option value="{{ i }}" {% if request.args.get('month')|int == i %}selected{% endif %}>Tháng {{ i }}</option>
+                {% endfor %}
+              </select>
+            </div>
 
-      <div class="col-xl-3 col-md-6">
-        <label class="form-label fw-semibold text-dark">
-          <i class="fas fa-info-circle me-2"></i>Trạng thái
-        </label>
-        <select class="form-select form-select-sm rounded-3" id="status" name="status">
-          <option value="">Tất cả trạng thái</option>
-          <option value="Pending" {% if request.args.get('status') == 'Pending' %}selected{% endif %}>Chờ duyệt</option>
-          <option value="Approved" {% if request.args.get('status') == 'Approved' %}selected{% endif %}>Đã duyệt</option>
-          <option value="Rejected" {% if request.args.get('status') == 'Rejected' %}selected{% endif %}>Từ chối</option>
-        </select>
-      </div>
+            <div class="col-xl-3 col-md-6">
+              <label class="leave-history-label form-label fw-medium text-dark small">
+                <i class="fas fa-calendar-alt me-1"></i>Năm
+              </label>
+              <select class="leave-history-select form-select form-select-sm" id="year" name="year">
+                <option value="">Tất cả năm</option>
+                {% for year in range(2020, 2031) %}
+                <option value="{{ year }}" {% if request.args.get('year')|int == year %}selected{% endif %}>Năm {{ year }}</option>
+                {% endfor %}
+              </select>
+            </div>
 
-      <div class="col-xl-3 col-md-6 d-flex align-items-end">
-        <button type="submit" class="btn btn-primary w-100 fw-semibold rounded-3">
-          <i class="fas fa-filter me-2"></i>Áp dụng lọc
-        </button>
-      </div>
-    </div>
-  </div>
-</form>
+            <div class="col-xl-3 col-md-6">
+              <label class="leave-history-label form-label fw-medium text-dark small">
+                <i class="fas fa-tag me-1"></i>Trạng thái
+              </label>
+              <select class="leave-history-select form-select form-select-sm" id="status" name="status">
+                <option value="">Tất cả trạng thái</option>
+                <option value="Pending" {% if request.args.get('status') == 'Pending' %}selected{% endif %}>Chờ duyệt</option>
+                <option value="Approved" {% if request.args.get('status') == 'Approved' %}selected{% endif %}>Đã duyệt</option>
+                <option value="Rejected" {% if request.args.get('status') == 'Rejected' %}selected{% endif %}>Từ chối</option>
+              </select>
+            </div>
 
-    <!-- Bảng -->
-    <div class="card-body p-0">
-      {% if requests %}
-      <div class="table-responsive">
-        <table class="table table-bordered align-middle text-center mb-0">
-          <thead class="table-light text-dark">
-            <tr>
-              <th>Mã đơn</th>
-              <th>Ngày gửi</th>
-              <th>Ngày nghỉ</th>
-              <th>Lý do</th>
-              <th>Minh chứng</th>
-              <th>Trạng thái</th>
-              <th>Hành động</th> <!-- THÊM -->
-            </tr>
-        </thead>
-          <tbody>
-            {% for item in requests %}
-            <tr>
-              <td class="fw-semibold text-primary">{{ item.request_id }}</td>
-              <td>{{ item.request_date.strftime("%d/%m/%Y") }}</td>
-              <td>{{ item.session_date.strftime("%d/%m/%Y") }}</td>
-              <td class="text-start reason-text">{{ item.reason }}</td>
-              <td>
-                {% if item.proof_file %}
-                <a href="{{ url_for('static', filename='LUU_NGHI_HOC/' ~ item.proof_file) }}"
-                   target="_blank" class="btn btn-outline-primary btn-sm fw-semibold">
-                  <i class="fas fa-eye me-1"></i>Xem
-                </a>
-                {% else %}
-                <span class="text-muted fst-italic">Không có</span>
-                {% endif %}
-              </td>
-              <td>
-                {% if item.status == 'Approved' %}
-                <span class="badge status-approved">Đã duyệt</span>
-                {% elif item.status == 'Rejected' %}
-                <span class="badge status-rejected">Từ chối</span>
-                {% else %}
-                <span class="badge status-pending">Chờ duyệt</span>
-                {% endif %}
-              </td>
-              <td>
-              {% if item.status == 'Pending' %}
-                <a href="/xoa_don_nghi_phep/{{ item.request_id }}"
-                   class="btn btn-danger btn-sm fw-semibold"
-                  <i class="fas fa-trash-alt me-1"></i> Xóa
-                </a>
-              {% else %}
-                <span class="text-muted small fst-italic">Không thể xóa</span>
-              {% endif %}
-            </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+            <div class="col-xl-3 col-md-6 d-flex align-items-end">
+              <button type="submit" class="leave-history-filter-btn btn btn-primary w-100 fw-medium btn-sm">
+                <i class="fas fa-filter me-1"></i>Lọc
+              </button>
+            </div>
+          </div>
+        </div>
+      </form>
+
+      <!-- Bảng dữ liệu -->
+      <div class="leave-history-table card-body p-0">
+        {% if requests %}
+        <div class="table-responsive">
+          <table class="leave-history-table-main table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th class="ps-4 fw-medium text-muted small">Mã đơn</th>
+                <th class="fw-medium text-muted small">Ngày gửi</th>
+                <th class="fw-medium text-muted small">Ngày nghỉ</th>
+                <th class="fw-medium text-muted small">Lý do</th>
+                <th class="fw-medium text-muted small">Minh chứng</th>
+                <th class="fw-medium text-muted small">Trạng thái</th>
+                <th class="fw-medium text-muted small">Hành động</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in requests %}
+              <tr class="border-bottom leave-history-row">
+                <td class="ps-4">
+                  <span class="fw-semibold text-dark">#{{ item.request_id }}</span>
+                </td>
+                <td>
+                  <span class="text-dark">{{ item.request_date.strftime("%d/%m/%Y") }}</span>
+                </td>
+                <td>
+                  <span class="text-dark">{{ item.session_date.strftime("%d/%m/%Y") }}</span>
+                </td>
+                <td>
+                  <span class="leave-history-reason text-dark" title="{{ item.reason }}">{{ item.reason }}</span>
+                </td>
+                <td>
+                  {% if item.proof_file %}
+                  <a href="{{ url_for('static', filename='LUU_NGHI_HOC/' ~ item.proof_file) }}"
+                     target="_blank" class="btn btn-outline-primary btn-sm leave-history-view-btn">
+                    <i class="fas fa-eye me-1"></i>Xem
+                  </a>
+                  {% else %}
+                  <span class="text-muted small">Không có</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if item.status == 'Approved' %}
+                  <span class="leave-history-badge badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">
+                    <i class="fas fa-check-circle me-1"></i>Đã duyệt
+                  </span>
+                  {% elif item.status == 'Rejected' %}
+                  <span class="leave-history-badge badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25">
+                    <i class="fas fa-times-circle me-1"></i>Từ chối
+                  </span>
+                  {% else %}
+                  <span class="leave-history-badge badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25">
+                    <i class="fas fa-clock me-1"></i>Chờ duyệt
+                  </span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if item.status == 'Pending' %}
+                  <a href="/xoa_don_nghi_phep/{{ item.request_id }}"
+                     class="btn btn-outline-danger btn-sm leave-history-delete-btn"
+                     onclick="return confirm('Bạn có chắc muốn xóa đơn này?')">
+                    <i class="fas fa-trash me-1"></i>Xóa
+                  </a>
+                  {% else %}
+                  <span class="text-muted small">-</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <!-- State khi không có dữ liệu -->
+        <div class="leave-history-empty text-center py-5">
+          <div class="py-4">
+            <i class="fas fa-inbox fa-2x text-muted mb-3 opacity-50"></i>
+            <h6 class="fw-medium text-muted mb-2">Không có dữ liệu</h6>
+            <p class="text-muted small mb-3">Không tìm thấy đơn nghỉ phép nào phù hợp</p>
+            <a href="/lich_su_nghi_phep" class="btn btn-outline-primary btn-sm leave-history-refresh-btn">
+              <i class="fas fa-refresh me-1"></i>Xem tất cả
+            </a>
+          </div>
+        </div>
+        {% endif %}
       </div>
-      {% else %}
-      <div class="text-center py-5">
-        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-        <h5 class="fw-bold text-muted">Không có dữ liệu</h5>
-        <p class="text-secondary small mb-4">Không tìm thấy đơn nghỉ phép nào phù hợp với bộ lọc</p>
-        <button class="btn btn-primary">
-          <i class="fas fa-redo me-2"></i>Thử lại
-        </button>
-      </div>
-      {% endif %}
     </div>
   </div>
 </div>
+
+<!-- Modal thông báo -->
 <div class="modal fade" id="notifyModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
@@ -150,6 +181,7 @@
     </div>
   </div>
 </div>
+
 {% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}
   <script>
@@ -169,79 +201,151 @@
 {% endwith %}
 
 <style>
-/* Cấu trúc chung */
-.card {
-  border-radius: 15px;
+/* FIX SCROLLBAR ISSUE */
+.leave-history-wrapper {
+  min-height: calc(100vh - 100px);
+  overflow-x: hidden;
+}
+
+/* Tổng thể */
+.leave-history-card {
+  border: 1px solid #e9ecef;
   background: #fff;
 }
 
-.card-header h4 {
-  font-size: 1.3rem;
-  letter-spacing: 0.3px;
+.leave-history-header {
+  background: #f8f9fa !important;
+  border-bottom: 1px solid #e9ecef;
 }
 
 /* Bảng */
-.table {
-  font-size: 0.95rem;
+.leave-history-table-main {
+  margin-bottom: 0;
 }
 
-.table th {
-  background: #e8f0ff;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  border-bottom: 2px solid #dee2e6;
+.leave-history-table-main th {
+  font-weight: 500;
+  font-size: 0.85rem;
+  padding: 1rem 0.75rem;
+  border-bottom: 1px solid #e9ecef;
+  background: #f8f9fa;
 }
 
-.table tbody tr:hover {
-  background-color: #f6f9ff;
+.leave-history-table-main td {
+  padding: 1rem 0.75rem;
+  vertical-align: middle;
+  border-bottom: 1px solid #f1f3f4;
+}
+
+.leave-history-table-main tbody .leave-history-row:hover {
+  background-color: #f8f9fa;
 }
 
 /* Badge trạng thái */
-.badge {
-  font-weight: 600;
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 0.85rem;
-}
-
-.status-approved {
-  background-color: #d1fae5;
-  color: #166534;
-}
-
-.status-rejected {
-  background-color: #fee2e2;
-  color: #991b1b;
-}
-
-.status-pending {
-  background-color: #fef9c3;
-  color: #854d0e;
+.leave-history-badge {
+  font-weight: 500;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.75rem;
+  border-radius: 6px;
 }
 
 /* Lý do */
-.reason-text {
-  max-width: 250px;
+.leave-history-reason {
+  max-width: 200px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  display: inline-block;
 }
 
-/* Form + nút */
-.form-select {
-  border-radius: 8px;
+/* Nút */
+.leave-history-new-btn,
+.leave-history-filter-btn,
+.leave-history-view-btn,
+.leave-history-delete-btn,
+.leave-history-refresh-btn {
+  border-radius: 6px;
+  font-weight: 500;
 }
 
-.btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: none;
-  transition: 0.3s ease;
+.leave-history-new-btn,
+.leave-history-filter-btn {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
 }
 
-.btn-primary:hover {
-  box-shadow: 0 5px 15px rgba(118, 75, 162, 0.3);
-  transform: translateY(-2px);
+.leave-history-new-btn:hover,
+.leave-history-filter-btn:hover {
+  background-color: #0b5ed7;
+  border-color: #0a58ca;
+}
+
+.leave-history-view-btn,
+.leave-history-refresh-btn {
+  color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+.leave-history-view-btn:hover,
+.leave-history-refresh-btn:hover {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+.leave-history-delete-btn {
+  color: #dc3545;
+  border-color: #dc3545;
+}
+
+.leave-history-delete-btn:hover {
+  background-color: #dc3545;
+  border-color: #dc3545;
+}
+
+/* Form controls */
+.leave-history-select {
+  border-radius: 6px;
+  border: 1px solid #dee2e6;
+  font-size: 0.875rem;
+}
+
+.leave-history-select:focus {
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.leave-history-label {
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .leave-history-header .d-flex {
+    flex-direction: column;
+    align-items: start !important;
+    gap: 1rem;
+  }
+
+  .leave-history-header .text-end {
+    align-self: stretch;
+    text-align: left !important;
+  }
+
+  .leave-history-reason {
+    max-width: 150px;
+  }
+
+  .leave-history-table .table-responsive {
+    font-size: 0.875rem;
+  }
+}
+
+/* Đảm bảo container-fluid không tạo scroll ngang */
+.leave-history-wrapper .container-fluid {
+  max-width: 100%;
+  padding-right: var(--bs-gutter-x, 0.75rem);
+  padding-left: var(--bs-gutter-x, 0.75rem);
 }
 </style>
 

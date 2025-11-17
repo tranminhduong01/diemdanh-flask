@@ -4,265 +4,545 @@
 
 {% block content %}
 <style>
-  /* Dashboard Styles */
-  .tp-dashboard {
-    padding: 0;
+  :root {
+    --primary-color: #3498db;
+    --primary-light: #e8f4fc;
+    --secondary-color: #2c3e50;
+    --accent-color: #e74c3c;
+    --success-color: #27ae60;
+    --warning-color: #f39c12;
+    --light-gray: #f8f9fa;
+    --border-color: #e0e0e0;
+    --text-primary: #2c3e50;
+    --text-secondary: #7f8c8d;
+    --text-light: #95a5a6;
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --radius: 12px;
+    --transition: all 0.3s ease;
   }
 
-  .tp-dashboard-header {
+  .dashboard-container {
+    padding: 20px;
+    background-color: #f5f7fa;
+    min-height: calc(100vh - 80px);
+  }
+
+  .dashboard-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     margin-bottom: 24px;
   }
 
-  .tp-dashboard-title {
-    font-size: 24px;
-    font-weight: 600;
-    color: var(--tp-text-dark);
+  .header-content h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 6px 0;
+  }
+
+  .header-content p {
+    font-size: 15px;
+    color: var(--text-secondary);
     margin: 0;
   }
 
-  .tp-dashboard-subtitle {
-    font-size: 14px;
-    color: var(--tp-text-light);
-    margin-top: 4px;
+  .date-display {
+    background: white;
+    padding: 12px 18px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+    text-align: center;
+  }
+
+  .date-display .current-date {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .date-display .current-time {
+    font-size: 13px;
+    color: var(--text-secondary);
   }
 
   /* Filter Section */
-  .tp-filter-section {
+  .filter-section {
     background: white;
-    border-radius: var(--tp-border-radius);
-    padding: 16px 20px;
+    border-radius: var(--radius);
+    padding: 20px;
     margin-bottom: 24px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
-    border: 1px solid var(--tp-border-color);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
   }
 
-  .tp-filter-row {
-  display: flex;
-  align-items: flex-end;
-  gap: 16px;
-  flex-wrap: wrap;
-}
+  .filter-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
 
-.tp-filter-group {
-  display: flex;
-  flex-direction: column;
-  min-width: 150px;
-}
+  .filter-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
 
-.tp-filter-button {
-  background: #3498db;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 8px 16px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: 0.3s;
-}
+  .filter-group {
+    display: flex;
+    flex-direction: column;
+    min-width: 160px;
+  }
 
-.tp-filter-button:hover {
-  background: #2980b9;
-}
+  .filter-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+  }
 
+  .filter-select, .filter-input {
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 14px;
+    transition: var(--transition);
+    background: white;
+  }
+
+  .filter-select:focus, .filter-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+  }
+
+  .filter-button {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .filter-button:hover {
+    background: #2980b9;
+    transform: translateY(-1px);
+  }
+
+  .export-button {
+    background: var(--success-color);
+  }
+
+  .export-button:hover {
+    background: #219653;
+  }
 
   /* Stats Cards */
-  .tp-stats-grid {
+  .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: 20px;
-    margin-bottom: 24px;
+    margin-bottom: 30px;
   }
 
-  .tp-stats-card {
+  .stats-card {
     background: white;
-    border-radius: var(--tp-border-radius);
-    padding: 20px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
-    border: 1px solid var(--tp-border-color);
-    transition: var(--tp-transition);
+    border-radius: var(--radius);
+    padding: 24px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
   }
 
-  .tp-stats-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  .stats-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
   }
 
-  .tp-stats-icon {
+  .stats-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+  }
+
+  .stats-card.users::before {
+    background: var(--primary-color);
+  }
+
+  .stats-card.classes::before {
+    background: var(--success-color);
+  }
+
+  .stats-card.sessions::before {
+    background: #9b59b6;
+  }
+
+  .stats-card.attendance::before {
+    background: var(--warning-color);
+  }
+
+  .stats-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+  }
+
+  .stats-icon {
     width: 48px;
     height: 48px;
     border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 16px;
     font-size: 20px;
   }
 
-  .tp-stats-icon.users {
+  .stats-card.users .stats-icon {
     background: rgba(52, 152, 219, 0.1);
-    color: var(--tp-primary-color);
+    color: var(--primary-color);
   }
 
-  .tp-stats-icon.classes {
+  .stats-card.classes .stats-icon {
     background: rgba(46, 204, 113, 0.1);
-    color: #2ecc71;
+    color: var(--success-color);
   }
 
-  .tp-stats-icon.sessions {
+  .stats-card.sessions .stats-icon {
     background: rgba(155, 89, 182, 0.1);
     color: #9b59b6;
   }
 
-  .tp-stats-icon.attendance {
+  .stats-card.attendance .stats-icon {
+    background: rgba(243, 156, 18, 0.1);
+    color: var(--warning-color);
+  }
+
+  .stats-trend {
+    font-size: 13px;
+    font-weight: 500;
+    padding: 4px 8px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .stats-trend.positive {
+    background: rgba(46, 204, 113, 0.1);
+    color: var(--success-color);
+  }
+
+  .stats-trend.negative {
     background: rgba(231, 76, 60, 0.1);
-    color: #e74c3c;
+    color: var(--accent-color);
   }
 
-  .tp-stats-value {
-    font-size: 28px;
-    font-weight: 600;
-    color: var(--tp-text-dark);
+  .stats-value {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--text-primary);
     margin-bottom: 4px;
+    line-height: 1;
   }
 
-  .tp-stats-label {
+  .stats-label {
     font-size: 14px;
-    color: var(--tp-text-light);
+    color: var(--text-secondary);
   }
 
   /* Charts Section */
-  .tp-charts-grid {
+  .charts-section {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+    gap: 24px;
+    margin-bottom: 30px;
   }
 
-  .tp-chart-container {
+  .chart-container {
     background: white;
-    border-radius: var(--tp-border-radius);
-    padding: 20px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
-    border: 1px solid var(--tp-border-color);
+    border-radius: var(--radius);
+    padding: 24px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+    transition: var(--transition);
   }
 
-  .tp-chart-title {
-    font-size: 16px;
+  .chart-container:hover {
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+  }
+
+  .chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .chart-title {
+    font-size: 18px;
     font-weight: 600;
-    margin-bottom: 16px;
-    color: var(--tp-text-dark);
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .chart-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .chart-action-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--light-gray);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: var(--transition);
+    font-size: 13px;
+  }
+
+  .chart-action-btn:hover {
+    background: var(--primary-light);
+    color: var(--primary-color);
+    border-color: var(--primary-color);
   }
 
   /* Responsive */
+  @media (max-width: 1200px) {
+    .charts-section {
+      grid-template-columns: 1fr;
+    }
+  }
+
   @media (max-width: 768px) {
-    .tp-stats-grid {
+    .dashboard-header {
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .date-display {
+      align-self: flex-start;
+    }
+
+    .stats-grid {
       grid-template-columns: 1fr;
     }
 
-    .tp-charts-grid {
-      grid-template-columns: 1fr;
-    }
-
-    .tp-filter-row {
+    .filter-row {
       flex-direction: column;
       align-items: stretch;
     }
 
-    .tp-filter-group {
+    .filter-group {
       min-width: auto;
+    }
+
+    .charts-section {
+      grid-template-columns: 1fr;
+    }
+
+    .chart-container {
+      padding: 16px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .dashboard-container {
+      padding: 16px;
+    }
+
+    .header-content h1 {
+      font-size: 24px;
+    }
+
+    .stats-value {
+      font-size: 28px;
     }
   }
 </style>
 
-<div class="tp-dashboard">
+<div class="dashboard-container">
   <!-- Header -->
-  <div class="tp-dashboard-header">
-    <div>
-      <h1 class="tp-dashboard-title">Dashboard Giáo viên</h1>
-      <p class="tp-dashboard-subtitle">Tổng quan về hoạt động giảng dạy</p>
+  <div class="dashboard-header">
+    <div class="header-content">
+      <h1>Thống kê</h1>
+      <p>Tổng quan về hoạt động giảng dạy và quản lý lớp học</p>
+    </div>
+    <div class="date-display">
+      <div class="current-date" id="currentDate">Đang tải...</div>
+      <div class="current-time" id="currentTime"></div>
     </div>
   </div>
 
-  <!-- Bộ lọc -->
-  <div class="tp-filter-section">
-    <div class="tp-filter-row">
-      <div class="tp-filter-group">
-        <label class="tp-filter-label">Chọn khoảng</label>
-        <select id="filterSelect" class="tp-filter-select">
+  <!-- Filter Section -->
+  <div class="filter-section">
+    <div class="filter-title">
+      <i class="fas fa-filter"></i>
+      <span>Bộ lọc và Xuất báo cáo</span>
+    </div>
+    <div class="filter-row">
+      <div class="filter-group">
+        <label class="filter-label">Chọn khoảng thời gian</label>
+        <select id="filterSelect" class="filter-select">
           <option value="day">Theo ngày</option>
           <option value="week" selected>Theo tuần</option>
           <option value="month">Theo tháng</option>
         </select>
       </div>
-      <div class="tp-filter-group">
-        <label class="tp-filter-label">Ngày</label>
-        <input type="date" id="dateInput" class="tp-filter-input">
+      <div class="filter-group">
+        <label class="filter-label">Ngày cụ thể</label>
+        <input type="date" id="dateInput" class="filter-input">
       </div>
-      <div class="tp-filter-group">
-        <button id="applyFilter" class="tp-filter-button">Xem</button>
+      <div class="filter-group">
+        <button id="applyFilter" class="filter-button">
+          <i class="fas fa-chart-line"></i>
+          <span>Xem báo cáo</span>
+        </button>
       </div>
-      <div class="tp-filter-group">
-        <button id="exportPdf" class="tp-filter-button">Xuất PDF</button>
+      <div class="filter-group">
+        <button id="exportPdf" class="filter-button export-button">
+          <i class="fas fa-file-pdf"></i>
+          <span>Xuất PDF</span>
+        </button>
       </div>
     </div>
   </div>
 
   <!-- Stats Cards -->
-  <div class="tp-stats-grid">
-    <div class="tp-stats-card">
-      <div class="tp-stats-icon users">
-        <i class="fas fa-users"></i>
+  <div class="stats-grid">
+    <div class="stats-card users">
+      <div class="stats-header">
+        <div class="stats-icon">
+          <i class="fas fa-users"></i>
+        </div>
+        <div class="stats-trend positive">
+          <i class="fas fa-arrow-up"></i>
+          <span>5.2%</span>
+        </div>
       </div>
-      <div class="tp-stats-value" id="totalUsers">0</div>
-      <div class="tp-stats-label">Người dùng</div>
+      <div class="stats-value" id="totalUsers">0</div>
+      <div class="stats-label">Tổng số người dùng</div>
     </div>
 
-    <div class="tp-stats-card">
-      <div class="tp-stats-icon classes">
-        <i class="fas fa-chalkboard"></i>
+    <div class="stats-card classes">
+      <div class="stats-header">
+        <div class="stats-icon">
+          <i class="fas fa-chalkboard-teacher"></i>
+        </div>
+        <div class="stats-trend positive">
+          <i class="fas fa-arrow-up"></i>
+          <span>2.7%</span>
+        </div>
       </div>
-      <div class="tp-stats-value" id="totalClasses">0</div>
-      <div class="tp-stats-label">Lớp học</div>
+      <div class="stats-value" id="totalClasses">0</div>
+      <div class="stats-label">Lớp học đang quản lý</div>
     </div>
 
-    <div class="tp-stats-card">
-      <div class="tp-stats-icon sessions">
-        <i class="fas fa-calendar-alt"></i>
+    <div class="stats-card sessions">
+      <div class="stats-header">
+        <div class="stats-icon">
+          <i class="fas fa-calendar-alt"></i>
+        </div>
+        <div class="stats-trend negative">
+          <i class="fas fa-arrow-down"></i>
+          <span>1.3%</span>
+        </div>
       </div>
-      <div class="tp-stats-value" id="totalSessions">0</div>
-      <div class="tp-stats-label">Buổi học</div>
+      <div class="stats-value" id="totalSessions">0</div>
+      <div class="stats-label">Buổi học</div>
     </div>
 
-    <div class="tp-stats-card">
-      <div class="tp-stats-icon attendance">
-        <i class="fas fa-check-circle"></i>
+    <div class="stats-card attendance">
+      <div class="stats-header">
+        <div class="stats-icon">
+          <i class="fas fa-clipboard-check"></i>
+        </div>
+        <div class="stats-trend positive">
+          <i class="fas fa-arrow-up"></i>
+          <span>3.8%</span>
+        </div>
       </div>
-      <div class="tp-stats-value" id="totalAttendance">0</div>
-      <div class="tp-stats-label">Điểm danh</div>
+      <div class="stats-value" id="totalAttendance">0</div>
+      <div class="stats-label">Lần điểm danh</div>
     </div>
   </div>
 
-  <!-- Charts -->
-  <div class="tp-charts-grid">
-    <div class="tp-chart-container">
-      <h5 class="tp-chart-title">Điểm danh 7 ngày qua</h5>
+  <!-- Charts Section -->
+  <div class="charts-section">
+    <div class="chart-container">
+      <div class="chart-header">
+        <h3 class="chart-title">Điểm danh 7 ngày qua</h3>
+        <div class="chart-actions">
+          <button class="chart-action-btn" title="Phóng to">
+            <i class="fas fa-expand"></i>
+          </button>
+          <button class="chart-action-btn" title="Làm mới">
+            <i class="fas fa-sync-alt"></i>
+          </button>
+        </div>
+      </div>
       <canvas id="attendanceChart" height="250"></canvas>
     </div>
 
-    <div class="tp-chart-container">
-      <h5 class="tp-chart-title">Số lớp theo tháng</h5>
+    <div class="chart-container">
+      <div class="chart-header">
+        <h3 class="chart-title">Số lớp theo tháng</h3>
+        <div class="chart-actions">
+          <button class="chart-action-btn" title="Phóng to">
+            <i class="fas fa-expand"></i>
+          </button>
+          <button class="chart-action-btn" title="Làm mới">
+            <i class="fas fa-sync-alt"></i>
+          </button>
+        </div>
+      </div>
       <canvas id="classChart" height="250"></canvas>
     </div>
   </div>
 </div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
+  // Cập nhật ngày giờ hiện tại
+  function updateDateTime() {
+    const now = new Date();
+    const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit' };
+
+    document.getElementById('currentDate').textContent = now.toLocaleDateString('vi-VN', dateOptions);
+    document.getElementById('currentTime').textContent = now.toLocaleTimeString('vi-VN', timeOptions);
+  }
+
+  // Cập nhật mỗi giây
+  updateDateTime();
+  setInterval(updateDateTime, 1000);
+
   let attendanceChartInstance = null;
   let classChartInstance = null;
 
@@ -276,19 +556,49 @@
     attendanceChartInstance = new Chart(ctx.getContext('2d'), {
       type: 'line',
       data: {
-        labels: labels || [],
+        labels: labels || ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'],
         datasets: [{
-          label: 'Điểm danh',
-          data: data || [],
-          borderColor: '#4a6cf7',
-          backgroundColor: 'rgba(74, 108, 247, 0.1)',
+          label: 'Số lần điểm danh',
+          data: data || [12, 19, 15, 17, 14, 16, 18],
+          borderColor: '#3498db',
+          backgroundColor: 'rgba(52, 152, 219, 0.1)',
+          borderWidth: 2,
           fill: true,
-          tension: 0.3
+          tension: 0.4,
+          pointBackgroundColor: '#3498db',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
+          pointRadius: 4
         }]
       },
       options: {
+        responsive: true,
         plugins: {
-          legend: { display: true, position: 'top' }
+          legend: {
+            display: true,
+            position: 'top',
+            labels: {
+              usePointStyle: true,
+              padding: 15
+            }
+          },
+          tooltip: {
+            mode: 'index',
+            intersect: false
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: {
+              color: 'rgba(0, 0, 0, 0.05)'
+            }
+          },
+          x: {
+            grid: {
+              display: false
+            }
+          }
         }
       }
     });
@@ -304,43 +614,115 @@
     classChartInstance = new Chart(ctx.getContext('2d'), {
       type: 'bar',
       data: {
-        labels: labels || [],
+        labels: labels || ['T1', 'T2', 'T3', 'T4', 'T5', 'T6'],
         datasets: [{
           label: 'Số lớp',
-          data: data || [],
-          backgroundColor: 'rgba(74, 108, 247, 0.5)'
+          data: data || [5, 8, 6, 10, 7, 9],
+          backgroundColor: [
+            'rgba(52, 152, 219, 0.7)',
+            'rgba(46, 204, 113, 0.7)',
+            'rgba(155, 89, 182, 0.7)',
+            'rgba(241, 196, 15, 0.7)',
+            'rgba(230, 126, 34, 0.7)',
+            'rgba(231, 76, 60, 0.7)'
+          ],
+          borderColor: [
+            '#3498db',
+            '#2ecc71',
+            '#9b59b6',
+            '#f1c40f',
+            '#e67e22',
+            '#e74c3c'
+          ],
+          borderWidth: 1,
+          borderRadius: 6
         }]
       },
       options: {
+        responsive: true,
         plugins: {
-          legend: { display: true, position: 'top' }
+          legend: {
+            display: true,
+            position: 'top',
+            labels: {
+              usePointStyle: true,
+              padding: 15
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: {
+              color: 'rgba(0, 0, 0, 0.05)'
+            }
+          },
+          x: {
+            grid: {
+              display: false
+            }
+          }
         }
       }
     });
   }
+
+  // Xuất PDF
   document.getElementById("exportPdf").addEventListener("click", async () => {
     const { jsPDF } = window.jspdf;
 
-    // 1. Chọn phần dashboard
-    const dashboard = document.querySelector(".tp-dashboard");
+    // Hiển thị thông báo đang xử lý
+    const exportBtn = document.getElementById("exportPdf");
+    const originalText = exportBtn.innerHTML;
+    exportBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Đang xử lý...</span>';
+    exportBtn.disabled = true;
 
-    // 2. Chụp dashboard thành canvas
-    const canvas = await html2canvas(dashboard, { scale: 2 });
+    try {
+      // Chọn phần dashboard
+      const dashboard = document.querySelector(".dashboard-container");
 
-    // 3. Chuyển canvas thành hình ảnh
-    const imgData = canvas.toDataURL("image/png");
+      // Chụp dashboard thành canvas
+      const canvas = await html2canvas(dashboard, {
+        scale: 2,
+        useCORS: true,
+        logging: false
+      });
 
-    // 4. Tạo PDF
-    const pdf = new jsPDF("p", "mm", "a4");
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      // Chuyển canvas thành hình ảnh
+      const imgData = canvas.toDataURL("image/png");
 
-    pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      // Tạo PDF
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
 
-    // 5. Lưu PDF
-    pdf.save("dashboard.pdf");
+      // Thêm hình ảnh vào PDF
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+
+      // Lưu PDF
+      pdf.save("dashboard-giao-vien.pdf");
+
+      // Hiển thị thông báo thành công
+      Swal.fire({
+        title: "Xuất PDF thành công!",
+        text: "File dashboard-giao-vien.pdf đã được tải về.",
+        icon: "success",
+        timer: 2000,
+        showConfirmButton: false
+      });
+    } catch (error) {
+      console.error("Lỗi khi xuất PDF:", error);
+      Swal.fire({
+        title: "Lỗi!",
+        text: "Không thể xuất PDF. Vui lòng thử lại.",
+        icon: "error"
+      });
+    } finally {
+      // Khôi phục trạng thái nút
+      exportBtn.innerHTML = originalText;
+      exportBtn.disabled = false;
+    }
   });
-
 
   // Lấy dữ liệu động từ API
   function loadReport(filter='week', date=null) {
@@ -357,13 +739,16 @@
       renderClassChart(data.classChartLabels, data.classChartData);
 
       // Gán số liệu vào card
-      document.getElementById('totalUsers').textContent = data.totalUsers;
-      document.getElementById('totalClasses').textContent = data.totalClasses;
-      document.getElementById('totalSessions').textContent = data.totalSessions;
-      document.getElementById('totalAttendance').textContent = data.totalAttendance;
+      document.getElementById('totalUsers').textContent = data.totalUsers || '0';
+      document.getElementById('totalClasses').textContent = data.totalClasses || '0';
+      document.getElementById('totalSessions').textContent = data.totalSessions || '0';
+      document.getElementById('totalAttendance').textContent = data.totalAttendance || '0';
     })
     .catch(err => {
-      console.warn('Không lấy được dữ liệu API', err);
+      console.warn('Không lấy được dữ liệu API, sử dụng dữ liệu mẫu', err);
+      // Sử dụng dữ liệu mẫu nếu API không khả dụng
+      renderAttendanceChart();
+      renderClassChart();
     });
   }
 
@@ -379,22 +764,5 @@
 
   // Gọi lần đầu khi load trang (mặc định là tuần)
   loadReport('week');
-
-  // Toggle sidebar mobile
-  const toggleBtn = document.getElementById('toggleSidebar');
-  const sidebar = document.querySelector('.sidebar');
-  const overlay = document.getElementById('sidebarOverlay');
-
-  if (toggleBtn && sidebar && overlay) {
-    toggleBtn.addEventListener('click', function() {
-      sidebar.classList.toggle('show');
-      overlay.classList.toggle('show');
-    });
-
-    overlay.addEventListener('click', function() {
-      sidebar.classList.remove('show');
-      overlay.classList.remove('show');
-    });
-  }
 </script>
 {% endblock %}

@@ -156,6 +156,77 @@
             margin-top: 5px;
         }
 
+        /* Phần hiển thị thông tin người nhận diện */
+        .recognition-result {
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4efe9 100%);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            display: none;
+            animation: fadeIn 0.5s ease;
+            border-left: 4px solid #2ecc71;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .recognition-header {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .recognition-info {
+            display: grid;
+            grid-template-columns: 80px 1fr;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .recognition-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #4b6cb7;
+            background-color: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: #7f8c8d;
+        }
+
+        .recognition-details {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .recognition-detail {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .recognition-label {
+            font-weight: 600;
+            color: #2c3e50;
+            min-width: 80px;
+        }
+
+        .recognition-value {
+            color: #4b6cb7;
+            font-weight: 500;
+        }
+
         .mode-controls {
             display: flex;
             gap: 10px;
@@ -333,6 +404,11 @@
             .stats {
                 grid-template-columns: 1fr;
             }
+
+            .recognition-info {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
         }
     </style>
 </head>
@@ -353,6 +429,36 @@
                 </div>
 
                 <div id="recognition-status">Đang khởi động hệ thống...</div>
+
+                <!-- Phần hiển thị thông tin người được nhận diện -->
+                <div id="recognition-result" class="recognition-result">
+                    <div class="recognition-header">
+                        <span>✅ Đã nhận diện thành công</span>
+                    </div>
+                    <div class="recognition-info">
+                        <div class="recognition-avatar" id="recognition-avatar">
+                            👤
+                        </div>
+                        <div class="recognition-details">
+                            <div class="recognition-detail">
+                                <span class="recognition-label">MSSV:</span>
+                                <span class="recognition-value" id="recognition-mssv">-</span>
+                            </div>
+                            <div class="recognition-detail">
+                                <span class="recognition-label">Họ tên:</span>
+                                <span class="recognition-value" id="recognition-name">-</span>
+                            </div>
+                            <div class="recognition-detail">
+                                <span class="recognition-label">Thời gian:</span>
+                                <span class="recognition-value" id="recognition-time">-</span>
+                            </div>
+                            <div class="recognition-detail">
+                                <span class="recognition-label">Trạng thái:</span>
+                                <span class="recognition-value" id="recognition-status-text">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <div class="stats">
                     <div class="stat-item">
@@ -420,6 +526,14 @@
         const presentCountEl = document.getElementById("present-count");
         const absentCountEl = document.getElementById("absent-count");
         const modeStatus = document.getElementById("mode-status");
+
+        // Phần hiển thị kết quả nhận diện
+        const recognitionResult = document.getElementById("recognition-result");
+        const recognitionMSSV = document.getElementById("recognition-mssv");
+        const recognitionName = document.getElementById("recognition-name");
+        const recognitionTime = document.getElementById("recognition-time");
+        const recognitionStatusText = document.getElementById("recognition-status-text");
+        const recognitionAvatar = document.getElementById("recognition-avatar");
 
         // 👉 Dữ liệu từ Flask - GIỮ NGUYÊN
         const sessionId = {{ buoi_hoc.session_id }};
@@ -499,6 +613,34 @@
             absentCountEl.textContent = absent;
         }
 
+        // Hiển thị thông tin người được nhận diện
+        function showRecognitionResult(student, mode) {
+            recognitionMSSV.textContent = student.mssv;
+            recognitionName.textContent = student.full_name;
+            recognitionTime.textContent = new Date().toLocaleString('vi-VN', { hour12: false });
+
+            const status = mode === "in" ?
+                (student.status_in === 'late' ? 'Điểm danh vào (trễ)' : 'Điểm danh vào') :
+                'Điểm danh ra';
+            recognitionStatusText.textContent = status;
+
+            // Tạo avatar từ tên (lấy chữ cái đầu)
+            const initials = student.full_name
+                .split(' ')
+                .map(name => name[0])
+                .join('')
+                .toUpperCase();
+            recognitionAvatar.textContent = initials;
+
+            // Hiển thị kết quả với hiệu ứng
+            recognitionResult.style.display = 'block';
+
+            // Tự động ẩn sau 5 giây
+            setTimeout(() => {
+                recognitionResult.style.display = 'none';
+            }, 5000);
+        }
+
         // Bật camera - GIỮ NGUYÊN
         async function initCamera() {
             try {
@@ -531,7 +673,7 @@
             });
         }
 
-        // Gửi frame nhận diện - GIỮ NGUYÊN
+        // Gửi frame nhận diện - CẬP NHẬT: thêm hiển thị kết quả
         async function sendFrameToServer() {
             const blob = await captureFrame();
             if (!blob) return;
@@ -541,24 +683,41 @@
             formData.append("mode", mode);
 
             try {
-                const res = await fetch(`/api/diemdanh/${sessionId}/${mode}`, {
-                    method: "POST",
-                    body: formData
-                });
-                const data = await res.json();
+            const res = await fetch(`/api/diemdanh/${sessionId}/${mode}`, {
+                method: "POST",
+                body: formData
+            });
+            const data = await res.json();
 
-                if (data.success) {
-                    statusText.textContent = data.message;
-                    statusText.className = "status-success";
-                    updateStudentStatus(data.student.enrollment_id, "present", data.student.full_name);
-                } else {
-                    statusText.textContent = "❌ " + (data.message || "Lỗi điểm danh");
-                    statusText.className = "status-error";
+            if (data.success) {
+                statusText.textContent = data.message;
+                statusText.className = "status-success";
+
+                // Xử lý tất cả sinh viên trả về
+                if (Array.isArray(data.results)) {
+                    data.results.forEach(item => {
+                        const stu = item.student;
+                        updateStudentStatus(
+                            stu.enrollment_id,
+                            mode === "in" ? "present" : "checked_out",
+                            stu.full_name
+                        );
+
+                        // HIỂN THỊ THÔNG TIN NGƯỜI ĐƯỢC NHẬN DIỆN
+                        showRecognitionResult(stu, mode);
+                    });
                 }
-            } catch (err) {
-                console.error("API error:", err);
-                statusText.textContent = "Không thể kết nối server.";
+
+            } else {
+                statusText.textContent = "❌ " + (data.message || "Lỗi điểm danh");
+                statusText.className = "status-error";
             }
+        } catch (err) {
+            console.error("API error:", err);
+            statusText.textContent = "Không thể kết nối server.";
+            statusText.className = "status-error";
+        }
+
         }
 
         // Cập nhật trạng thái sinh viên sau khi nhận diện - GIỮ NGUYÊN
@@ -602,7 +761,6 @@
             alert("Đã lưu điểm danh thành công!");
         });
 
-        // Khởi tạo
         // Khởi tạo
         renderStudents();
         initCamera();

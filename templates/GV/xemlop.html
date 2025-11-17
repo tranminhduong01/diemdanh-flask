@@ -7,148 +7,155 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root {
-            --primary-color: #4e73df;
-            --secondary-color: #858796;
-            --success-color: #1cc88a;
-            --info-color: #36b9cc;
-            --warning-color: #f6c23e;
-            --danger-color: #e74a3b;
-            --light-bg: #f8f9fc;
-        }
-
         body {
-            background-color: var(--light-bg);
+            background-color: #f8f9fa;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
         }
 
         .header {
-            background: linear-gradient(135deg, var(--primary-color) 0%, #2a3e9d 100%);
-            color: white;
-            padding: 1.5rem 0;
-            border-radius: 0 0 15px 15px;
-            margin-bottom: 2rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+            border-bottom: 1px solid #dee2e6;
+            padding: 1rem 0;
+            margin-bottom: 1.5rem;
+        }
+
+        .class-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .class-subtitle {
+            color: #6c757d;
+            font-size: 0.9rem;
         }
 
         .session-card {
-            border: none;
-            border-radius: 10px;
-            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
-            transition: transform 0.3s, box-shadow 0.3s;
-            margin-bottom: 1.5rem;
+            background-color: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            margin-bottom: 1rem;
             overflow: hidden;
         }
 
-        .session-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 0.5rem 2rem 0 rgba(58, 59, 69, 0.2);
-        }
-
         .session-header {
-            background-color: white;
-            padding: 1rem 1.5rem;
-            border-bottom: 1px solid #e3e6f0;
+            padding: 1rem;
+            border-bottom: 1px solid #dee2e6;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            cursor: pointer;
+            transition: background-color 0.2s;
         }
 
-        .session-body {
-            padding: 1.5rem;
-            background-color: white;
+        .session-header:hover {
+            background-color: #f8f9fa;
         }
 
-        .session-footer {
-            background-color: #f8f9fc;
-            padding: 0.75rem 1.5rem;
-            border-top: 1px solid #e3e6f0;
+        .session-info {
             display: flex;
-            justify-content: flex-end;
+            align-items: center;
         }
 
-        .badge-status {
-            font-size: 0.85rem;
-            padding: 0.35rem 0.65rem;
-            border-radius: 0.35rem;
+        .session-number {
+            font-weight: 600;
+            margin-right: 1rem;
+        }
+
+        .session-date {
+            color: #6c757d;
+            margin-right: 1rem;
+        }
+
+        .session-time {
+            color: #6c757d;
+            font-size: 0.875rem;
         }
 
         .student-list {
-            background-color: #f8f9fc;
-            border-radius: 10px;
-            padding: 1.5rem;
-            margin-top: 1rem;
+            padding: 1rem;
             display: none;
         }
 
         .stats-container {
-            display: flex;
-            justify-content: space-between;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 0.5rem;
             margin-bottom: 1rem;
-            flex-wrap: wrap;
         }
 
         .stat-item {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            padding: 0.75rem;
             text-align: center;
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            margin-bottom: 0.5rem;
-            flex: 1;
-            min-width: 120px;
-            margin: 0 0.25rem;
         }
 
         .stat-count {
-            font-size: 1.5rem;
-            font-weight: bold;
+            font-size: 1.25rem;
+            font-weight: 600;
         }
 
-        .btn-toggle {
-            border-radius: 50px;
-            padding: 0.375rem 1.2rem;
-            font-weight: 500;
-            transition: all 0.3s;
-        }
-
-        .btn-toggle i {
-            margin-right: 0.5rem;
+        .stat-label {
+            font-size: 0.875rem;
+            color: #6c757d;
         }
 
         .table th {
-            border-top: none;
+            background-color: #f8f9fa;
             font-weight: 600;
-            color: var(--secondary-color);
-            background-color: #f8f9fc;
         }
 
-        .session-number {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: var(--primary-color);
+        .table-responsive {
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
         }
 
-        .session-date {
-            color: var(--secondary-color);
-            font-size: 0.9rem;
+        .btn-toggle {
+            background-color: #0d6efd;
+            color: white;
+            border: none;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            transition: background-color 0.2s;
         }
 
-        .session-time {
-            background-color: #eaecf4;
-            padding: 0.35rem 0.75rem;
-            border-radius: 50px;
-            font-size: 0.85rem;
-            display: inline-block;
-            margin-top: 0.5rem;
+        .btn-toggle:hover {
+            background-color: #0b5ed7;
+        }
+
+        .btn-toggle.active {
+            background-color: #6c757d;
+        }
+
+        .form-select-sm {
+            font-size: 0.875rem;
+            padding: 0.25rem 0.5rem;
         }
 
         @media (max-width: 768px) {
-            .stats-container {
+            .session-header {
                 flex-direction: column;
+                align-items: flex-start;
             }
 
-            .stat-item {
+            .session-info {
+                flex-direction: column;
+                align-items: flex-start;
                 margin-bottom: 0.5rem;
-                width: 100%;
+            }
+
+            .session-number, .session-date, .session-time {
+                margin-right: 0;
+                margin-bottom: 0.25rem;
+            }
+
+            .stats-container {
+                grid-template-columns: repeat(2, 1fr);
             }
         }
     </style>
@@ -157,42 +164,38 @@
     <div class="header">
         <div class="container">
             <div class="d-flex justify-content-between align-items-center">
-                <h1 class="h3 mb-0"><i class="fas fa-chalkboard-teacher me-2"></i>Quản lý điểm danh</h1>
-                <a href="javascript:history.back()" class="btn btn-light btn-sm">
-                    <i class="fas fa-arrow-left me-1"></i> Quay lại
-                </a>
+                <div class="d-flex align-items-center">
+                    <!-- Nút Quay lại bên trái -->
+                    <a href="javascript:history.back()" class="btn btn-outline-secondary btn-sm me-3">
+                        <i class="fas fa-arrow-left me-1"></i> Quay lại
+                    </a>
+                    <!-- Tiêu đề -->
+                    <div>
+                        <h1 class="class-title">Quản lý điểm danh</h1>
+                        <p class="class-subtitle">{{ lop.class_name }}</p>
+                    </div>
+                </div>
+                <!-- Nút Xuất Excel bên phải -->
+                <button class="btn btn-success" onclick="exportExcel({{ class_id }})">
+                    Xuất Excel danh sách lớp
+                </button>
             </div>
         </div>
     </div>
 
     <div class="container">
-        <div class="row mb-4">
-            <div class="col">
-                <div class="card session-card">
-                    <div class="card-body text-center py-4">
-                        <h2 class="h4">{{ lop.class_name }}</h2>
-                        <p class="text-muted mb-0">Theo dõi điểm danh các buổi học</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <div class="session-list">
             {% for s in sessions %}
-            <div class="session-card card" data-session-id="{{ s.id }}">
+            <div class="session-card" data-session-id="{{ s.id }}">
                 <div class="session-header">
-                    <div>
+                    <div class="session-info">
                         <span class="session-number">Buổi {{ s.session_number }}</span>
-                        <span class="session-date ms-2">{{ s.date }}</span>
-                        <div class="session-time">
-                            <i class="far fa-clock me-1"></i>{{ s.start_time }} - {{ s.end_time }}
-                        </div>
+                        <span class="session-date">{{ s.date }}</span>
+                        <span class="session-time"><i class="far fa-clock me-1"></i>{{ s.start_time }} - {{ s.end_time }}</span>
                     </div>
-                    <div class="session-actions">
-                        <button class="btn btn-primary btn-toggle btn-xem-sinhvien">
-                            <i class="fas fa-users"></i>Xem sinh viên
-                        </button>
-                    </div>
+                    <button class="btn-toggle">
+                        <i class="fas fa-users me-1"></i>Xem sinh viên
+                    </button>
                 </div>
 
                 <div class="student-list">
@@ -207,8 +210,11 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
+        function exportExcel(classId) {
+            window.location.href = `/export_excel/${classId}`;
+        }
         document.addEventListener("DOMContentLoaded", () => {
-            document.querySelectorAll(".btn-xem-sinhvien").forEach(btn => {
+            document.querySelectorAll(".btn-toggle").forEach(btn => {
                 btn.addEventListener("click", async () => {
                     const sessionCard = btn.closest(".session-card");
                     const studentListDiv = sessionCard.querySelector(".student-list");
@@ -218,10 +224,9 @@
                     // Toggle hiển thị
                     if (studentListDiv.style.display === "block") {
                         studentListDiv.style.display = "none";
-                        btn.classList.remove("btn-secondary");
-                        btn.classList.add("btn-primary");
-                        icon.className = "fas fa-users";
-                        btn.innerHTML = '<i class="fas fa-users"></i>Xem sinh viên';
+                        btn.classList.remove("active");
+                        icon.className = "fas fa-users me-1";
+                        btn.innerHTML = '<i class="fas fa-users me-1"></i>Xem sinh viên';
                         return;
                     }
 
@@ -237,17 +242,16 @@
                     studentListDiv.style.display = "block";
 
                     // Thay đổi trạng thái nút
-                    btn.classList.remove("btn-primary");
-                    btn.classList.add("btn-secondary");
-                    icon.className = "fas fa-spinner fa-spin";
-                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>Đang tải...';
+                    btn.classList.add("active");
+                    icon.className = "fas fa-spinner fa-spin me-1";
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Đang tải...';
 
                     try {
                         // Gọi API lấy danh sách sinh viên
                         const res = await fetch(`/api/buoi_hoc/${sessionId}/sinhvien`);
                         const data = await res.json();
 
-                        // Đếm số lượng theo trạng thái
+                        // Đếm số lượng theo trạng thái - SỬA LẠI Ở ĐÂY
                         let counts = {
                             "Có mặt": 0,
                             "Đi trễ": 0,
@@ -255,36 +259,52 @@
                             "Vắng không phép": 0,
                             "Chưa điểm danh": 0
                         };
-                        console.log("📋 Dữ liệu sinh viên:", data);
 
                         data.forEach(st => {
-                            if (counts[st.status] !== undefined) counts[st.status]++;
+                            // Đếm dựa trên status_in
+                            switch(st.status_in) {
+                                case "present":
+                                    counts["Có mặt"]++;
+                                    break;
+                                case "late":
+                                    counts["Đi trễ"]++;
+                                    break;
+                                case "absent_excused":
+                                    counts["Vắng có phép"]++;
+                                    break;
+                                case "absent_unexcused":
+                                    counts["Vắng không phép"]++;
+                                    break;
+                                default:
+                                    counts["Chưa điểm danh"]++;
+                                    break;
+                            }
                         });
 
                         // Render thống kê + danh sách
                         let html = `
                             <div class="stats-container">
-                                <div class="stat-item" style="background-color: rgba(28, 200, 138, 0.2); color: #1cc88a;">
+                                <div class="stat-item">
                                     <div class="stat-count">${counts["Có mặt"]}</div>
                                     <div class="stat-label">Có mặt</div>
                                 </div>
-                                <div class="stat-item" style="background-color: rgba(246, 194, 62, 0.2); color: #f6c23e;">
+                                <div class="stat-item">
                                     <div class="stat-count">${counts["Đi trễ"]}</div>
                                     <div class="stat-label">Đi trễ</div>
                                 </div>
-                                <div class="stat-item" style="background-color: rgba(54, 185, 204, 0.2); color: #36b9cc;">
+                                <div class="stat-item">
                                     <div class="stat-count">${counts["Vắng có phép"]}</div>
                                     <div class="stat-label">Vắng có phép</div>
                                 </div>
-                                <div class="stat-item" style="background-color: rgba(231, 74, 59, 0.2); color: #e74a3b;">
+                                <div class="stat-item">
                                     <div class="stat-count">${counts["Vắng không phép"]}</div>
                                     <div class="stat-label">Vắng không phép</div>
                                 </div>
-                                <div class="stat-item" style="background-color: rgba(133, 135, 150, 0.2); color: #858796;">
+                                <div class="stat-item">
                                     <div class="stat-count">${counts["Chưa điểm danh"]}</div>
                                     <div class="stat-label">Chưa điểm danh</div>
                                 </div>
-                                <div class="stat-item" style="background-color: rgba(78, 115, 223, 0.2); color: #4e73df;">
+                                <div class="stat-item">
                                     <div class="stat-count">${data.length}</div>
                                     <div class="stat-label">Tổng số</div>
                                 </div>
@@ -306,45 +326,31 @@
                                     <tbody>`;
 
                         data.forEach(st => {
-                        let badgeIn = "secondary";
-                        let badgeOut = "secondary";
-
-                        // Mapping trạng thái vào
-                        if (st.status_in === "present") badgeIn = "success";
-                        else if (st.status_in === "late") badgeIn = "warning";
-                        else if (st.status_in === "absent_excused") badgeIn = "info";
-                        else if (st.status_in === "absent_unexcused") badgeIn = "danger";
-
-                        // Mapping trạng thái ra
-                        if (st.status_out === "checked_out") badgeOut = "success";
-                        else badgeOut = "secondary";
-
-                        html += `
-                            <tr>
-                                <td>${st.mssv}</td>
-                                <td>${st.full_name}</td>
-                                <td>${st.date}</td>
-                                <td>
-                                  <select class="form-select form-select-sm status-in-select" data-id="${st.enrollment_id}" data-session="${sessionId}">
-                                    <option value="present" ${st.status_in === "present" ? "selected" : ""}>Có mặt</option>
-                                    <option value="late" ${st.status_in === "late" ? "selected" : ""}>Đi trễ</option>
-                                    <option value="absent_excused" ${st.status_in === "absent_excused" ? "selected" : ""}>Vắng có phép</option>
-                                    <option value="absent_unexcused" ${st.status_in === "absent_unexcused" ? "selected" : ""}>Vắng không phép</option>
-                                  </select>
-                                </td>
-                                <td>${st.time_in}</td>
-                                <td>
-                                  <select class="form-select form-select-sm status-out-select" data-id="${st.enrollment_id}" data-session="${sessionId}">
-                                    <option value="checked_out" ${st.status_out === "checked_out" ? "selected" : ""}>Đã ra</option>
-                                    <option value="not_checked_out" ${st.status_out === "not_checked_out" ? "selected" : ""}>Chưa ra</option>
-                                  </select>
-                                </td>
-                                <td>${st.time_out}</td>
-                                <td>${st.score}</td>
-                            </tr>
-                        `;
-                    });
-
+                            html += `
+                                <tr>
+                                    <td>${st.mssv}</td>
+                                    <td>${st.full_name}</td>
+                                    <td>${st.date}</td>
+                                    <td>
+                                      <select class="form-select form-select-sm status-in-select" data-id="${st.enrollment_id}" data-session="${sessionId}">
+                                        <option value="present" ${st.status_in === "present" ? "selected" : ""}>Có mặt</option>
+                                        <option value="late" ${st.status_in === "late" ? "selected" : ""}>Đi trễ</option>
+                                        <option value="absent_excused" ${st.status_in === "absent_excused" ? "selected" : ""}>Vắng có phép</option>
+                                        <option value="absent_unexcused" ${st.status_in === "absent_unexcused" ? "selected" : ""}>Vắng không phép</option>
+                                      </select>
+                                    </td>
+                                    <td>${st.time_in || ''}</td>
+                                    <td>
+                                      <select class="form-select form-select-sm status-out-select" data-id="${st.enrollment_id}" data-session="${sessionId}">
+                                        <option value="checked_out" ${st.status_out === "checked_out" ? "selected" : ""}>Đã ra</option>
+                                        <option value="not_checked_out" ${st.status_out === "not_checked_out" ? "selected" : ""}>Chưa ra</option>
+                                      </select>
+                                    </td>
+                                    <td>${st.time_out || ''}</td>
+                                    <td>${st.score || ''}</td>
+                                </tr>
+                            `;
+                        });
 
                         html += `</tbody></table></div>`;
 
@@ -358,10 +364,6 @@
                             const sessionId = selectElem.dataset.session;
                             const newStatus = selectElem.value;
                             const isStatusIn = selectElem.classList.contains("status-in-select");
-
-                            console.log("🔍 Debug gửi API:", {
-                              enrollmentId, sessionId, field: isStatusIn ? "status_in" : "status_out", value: newStatus
-                            });
 
                             try {
                               const res = await fetch(`/api/diemdanh/thaydoi`, {
@@ -378,16 +380,26 @@
                               const result = await res.json();
                               if (!result.success) throw new Error(result.error || "Lỗi cập nhật trạng thái");
 
-                              // ✅ Hiện toast đẹp
+                              // Hiện thông báo thành công
                               Swal.fire({
-                                toast: true,
-                                position: "top-end",
-                                icon: "success",
-                                title: "Cập nhật trạng thái thành công!",
-                                showConfirmButton: false,
-                                timer: 2000,
-                                timerProgressBar: true
-                              });
+                                    toast: true,
+                                    position: "top-end",
+                                    icon: "success",
+                                    title: "Cập nhật trạng thái thành công!",
+                                    showConfirmButton: false,
+                                    timer: 800,
+                                    timerProgressBar: true
+                                }).then(() => {
+                                    location.reload();
+                                });
+
+                              // Cập nhật lại thống kê sau khi thay đổi
+                              if (isStatusIn) {
+                                // Tìm hàng chứa select box này
+                                const row = selectElem.closest('tr');
+                                // Có thể cập nhật lại thống kê ở đây nếu cần
+                              }
+
                             } catch (err) {
                               Swal.fire({
                                 icon: "error",
@@ -395,19 +407,18 @@
                                 text: "Có lỗi xảy ra: " + err.message,
                                 confirmButtonText: "Đóng"
                               });
+
                             }
                           });
                         });
 
-
                         // Cập nhật lại nút
-                        btn.classList.remove("btn-secondary");
-                        btn.classList.add("btn-primary");
-                        icon.className = "fas fa-times";
-                        btn.innerHTML = '<i class="fas fa-times"></i>Ẩn sinh viên';
-
+                        btn.classList.remove("active");
+                        icon.className = "fas fa-times me-1";
+                        btn.innerHTML = '<i class="fas fa-times me-1"></i>Ẩn sinh viên';
 
                     } catch (error) {
+                        console.error("Lỗi khi tải dữ liệu:", error);
                         studentListDiv.innerHTML = `
                             <div class="alert alert-danger text-center" role="alert">
                                 <i class="fas fa-exclamation-triangle me-2"></i>
@@ -416,15 +427,13 @@
                         `;
 
                         // Khôi phục nút về trạng thái ban đầu
-                        btn.classList.remove("btn-secondary");
-                        btn.classList.add("btn-primary");
-                        icon.className = "fas fa-users";
-                        btn.innerHTML = '<i class="fas fa-users"></i>Xem sinh viên';
+                        btn.classList.remove("active");
+                        icon.className = "fas fa-users me-1";
+                        btn.innerHTML = '<i class="fas fa-users me-1"></i>Xem sinh viên';
                     }
                 });
             });
         });
-
     </script>
 </body>
 </html>

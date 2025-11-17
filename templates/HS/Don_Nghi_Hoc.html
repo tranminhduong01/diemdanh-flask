@@ -214,21 +214,48 @@
 
     /* Header styles */
     .dn-page-header {
-      background: linear-gradient(135deg, var(--dn-primary) 0%, var(--dn-primary-dark) 100%);
-      color: var(--dn-white);
+      background: #ffffff; /* nền trắng */
+      color: var(--dn-primary-dark); /* chữ màu tối cho nổi bật trên nền trắng */
       padding: 2rem 0;
       margin-bottom: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Hiệu ứng hình kim cương mờ dần từ trái sang phải */
+    .dn-page-header::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolygon points='20,0 40,20 20,40 0,20' fill='%23000000' fill-opacity='0.1'/%3E%3C/svg%3E");
+      background-size: 30px 30px; /* kích thước kim cương */
+      background-repeat: repeat;
+      opacity: 0.5;
+
+      /* Mờ dần từ trái sang phải */
+      -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,1), rgba(0,0,0,0));
+      mask-image: linear-gradient(to right, rgba(0,0,0,1), rgba(0,0,0,0));
+
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .dn-page-header * {
+      position: relative;
+      z-index: 1;
     }
 
     .dn-page-title {
       font-size: 2.2rem;
       font-weight: 700;
+      color: #2563eb;
       margin-bottom: 0.5rem;
     }
 
     .dn-page-subtitle {
       font-size: 1.1rem;
       opacity: 0.9;
+      color: #2563eb;
       margin-bottom: 0;
     }
 

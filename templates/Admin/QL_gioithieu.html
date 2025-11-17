@@ -1,0 +1,226 @@
+{% extends "menu_admin.html" %}
+{% block title %}Hệ Thống Quản Trị | Cài đặt{% endblock %}
+{% block content %}
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+
+<style>
+    .admin-table td, .admin-table th { vertical-align: middle; }
+    .admin-btn-sm { padding: .25rem .5rem; font-size: .85rem; }
+</style>
+</head>
+<body class="p-4">
+
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Quản lý Features</h2>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addFeatureModal">
+            <i class="fas fa-plus me-1"></i>Thêm mới
+        </button>
+    </div>
+
+    {% if features %}
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th width="80">ID</th>
+                <th width="100">Icon</th>
+                <th>Tiêu đề</th>
+                <th>Mô tả</th>
+                <th width="150">Hành động</th>
+            </tr>
+        </thead>
+        <tbody id="featureTable">
+            {% for f in features %}
+            <tr data-id="{{ f.id }}">
+                <td>#{{ f.id }}</td>
+                <td><i class="{{ f.icon }}"></i></td>
+                <td>{{ f.title }}</td>
+                <td>{{ f.description }}</td>
+                <td>
+                    <button class="btn btn-warning btn-sm editBtn"
+                            data-id="{{ f.id }}"
+                            data-icon="{{ f.icon }}"
+                            data-title="{{ f.title }}"
+                            data-desc="{{ f.description }}">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-danger btn-sm deleteBtn" data-id="{{ f.id }}">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>Chưa có feature nào. Nhấn "Thêm mới" để bắt đầu.</p>
+    {% endif %}
+</div>
+
+<!-- Modal Thêm Feature -->
+<div class="modal fade" id="addFeatureModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Thêm Feature</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="addFeatureForm">
+          <div class="mb-3">
+            <label>Icon (FontAwesome class)</label>
+            <input type="text" class="form-control" name="icon" placeholder="fas fa-user-check" required>
+          </div>
+          <div class="mb-3">
+            <label>Tiêu đề</label>
+            <input type="text" class="form-control" name="title" placeholder="Điểm danh Thông minh" required>
+          </div>
+          <div class="mb-3">
+            <label>Mô tả</label>
+            <textarea class="form-control" name="description" rows="3" required></textarea>
+          </div>
+          <div class="text-end">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+            <button type="submit" class="btn btn-success">Lưu</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Sửa Feature -->
+<div class="modal fade" id="editFeatureModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Sửa Feature</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editFeatureForm">
+          <input type="hidden" name="id">
+          <div class="mb-3">
+            <label>Icon (FontAwesome class)</label>
+            <input type="text" class="form-control" name="icon" required>
+          </div>
+          <div class="mb-3">
+            <label>Tiêu đề</label>
+            <input type="text" class="form-control" name="title" required>
+          </div>
+          <div class="mb-3">
+            <label>Mô tả</label>
+            <textarea class="form-control" name="description" rows="3" required></textarea>
+          </div>
+          <div class="text-end">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+            <button type="submit" class="btn btn-success">Cập nhật</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Thông báo -->
+<div class="modal fade" id="actionModal" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-body text-center">
+        <p id="actionModalText"></p>
+        <button type="button" class="btn btn-primary mt-2" data-bs-dismiss="modal">Đóng</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+$(function(){
+
+    const actionModalEl = document.getElementById("actionModal");
+    const actionModal = new bootstrap.Modal(actionModalEl);
+
+    // ✅ Hiện thông báo và auto ẩn khi bấm OK
+    function showMessage(msg, reload = false){
+        $("#actionModalText").text(msg);
+        actionModal.show();
+
+        // Gán sự kiện chỉ 1 lần
+        $("#actionModalClose").off("click").on("click", function(){
+            actionModal.hide();
+            if (reload) location.reload();
+        });
+    }
+
+    // 🔹 Thêm Feature
+    $("#addFeatureForm").submit(function(e){
+        e.preventDefault();
+        $.ajax({
+            url: "/admin/features/add",
+            method: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({
+                icon: $(this).find("[name='icon']").val(),
+                title: $(this).find("[name='title']").val(),
+                description: $(this).find("[name='description']").val()
+            }),
+            success: function(){ showMessage("✅ Thêm feature thành công!", true); },
+            error: function(){ showMessage("❌ Có lỗi khi thêm feature."); }
+        });
+    });
+
+    // 🔹 Mở modal Sửa Feature
+    $(".editBtn").click(function(){
+        let modalEl = document.getElementById('editFeatureModal');
+        let modal = new bootstrap.Modal(modalEl);
+        modalEl.querySelector("[name='id']").value = $(this).data("id");
+        modalEl.querySelector("[name='icon']").value = $(this).data("icon");
+        modalEl.querySelector("[name='title']").value = $(this).data("title");
+        modalEl.querySelector("[name='description']").value = $(this).data("desc");
+        modal.show();
+    });
+
+    // 🔹 Sửa Feature
+    $("#editFeatureForm").submit(function(e){
+        e.preventDefault();
+        let id = $(this).find("[name='id']").val();
+        $.ajax({
+            url: "/admin/features/edit/" + id,
+            method: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({
+                icon: $(this).find("[name='icon']").val(),
+                title: $(this).find("[name='title']").val(),
+                description: $(this).find("[name='description']").val()
+            }),
+            success: function(){
+                $("#editFeatureModal").modal("hide");
+                showMessage("✅ Cập nhật feature thành công!", true);
+            },
+            error: function(){ showMessage("❌ Cập nhật thất bại."); }
+        });
+    });
+
+    // 🔹 Xóa Feature
+    $(".deleteBtn").click(function(){
+        if(confirm("Bạn có chắc muốn xóa feature này?")){
+            let id = $(this).data("id");
+            $.ajax({
+                url: "/admin/features/delete/" + id,
+                method: "POST",
+                success: function(){ showMessage("🗑️ Xóa feature thành công!", true); },
+                error: function(){ showMessage("❌ Xóa feature thất bại."); }
+            });
+        }
+    });
+
+});
+</script>
+
+
+{% endblock %}
+

@@ -3,1153 +3,655 @@
 {% block title %}Student Dashboard{% endblock %}
 
 {% block content %}
+<!-- Thêm Font Awesome CDN -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-  <div class="chat-main-content">
-    <!-- Sidebar: danh sách giảng viên -->
-    <div class="chat-sidebar">
-      <div class="chat-user-profile">
-        <div class="chat-user-avatar">SV</div>
-        <div class="chat-user-info">
-          <h3>{{ user_name }}</h3>
-          <p>Đang hoạt động</p>
-        </div>
-      </div>
-
-      <div class="chat-sidebar-header">
-        <h3>Danh sách giảng viên</h3>
-        <button class="chat-sidebar-menu"><i class="fas fa-ellipsis-v"></i></button>
-      </div>
-
-      <div class="chat-search-container">
-        <div class="chat-search-box">
-          <i class="fas fa-search chat-search-icon"></i>
-          <input type="text" placeholder="Tìm kiếm giảng viên..." class="chat-search-input">
-        </div>
-      </div>
-
-      <div class="chat-lecturers-list">
-        {% for gv in danh_sach_giang_vien %}
-          <div class="chat-lecturer-item" onclick="chonGiangVien({{ gv.id }}, '{{ gv.name }}')">
-            <div class="chat-lecturer-avatar">{{ gv.name[0]|upper }}</div>
-            <div class="chat-lecturer-info">
-              <div class="chat-lecturer-name">{{ gv.name }}</div>
-              <div class="chat-lecturer-lastmsg">Tin nhắn cuối...</div>
-            </div>
-            <div class="chat-lecturer-meta">
-              <div class="chat-lecturer-time">14:20</div>
-              <div class="chat-lecturer-unread">3</div>
-            </div>
-          </div>
-        {% else %}
-          <div class="chat-no-lecturers">Chưa có giảng viên nào</div>
-        {% endfor %}
-      </div>
+<div class="simple-chat-container">
+  <!-- Sidebar đơn giản -->
+  <div class="simple-sidebar">
+    <div class="sidebar-header">
+      <h3>Giảng viên</h3>
+      <span class="badge">{{ danh_sach_giang_vien|length }}</span>
     </div>
 
-    <div class="chat-main-container">
-      <div class="chat-main-header">
-        <div class="chat-current-lecturer">
-          <div class="chat-current-avatar" id="currentLecturerAvatar">G</div>
-          <div class="chat-current-info">
-            <h3 id="chatHeader">Chọn giảng viên để chat</h3>
-            <p id="lecturerStatus">Trạng thái</p>
-          </div>
+    <div class="search-box">
+      <i class="fas fa-search"></i>
+      <input type="text" placeholder="Tìm giảng viên...">
+    </div>
+
+    <div class="lecturers-list">
+      {% for gv in danh_sach_giang_vien %}
+      <div class="lecturer-item" onclick="chonGiangVien('{{ gv.id }}', '{{ gv.name }}', '{{ gv.avatar }}')">
+        <div class="avatar">
+          <img src="{{ gv.avatar }}" onerror="this.src='https://ui-avatars.com/api/?name={{ gv.name }}&background=6366f1&color=fff'">
+          <div class="status {% if loop.index % 2 == 0 %}online{% endif %}"></div>
         </div>
-        <div class="chat-header-actions">
-          <button class="chat-action-btn" onclick="startVoiceCall()"><i class="fas fa-phone"></i></button>
-          <button class="chat-action-btn" onclick="startVideoCall()"><i class="fas fa-video"></i></button>
-          <button class="chat-action-btn"><i class="fas fa-info-circle"></i></button>
+        <div class="info">
+          <h4>{{ gv.name }}</h4>
+          <p>Chào bạn! Tôi có thể giúp gì?</p>
         </div>
       </div>
+      {% else %}
+      <div class="empty-state">
+        <i class="fas fa-users"></i>
+        <p>Chưa có giảng viên</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
 
-      <div class="chat-messages-container" id="chat-box">
-        <div class="chat-no-selection">
-          <i class="fas fa-comments chat-no-selection-icon"></i>
-          <h3>Chưa chọn giảng viên</h3>
-          <p>Vui lòng chọn một giảng viên từ danh sách bên trái để bắt đầu trò chuyện</p>
+  <!-- Main chat area -->
+  <div class="simple-chat-area">
+    <div class="chat-header">
+      <div class="current-user">
+        <div class="avatar" id="currentLecturerAvatar">
+          <i class="fas fa-user"></i>
+        </div>
+        <div class="user-info">
+          <h3 id="chatHeader">Chọn giảng viên</h3>
+          <p id="lecturerStatus">Chọn từ danh sách bên trái</p>
         </div>
       </div>
-
-      <div class="chat-input-container">
-        <div class="chat-input-wrapper">
-          <input type="text" id="noi_dung" class="chat-message-input" placeholder="Nhập tin nhắn...">
-          <div class="chat-input-actions">
-            <button class="chat-input-btn"><i class="far fa-smile"></i></button>
-            <button class="chat-input-btn"><i class="fas fa-paperclip"></i></button>
-          </div>
-        </div>
-        <button class="chat-send-btn" onclick="guiTinNhan()">
-          <i class="fas fa-paper-plane"></i>
+      <div class="header-actions">
+        <button class="icon-btn" title="Gọi điện">
+          <i class="fas fa-phone"></i>
+        </button>
+        <button class="icon-btn" title="Video call">
+          <i class="fas fa-video"></i>
         </button>
       </div>
     </div>
-  </div>
 
-  <!-- Incoming Call Notification -->
-  <div class="chat-incoming-call" id="incomingCall">
-    <div class="chat-call-content">
-      <div class="chat-call-avatar" id="incomingCallAvatar">G</div>
-      <div class="chat-call-info">
-        <h5 id="incomingCallName">Giảng viên</h5>
-        <p>Cuộc gọi đến</p>
+    <div class="messages-container" id="chat-box">
+      <div class="welcome-message">
+        <i class="fas fa-comments"></i>
+        <h3>Bắt đầu trò chuyện</h3>
+        <p>Chọn một giảng viên để bắt đầu</p>
       </div>
     </div>
-    <div class="chat-call-buttons">
-      <button class="chat-call-btn chat-call-accept" onclick="acceptCall()">
-        <i class="fas fa-phone"></i> Chấp nhận
+
+    <div class="input-container">
+      <div class="input-wrapper">
+        <button class="attach-btn" title="Đính kèm">
+          <i class="fas fa-paperclip"></i>
+        </button>
+        <input type="text" id="noi_dung" placeholder="Nhập tin nhắn..." class="message-input">
+        <button class="emoji-btn" title="Biểu tượng">
+          <i class="far fa-smile"></i>
+        </button>
+      </div>
+      <!-- Sửa lại button send -->
+      <button class="send-btn" onclick="guiTinNhan()" title="Gửi">
       </button>
-      <button class="chat-call-btn chat-call-decline" onclick="declineCall()">
-        <i class="fas fa-times"></i> Từ chối
-      </button>
     </div>
   </div>
-
-  <!-- Voice Call Modal -->
-  <div class="chat-modal chat-voice-modal" id="voiceCallModal" tabindex="-1" aria-hidden="true">
-    <div class="chat-modal-dialog">
-      <div class="chat-modal-content">
-        <div class="chat-call-header">
-          <div class="chat-call-avatar" id="voiceCallAvatar">G</div>
-          <h4 id="voiceCallName">Giảng viên</h4>
-          <p class="chat-call-status" id="voiceCallStatus">Đang gọi...</p>
-        </div>
-        <div class="chat-call-body">
-          <div class="chat-call-timer" id="voiceCallTimer">00:00</div>
-          <div class="chat-call-controls">
-            <button class="chat-call-control-btn chat-call-mute" onclick="toggleMute()">
-              <i class="fas fa-microphone"></i>
-            </button>
-            <button class="chat-call-control-btn chat-call-end" onclick="endCall()">
-              <i class="fas fa-phone"></i>
-            </button>
-            <button class="chat-call-control-btn chat-call-speaker" onclick="toggleSpeaker()">
-              <i class="fas fa-volume-up"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Video Call Modal -->
-  <div class="chat-modal chat-video-modal" id="videoCallModal" tabindex="-1" aria-hidden="true">
-    <div class="chat-modal-dialog chat-modal-lg">
-      <div class="chat-modal-content">
-        <div class="chat-call-header">
-          <h4 id="videoCallName">Video call với giảng viên</h4>
-          <p class="chat-call-status" id="videoCallStatus">Đang gọi...</p>
-        </div>
-        <div class="chat-call-body">
-          <div class="chat-video-container">
-            <div class="chat-video-feed">
-              <i class="fas fa-user chat-video-placeholder"></i>
-              <div class="chat-video-name">Bạn</div>
-            </div>
-            <div class="chat-video-feed">
-              <i class="fas fa-user chat-video-placeholder"></i>
-              <div class="chat-video-name" id="videoCallUserName">Giảng viên</div>
-            </div>
-          </div>
-          <div class="chat-call-timer" id="videoCallTimer">00:00</div>
-          <div class="chat-call-controls">
-            <button class="chat-call-control-btn chat-call-mute" onclick="toggleMute()">
-              <i class="fas fa-microphone"></i>
-            </button>
-            <button class="chat-call-control-btn chat-call-video" onclick="toggleVideo()">
-              <i class="fas fa-video"></i>
-            </button>
-            <button class="chat-call-control-btn chat-call-end" onclick="endCall()">
-              <i class="fas fa-phone"></i>
-            </button>
-            <button class="chat-call-control-btn chat-call-speaker" onclick="toggleSpeaker()">
-              <i class="fas fa-volume-up"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <input type="hidden" id="sinh_vien_id" value="{{ sinh_vien_id }}">
-  <input type="hidden" id="giang_vien_id">
-
-  <style>
-    /* Biến hệ thống */
-    :root {
-      --chat-primary: #3498db;
-      --chat-primary-dark: #2980b9;
-      --chat-secondary: #6c757d;
-      --chat-success: #28a745;
-      --chat-info: #17a2b8;
-      --chat-warning: #ffc107;
-      --chat-danger: #dc3545;
-      --chat-light: #f8f9fa;
-      --chat-dark: #343a40;
-      --chat-white: #ffffff;
-      --chat-gray: #6c757d;
-      --chat-gray-light: #e9ecef;
-      --chat-gray-lighter: #f8f9fa;
-      --chat-border-radius: 12px;
-      --chat-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-      --chat-transition: all 0.3s ease;
-    }
-
-    /* Reset và base styles */
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    /* Layout chính - VỪA MÀN HÌNH */
-    .chat-main-content {
-      display: flex;
-      height: calc(100vh - 100px); /* Trừ đi chiều cao menu */
-      max-height: calc(100vh - 60px);
-      background-color: var(--chat-white);
-      overflow: hidden;
-    }
-
-    /* Sidebar */
-    .chat-sidebar {
-      width: 300px;
-      background-color: var(--chat-white);
-      border-right: 1px solid var(--chat-gray-light);
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-    }
-
-    .chat-user-profile {
-      display: flex;
-      align-items: center;
-      padding: 1rem;
-      border-bottom: 1px solid var(--chat-gray-light);
-      flex-shrink: 0;
-    }
-
-    .chat-user-avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--chat-primary) 0%, var(--chat-primary-dark) 100%);
-      color: var(--chat-white);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      font-size: 1rem;
-      margin-right: 0.75rem;
-    }
-
-    .chat-user-info h3 {
-      margin: 0;
-      font-size: 1rem;
-      color: var(--chat-dark);
-    }
-
-    .chat-user-info p {
-      margin: 0;
-      color: var(--chat-success);
-      font-size: 0.8rem;
-    }
-
-    .chat-sidebar-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0.75rem 1rem;
-      border-bottom: 1px solid var(--chat-gray-light);
-      flex-shrink: 0;
-    }
-
-    .chat-sidebar-header h3 {
-      margin: 0;
-      font-size: 0.9rem;
-      color: var(--chat-dark);
-    }
-
-    .chat-sidebar-menu {
-      background: none;
-      border: none;
-      color: var(--chat-gray);
-      cursor: pointer;
-      padding: 0.25rem;
-      font-size: 0.8rem;
-    }
-
-    .chat-search-container {
-      padding: 0.75rem 1rem;
-      border-bottom: 1px solid var(--chat-gray-light);
-      flex-shrink: 0;
-    }
-
-    .chat-search-box {
-      position: relative;
-    }
-
-    .chat-search-icon {
-      position: absolute;
-      left: 0.75rem;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--chat-gray);
-      font-size: 0.8rem;
-    }
-
-    .chat-search-input {
-      width: 100%;
-      padding: 0.5rem 0.75rem 0.5rem 2.25rem;
-      border: 1px solid var(--chat-gray-light);
-      border-radius: 20px;
-      font-size: 0.8rem;
-      transition: var(--chat-transition);
-    }
-
-    .chat-search-input:focus {
-      outline: none;
-      border-color: var(--chat-primary);
-      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
-    }
-
-    .chat-lecturers-list {
-      flex: 1;
-      overflow-y: auto;
-    }
-
-    .chat-lecturer-item {
-      display: flex;
-      align-items: center;
-      padding: 0.75rem;
-      cursor: pointer;
-      transition: var(--chat-transition);
-      border-bottom: 1px solid var(--chat-gray-light);
-    }
-
-    .chat-lecturer-item:hover {
-      background-color: var(--chat-gray-lighter);
-    }
-
-    .chat-lecturer-item.active {
-      background-color: #e8f4ff;
-      border-right: 3px solid var(--chat-primary);
-    }
-
-    .chat-lecturer-avatar {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-      color: var(--chat-white);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      margin-right: 0.75rem;
-      flex-shrink: 0;
-      font-size: 0.9rem;
-    }
-
-    .chat-lecturer-info {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .chat-lecturer-name {
-      font-weight: 600;
-      color: var(--chat-dark);
-      margin-bottom: 0.15rem;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      font-size: 0.85rem;
-    }
-
-    .chat-lecturer-lastmsg {
-      font-size: 0.75rem;
-      color: var(--chat-gray);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .chat-lecturer-meta {
-      text-align: right;
-      flex-shrink: 0;
-      margin-left: 0.5rem;
-    }
-
-    .chat-lecturer-time {
-      font-size: 0.7rem;
-      color: var(--chat-gray);
-      margin-bottom: 0.25rem;
-    }
-
-    .chat-lecturer-unread {
-      background-color: var(--chat-primary);
-      color: var(--chat-white);
-      border-radius: 50%;
-      width: 18px;
-      height: 18px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.65rem;
-      font-weight: bold;
-      margin-left: auto;
-    }
-
-    .chat-no-lecturers {
-      text-align: center;
-      padding: 1.5rem;
-      color: var(--chat-gray);
-      font-size: 0.9rem;
-    }
-
-    /* Main chat container */
-    .chat-main-container {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-    }
-
-    .chat-main-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0.75rem 1rem;
-      border-bottom: 1px solid var(--chat-gray-light);
-      background-color: var(--chat-white);
-      flex-shrink: 0;
-    }
-
-    .chat-current-lecturer {
-      display: flex;
-      align-items: center;
-    }
-
-    .chat-current-avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-      color: var(--chat-white);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      font-size: 1rem;
-      margin-right: 0.75rem;
-    }
-
-    .chat-current-info h3 {
-      margin: 0;
-      font-size: 1rem;
-      color: var(--chat-dark);
-    }
-
-    .chat-current-info p {
-      margin: 0;
-      color: var(--chat-success);
-      font-size: 0.8rem;
-    }
-
-    .chat-header-actions {
-      display: flex;
-      gap: 0.5rem;
-    }
-
-    .chat-action-btn {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      border: 1px solid var(--chat-gray-light);
-      background-color: var(--chat-white);
-      color: var(--chat-gray);
-      cursor: pointer;
-      transition: var(--chat-transition);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.8rem;
-    }
-
-    .chat-action-btn:hover {
-      background-color: var(--chat-gray-lighter);
-      color: var(--chat-primary);
-    }
-
-    .chat-messages-container {
-      flex: 1;
-      padding: 1rem;
-      overflow-y: auto;
-      background-color: #f8f9fa;
-    }
-
-    .chat-no-selection {
-      text-align: center;
-      padding: 2rem 1rem;
-      color: var(--chat-gray);
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .chat-no-selection-icon {
-      font-size: 3rem;
-      margin-bottom: 0.75rem;
-      opacity: 0.5;
-    }
-
-    .chat-no-selection h3 {
-      margin-bottom: 0.5rem;
-      color: var(--chat-dark);
-      font-size: 1.1rem;
-    }
-
-    .chat-no-selection p {
-      font-size: 0.9rem;
-      max-width: 300px;
-      line-height: 1.4;
-    }
-
-    /* Message bubbles */
-    .chat-message {
-      margin-bottom: 0.75rem;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .chat-message.sent {
-      align-items: flex-end;
-    }
-
-    .chat-message.received {
-      align-items: flex-start;
-    }
-
-    .chat-message-bubble {
-      max-width: 70%;
-      padding: 0.6rem 0.8rem;
-      border-radius: 18px;
-      margin-bottom: 0.2rem;
-      position: relative;
-      font-size: 0.9rem;
-      line-height: 1.3;
-    }
-
-    .chat-message.sent .chat-message-bubble {
-      background: linear-gradient(135deg, var(--chat-primary) 0%, var(--chat-primary-dark) 100%);
-      color: var(--chat-white);
-      border-bottom-right-radius: 4px;
-    }
-
-    .chat-message.received .chat-message-bubble {
-      background-color: var(--chat-white);
-      color: var(--chat-dark);
-      border: 1px solid var(--chat-gray-light);
-      border-bottom-left-radius: 4px;
-    }
-
-    .chat-message-time {
-      font-size: 0.7rem;
-      color: var(--chat-gray);
-      margin: 0 0.5rem;
-    }
-
-    /* Input area */
-    .chat-input-container {
-      padding: 0.75rem 1rem;
-      border-top: 1px solid var(--chat-gray-light);
-      background-color: var(--chat-white);
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      flex-shrink: 0;
-    }
-
-    .chat-input-wrapper {
-      flex: 1;
-      position: relative;
-      display: flex;
-      align-items: center;
-      background-color: var(--chat-gray-lighter);
-      border-radius: 20px;
-      padding: 0 0.75rem;
-    }
-
-    .chat-message-input {
-      flex: 1;
-      border: none;
-      background: none;
-      padding: 0.6rem 0;
-      outline: none;
-      font-size: 0.85rem;
-    }
-
-    .chat-input-actions {
-      display: flex;
-      gap: 0.25rem;
-    }
-
-    .chat-input-btn {
-      background: none;
-      border: none;
-      color: var(--chat-gray);
-      cursor: pointer;
-      padding: 0.4rem;
-      border-radius: 50%;
-      transition: var(--chat-transition);
-      font-size: 0.8rem;
-    }
-
-    .chat-input-btn:hover {
-      background-color: var(--chat-gray-light);
-      color: var(--chat-primary);
-    }
-
-    .chat-send-btn {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      border: none;
-      background: linear-gradient(135deg, var(--chat-primary) 0%, var(--chat-primary-dark) 100%);
-      color: var(--chat-white);
-      cursor: pointer;
-      transition: var(--chat-transition);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.9rem;
-    }
-
-    .chat-send-btn:hover {
-      transform: scale(1.05);
-      box-shadow: var(--chat-shadow);
-    }
-
-    /* Incoming call */
-    .chat-incoming-call {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background-color: var(--chat-white);
-      border-radius: var(--chat-border-radius);
-      box-shadow: var(--chat-shadow);
-      padding: 1.5rem;
-      z-index: 1060;
-      display: none;
-      text-align: center;
-      width: 300px;
-    }
-
-    .chat-call-content {
-      display: flex;
-      align-items: center;
-      margin-bottom: 1rem;
-    }
-
-    .chat-call-avatar {
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-      color: var(--chat-white);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      font-size: 1.2rem;
-      margin-right: 0.75rem;
-    }
-
-    .chat-call-info h5 {
-      margin: 0 0 0.2rem 0;
-      color: var(--chat-dark);
-      font-size: 1rem;
-    }
-
-    .chat-call-info p {
-      margin: 0;
-      color: var(--chat-gray);
-      font-size: 0.85rem;
-    }
-
-    .chat-call-buttons {
-      display: flex;
-      gap: 0.75rem;
-      justify-content: center;
-    }
-
-    .chat-call-btn {
-      padding: 0.6rem 1rem;
-      border: none;
-      border-radius: var(--chat-border-radius);
-      cursor: pointer;
-      font-weight: 600;
-      transition: var(--chat-transition);
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-      font-size: 0.85rem;
-    }
-
-    .chat-call-accept {
-      background-color: var(--chat-success);
-      color: var(--chat-white);
-    }
-
-    .chat-call-accept:hover {
-      background-color: #218838;
-    }
-
-    .chat-call-decline {
-      background-color: var(--chat-danger);
-      color: var(--chat-white);
-    }
-
-    .chat-call-decline:hover {
-      background-color: #c82333;
-    }
-
-    /* Call modals */
-    .chat-modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.5);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1050;
-      opacity: 0;
-      visibility: hidden;
-      transition: var(--chat-transition);
-    }
-
-    .chat-modal.show {
-      opacity: 1;
-      visibility: visible;
-    }
-
-    .chat-modal-dialog {
-      width: 90%;
-      max-width: 320px;
-    }
-
-    .chat-modal-lg {
-      max-width: 600px;
-    }
-
-    .chat-modal-content {
-      background-color: var(--chat-white);
-      border-radius: var(--chat-border-radius);
-      overflow: hidden;
-      box-shadow: var(--chat-shadow);
-    }
-
-    .chat-call-header {
-      text-align: center;
-      padding: 1.5rem;
-      background: linear-gradient(135deg, var(--chat-primary) 0%, var(--chat-primary-dark) 100%);
-      color: var(--chat-white);
-    }
-
-    .chat-call-avatar {
-      width: 70px;
-      height: 70px;
-      border-radius: 50%;
-      background-color: var(--chat-white);
-      color: var(--chat-primary);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      font-size: 1.5rem;
-      margin: 0 auto 0.75rem;
-    }
-
-    .chat-call-header h4 {
-      margin: 0 0 0.4rem 0;
-      font-size: 1.1rem;
-    }
-
-    .chat-call-status {
-      margin: 0;
-      opacity: 0.9;
-      font-size: 0.9rem;
-    }
-
-    .chat-call-body {
-      padding: 1.5rem;
-      text-align: center;
-    }
-
-    .chat-call-timer {
-      font-size: 1.2rem;
-      font-weight: 600;
-      color: var(--chat-dark);
-      margin-bottom: 1.5rem;
-    }
-
-    .chat-call-controls {
-      display: flex;
-      justify-content: center;
-      gap: 0.75rem;
-    }
-
-    .chat-call-control-btn {
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      border: none;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1rem;
-      transition: var(--chat-transition);
-    }
-
-    .chat-call-mute {
-      background-color: var(--chat-secondary);
-      color: var(--chat-white);
-    }
-
-    .chat-call-mute:hover {
-      background-color: #5a6268;
-    }
-
-    .chat-call-video {
-      background-color: var(--chat-info);
-      color: var(--chat-white);
-    }
-
-    .chat-call-video:hover {
-      background-color: #138496;
-    }
-
-    .chat-call-end {
-      background-color: var(--chat-danger);
-      color: var(--chat-white);
-    }
-
-    .chat-call-end:hover {
-      background-color: #c82333;
-    }
-
-    .chat-call-speaker {
-      background-color: var(--chat-warning);
-      color: var(--chat-white);
-    }
-
-    .chat-call-speaker:hover {
-      background-color: #e0a800;
-    }
-
-    .chat-video-container {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0.75rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .chat-video-feed {
-      background-color: var(--chat-dark);
-      border-radius: var(--chat-border-radius);
-      aspect-ratio: 16/9;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-    }
-
-    .chat-video-placeholder {
-      font-size: 2.5rem;
-      color: var(--chat-gray);
-    }
-
-    .chat-video-name {
-      position: absolute;
-      bottom: 0.4rem;
-      left: 0.4rem;
-      background-color: rgba(0, 0, 0, 0.5);
-      color: var(--chat-white);
-      padding: 0.2rem 0.4rem;
-      border-radius: 4px;
-      font-size: 0.75rem;
-    }
-
-    /* Responsive design */
-    @media (max-width: 768px) {
-      .chat-main-content {
-        flex-direction: column;
-        height: calc(100vh - 60px);
-      }
-
-      .chat-sidebar {
-        width: 100%;
-        height: auto;
-        max-height: 40%;
-        border-right: none;
-        border-bottom: 1px solid var(--chat-gray-light);
-      }
-
-      .chat-lecturers-list {
-        max-height: 200px;
-      }
-    }
-  </style>
-
-  <script>
-    // JavaScript code remains the same as before
-    const currentUserId = {{ user_id or 'null' }};
-    console.log("currentUserId:", currentUserId);
-
-    let giangVienDangChon = null;
-    let callTimer = null;
-    let callSeconds = 0;
-    let currentCallType = null;
-    let isMuted = false;
-    let isVideoEnabled = true;
-    let isSpeakerEnabled = false;
-
-    function chonGiangVien(id, ten) {
-      console.log("Chọn giảng viên:", id, ten);
-      giangVienDangChon = id;
-
-      const headerElement = document.getElementById("chatHeader");
-      if (headerElement) {
-        headerElement.innerText = ten;
-      }
-
-      document.getElementById("currentLecturerAvatar").innerText = ten[0].toUpperCase();
-      document.getElementById("lecturerStatus").innerText = "Đang hoạt động";
-
-      const noChat = document.querySelector('.chat-no-selection');
-      if (noChat) {
-        noChat.remove();
-      }
-
-      taiTinNhan();
-
-      document.querySelectorAll('.chat-lecturer-item').forEach(el => {
-        el.classList.remove('active');
-      });
-      event.currentTarget.classList.add('active');
-    }
-
-    function taiTinNhan() {
-      if (!giangVienDangChon) return;
-
-      fetch(`/tin_nhan/${giangVienDangChon}`)
-        .then(res => {
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          return res.json();
-        })
-        .then(data => {
-          const box = document.getElementById("chat-box");
-          if (!box) return;
-
-          box.innerHTML = "";
-
-          if (Array.isArray(data) && data.length > 0) {
-            data.forEach(msg => {
-              const messageDiv = document.createElement("div");
-              messageDiv.classList.add("chat-message");
-
-              const bubbleDiv = document.createElement("div");
-              bubbleDiv.classList.add("chat-message-bubble");
-              bubbleDiv.innerText = msg.noi_dung;
-
-              const timeDiv = document.createElement("div");
-              timeDiv.classList.add("chat-message-time");
-              timeDiv.innerText = msg.thoi_gian || 'Vừa xong';
-
-              messageDiv.appendChild(bubbleDiv);
-              messageDiv.appendChild(timeDiv);
-
-              if (msg.nguoi_gui_id === currentUserId) {
-                messageDiv.classList.add("sent");
-              } else {
-                messageDiv.classList.add("received");
-              }
-
-              box.appendChild(messageDiv);
-            });
+</div>
+
+<input type="hidden" id="sinh_vien_id" value="{{ sinh_vien_id }}">
+<input type="hidden" id="giang_vien_id">
+
+<style>
+.simple-chat-container {
+  display: flex;
+  height: 80vh;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+  overflow: hidden;
+  margin: 20px;
+}
+
+/* Sidebar */
+.simple-sidebar {
+  width: 320px;
+  background: #f8fafc;
+  border-right: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-header {
+  padding: 20px;
+  background: #6366f1;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sidebar-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.badge {
+  background: rgba(255,255,255,0.2);
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.search-box {
+  padding: 16px;
+  position: relative;
+}
+
+.search-box i {
+  position: absolute;
+  left: 28px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #64748b;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 10px 16px 10px 40px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: white;
+  font-size: 14px;
+}
+
+.search-box input:focus {
+  outline: none;
+  border-color: #6366f1;
+}
+
+.lecturers-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+.lecturer-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background 0.2s;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.lecturer-item:hover {
+  background: #f1f5f9;
+}
+
+.lecturer-item.active {
+  background: #e0e7ff;
+  border-right: 3px solid #6366f1;
+}
+
+.avatar {
+  position: relative;
+  margin-right: 12px;
+}
+
+.avatar img {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.status {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #94a3b8;
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  border: 2px solid white;
+}
+
+.status.online {
+  background: #10b981;
+}
+
+.info {
+  flex: 1;
+  min-width: 0;
+}
+
+.info h4 {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.info p {
+  margin: 0;
+  font-size: 12px;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.time {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.unread {
+  background: #ef4444;
+  color: white;
+  border-radius: 8px;
+  padding: 2px 6px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #94a3b8;
+}
+
+.empty-state i {
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* Chat Area */
+.simple-chat-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: white;
+}
+
+.current-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.current-user .avatar {
+  width: 44px;
+  height: 44px;
+  background: #6366f1;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.user-info h3 {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.user-info p {
+  margin: 0;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.icon-btn {
+  width: 36px;
+  height: 36px;
+  border: 1px solid #e2e8f0;
+  background: white;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #64748b;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-btn:hover {
+  background: #6366f1;
+  color: white;
+  border-color: #6366f1;
+}
+
+/* Messages */
+.messages-container {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+}
+
+.welcome-message {
+  text-align: center;
+  color: #64748b;
+  margin: auto;
+}
+
+.welcome-message i {
+  font-size: 48px;
+  margin-bottom: 16px;
+  color: #cbd5e1;
+}
+
+.welcome-message h3 {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.welcome-message p {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* Message Bubbles */
+.message {
+  max-width: 70%;
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.4;
+  position: relative;
+}
+
+.message.sent {
+  background: #6366f1;
+  color: white;
+  margin-left: auto;
+  border-bottom-right-radius: 4px;
+}
+
+.message.received {
+  background: white;
+  color: #1e293b;
+  border: 1px solid #e2e8f0;
+  margin-right: auto;
+  border-bottom-left-radius: 4px;
+}
+
+.message-time {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 4px;
+  text-align: right;
+}
+
+.message.sent .message-time {
+  color: rgba(255,255,255,0.8);
+}
+
+/* Input */
+.input-container {
+  padding: 16px 24px;
+  background: white;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.input-wrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  gap: 8px;
+}
+
+.message-input {
+  flex: 1;
+  border: none;
+  background: none;
+  outline: none;
+  font-size: 14px;
+  color: #1e293b;
+  font-family: inherit;
+}
+
+.attach-btn, .emoji-btn {
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 4px;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+}
+
+.attach-btn:hover, .emoji-btn:hover {
+  background: #e2e8f0;
+}
+
+/* Sửa lại send button để chắc chắn hiển thị */
+.send-btn {
+  width: 44px;
+  height: 44px;
+  background: #6366f1;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.send-btn:hover {
+  background: #4f46e5;
+  transform: scale(1.05);
+}
+
+/* Scrollbar */
+.lecturers-list::-webkit-scrollbar,
+.messages-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.lecturers-list::-webkit-scrollbar-track,
+.messages-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.lecturers-list::-webkit-scrollbar-thumb,
+.messages-container::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.lecturers-list::-webkit-scrollbar-thumb:hover,
+.messages-container::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .simple-chat-container {
+    flex-direction: column;
+    height: 90vh;
+    margin: 10px;
+  }
+
+  .simple-sidebar {
+    width: 100%;
+    height: 40%;
+  }
+
+  .lecturers-list {
+    max-height: calc(40vh - 120px);
+  }
+
+  .send-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 14px;
+  }
+}
+
+/* Thêm style cho khi không có Font Awesome */
+.send-btn::before {
+  content: "➤";
+  font-family: Arial, sans-serif;
+}
+</style>
+
+<script>
+// JavaScript code giữ nguyên
+const currentUserId = {{ user_id or 'null' }};
+console.log("currentUserId:", currentUserId);
+
+let giangVienDangChon = null;
+
+function chonGiangVien(id, ten, avatar) {
+  giangVienDangChon = id;
+
+  document.getElementById("chatHeader").innerText = ten;
+  document.getElementById("lecturerStatus").innerText = "Đang hoạt động";
+
+  const avatarEl = document.getElementById("currentLecturerAvatar");
+  if (avatar) {
+    avatarEl.innerHTML = `<img src="${avatar}" style="width:44px;height:44px;border-radius:10px;object-fit:cover;">`;
+  } else {
+    avatarEl.innerHTML = '<i class="fas fa-user"></i>';
+  }
+
+  const welcomeMsg = document.querySelector('.welcome-message');
+  if (welcomeMsg) welcomeMsg.remove();
+
+  taiTinNhan();
+
+  document.querySelectorAll('.lecturer-item').forEach(el => el.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+}
+
+function taiTinNhan() {
+  if (!giangVienDangChon) return;
+
+  fetch(`/tin_nhan/${giangVienDangChon}`)
+    .then(res => {
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.json();
+    })
+    .then(data => {
+      const box = document.getElementById("chat-box");
+      if (!box) return;
+
+      box.innerHTML = "";
+
+      if (Array.isArray(data) && data.length > 0) {
+        data.forEach(msg => {
+          const messageDiv = document.createElement("div");
+          messageDiv.classList.add("message");
+
+          if (msg.nguoi_gui_id === currentUserId) {
+            messageDiv.classList.add("sent");
           } else {
-            box.innerHTML = '<p style="text-align:center; color:#999; margin-top: 20px;">Chưa có tin nhắn nào</p>';
+            messageDiv.classList.add("received");
           }
 
-          box.scrollTop = box.scrollHeight;
-        })
-        .catch(error => {
-          console.error('Lỗi tải tin nhắn:', error);
+          messageDiv.innerHTML = `
+            <div class="message-content">${msg.noi_dung}</div>
+            <div class="message-time">${msg.thoi_gian || 'Vừa xong'}</div>
+          `;
+
+          box.appendChild(messageDiv);
         });
-    }
-
-    function guiTinNhan() {
-      const inputElement = document.getElementById("noi_dung");
-      if (!inputElement) return;
-
-      const noiDung = inputElement.value.trim();
-      if (!noiDung || !giangVienDangChon) return;
-
-      fetch("/gui_tin_nhan", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          nguoi_nhan_id: giangVienDangChon,
-          noi_dung: noiDung
-        })
-      })
-      .then(res => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
-      })
-      .then(data => {
-        if (data.success) {
-          inputElement.value = "";
-          taiTinNhan();
-        }
-      })
-      .catch(error => {
-        console.error('Lỗi gửi tin nhắn:', error);
-        alert('Không thể gửi tin nhắn. Vui lòng thử lại!');
-      });
-    }
-
-    // Call functions (same as before)
-    function startVoiceCall() {
-      if (!giangVienDangChon) {
-        alert('Vui lòng chọn một giảng viên để gọi');
-        return;
-      }
-
-      currentCallType = 'voice';
-      const lecturerName = document.getElementById("chatHeader").innerText;
-
-      document.getElementById("voiceCallName").innerText = lecturerName;
-      document.getElementById("voiceCallAvatar").innerText = lecturerName[0].toUpperCase();
-      document.getElementById("voiceCallStatus").innerText = "Đang gọi...";
-
-      document.getElementById('voiceCallModal').classList.add('show');
-
-      setTimeout(() => {
-        document.getElementById("voiceCallStatus").innerText = "Đã kết nối";
-        startCallTimer('voiceCallTimer');
-        setTimeout(simulateIncomingCall, 3000);
-      }, 2000);
-    }
-
-    function startVideoCall() {
-      if (!giangVienDangChon) {
-        alert('Vui lòng chọn một giảng viên để gọi video');
-        return;
-      }
-
-      currentCallType = 'video';
-      const lecturerName = document.getElementById("chatHeader").innerText;
-
-      document.getElementById("videoCallName").innerText = `Video call với ${lecturerName}`;
-      document.getElementById("videoCallUserName").innerText = lecturerName;
-      document.getElementById("videoCallStatus").innerText = "Đang gọi...";
-
-      document.getElementById('videoCallModal').classList.add('show');
-
-      setTimeout(() => {
-        document.getElementById("videoCallStatus").innerText = "Đã kết nối";
-        startCallTimer('videoCallTimer');
-      }, 2000);
-    }
-
-    function simulateIncomingCall() {
-      const lecturerName = document.getElementById("chatHeader").innerText;
-      document.getElementById("incomingCallName").innerText = lecturerName;
-      document.getElementById("incomingCallAvatar").innerText = lecturerName[0].toUpperCase();
-      document.getElementById("incomingCall").style.display = 'block';
-    }
-
-    function acceptCall() {
-      document.getElementById("incomingCall").style.display = 'none';
-      if (currentCallType === 'voice') {
-        document.getElementById("voiceCallStatus").innerText = "Đã kết nối";
-        startCallTimer('voiceCallTimer');
       } else {
-        document.getElementById("videoCallStatus").innerText = "Đã kết nối";
-        startCallTimer('videoCallTimer');
+        box.innerHTML = '<div class="welcome-message"><p>Chưa có tin nhắn nào</p></div>';
       }
-    }
 
-    function declineCall() {
-      document.getElementById("incomingCall").style.display = 'none';
-      endCall();
-    }
+      box.scrollTop = box.scrollHeight;
+    })
+    .catch(error => {
+      console.error('Lỗi tải tin nhắn:', error);
+    });
+}
 
-    function startCallTimer(timerElementId) {
-      callSeconds = 0;
-      clearInterval(callTimer);
-      callTimer = setInterval(() => {
-        callSeconds++;
-        const minutes = Math.floor(callSeconds / 60);
-        const seconds = callSeconds % 60;
-        document.getElementById(timerElementId).innerText =
-          `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-      }, 1000);
-    }
+function guiTinNhan() {
+  const inputElement = document.getElementById("noi_dung");
+  if (!inputElement) return;
 
-    function endCall() {
-      clearInterval(callTimer);
-      document.getElementById('voiceCallModal').classList.remove('show');
-      document.getElementById('videoCallModal').classList.remove('show');
-      document.getElementById("incomingCall").style.display = 'none';
-      isMuted = false;
-      isVideoEnabled = true;
-      isSpeakerEnabled = false;
-    }
+  const noiDung = inputElement.value.trim();
+  if (!noiDung || !giangVienDangChon) return;
 
-    function toggleMute() {
-      isMuted = !isMuted;
-      const muteButtons = document.querySelectorAll('.chat-call-mute i');
-      muteButtons.forEach(btn => {
-        btn.className = isMuted ? 'fas fa-microphone-slash' : 'fas fa-microphone';
-      });
+  fetch("/gui_tin_nhan", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      nguoi_nhan_id: giangVienDangChon,
+      noi_dung: noiDung
+    })
+  })
+  .then(res => {
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+  })
+  .then(data => {
+    if (data.success) {
+      inputElement.value = "";
+      taiTinNhan();
     }
+  })
+  .catch(error => {
+    console.error('Lỗi gửi tin nhắn:', error);
+    alert('Không thể gửi tin nhắn. Vui lòng thử lại!');
+  });
+}
 
-    function toggleVideo() {
-      isVideoEnabled = !isVideoEnabled;
-      const videoButtons = document.querySelectorAll('.chat-call-video i');
-      videoButtons.forEach(btn => {
-        btn.className = isVideoEnabled ? 'fas fa-video' : 'fas fa-video-slash';
-      });
-    }
-
-    function toggleSpeaker() {
-      isSpeakerEnabled = !isSpeakerEnabled;
-      const speakerButtons = document.querySelectorAll('.chat-call-speaker i');
-      speakerButtons.forEach(btn => {
-        btn.className = isSpeakerEnabled ? 'fas fa-volume-up' : 'fas fa-volume-mute';
-      });
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-      const inputElement = document.getElementById("noi_dung");
-      if (inputElement) {
-        inputElement.addEventListener("keypress", function(e) {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            guiTinNhan();
-          }
-        });
+// Xử lý phím Enter
+document.addEventListener('DOMContentLoaded', function() {
+  const inputElement = document.getElementById("noi_dung");
+  if (inputElement) {
+    inputElement.addEventListener("keypress", function(e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        guiTinNhan();
       }
     });
+  }
+});
 
-    setInterval(taiTinNhan, 5000);
-  </script>
+// Tải tin nhắn mỗi 5 giây
+setInterval(taiTinNhan, 5000);
+</script>
 {% endblock %}

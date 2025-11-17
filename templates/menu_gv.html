@@ -413,7 +413,6 @@
 
       <li><a href="{{ url_for('ds_diemdanh') }}" class="{% if active=='ds_diemdanh' %}tp-active{% endif %}">
         <i class="fas fa-calendar-check"></i> <span>Điểm danh</span>
-        <span class="tp-badge">3</span>
       </a></li>
 
       <li><a href="{{ url_for('gv_thongke') }}" class="{% if active=='QLsinhvien' %}tp-active{% endif %}">
@@ -421,18 +420,15 @@
 
       <li><a href="{{ url_for('Ds_don_nghi') }}" class="{% if active=='Ds_don_nghi' %}tp-active{% endif %}">
         <i class="fas fa-file-alt"></i> <span>Đơn xin phép</span>
-        <span class="tp-badge">5</span>
       </a></li>
 
       <li><a href="{{ url_for('lich_day_gv') }}" class="{% if active=='Ds_don_nghi' %}tp-active{% endif %}">
         <i class="fas fa-file-alt"></i> <span>Lịch dạy</span>
-        <span class="tp-badge">5</span>
       </a></li>
 
       <li>
         <a href="/chat_gv/{{ session['user_id'] }}" class="{% if active=='chat' %}tp-active{% endif %}">
           <i class="fas fa-comments"></i> <span>Trò chuyện</span>
-          <span class="tp-badge">12</span>
         </a>
       </li>
 
@@ -463,9 +459,8 @@
 
   <!-- Main content -->
   <div class="tp-content" id="tpMainContent">
-    <div class="tp-main-content">
-      {% block content %}{% endblock %}
-    </div>
+      {% block content %}
+      {% endblock %}
   </div>
 
   <!-- Bootstrap JS -->

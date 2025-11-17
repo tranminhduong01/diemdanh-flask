@@ -365,7 +365,7 @@ body {
     <div class="container py-1">
       <a class="navbar-brand d-flex align-items-center sp-navbrand" href="{{ url_for('student_dashboard') }}">
         <i class="bi bi-mortarboard-fill me-2 fs-5"></i>
-        <span class="fw-bold">STUDENT PORTAL</span>
+        <span class="fw-bold">{{ site_name }}</span>
       </a>
 
       <div class="d-flex align-items-center gap-2">
@@ -404,7 +404,6 @@ body {
           <li class="nav-item">
             <a class="nav-link sp-navlink {% if active=='chat' %}active{% endif %}" href="{{ url_for('chat_sinh_vien') }}">
               <i class="bi bi-chat-dots me-1"></i>Chat
-              <span class="sp-badge ms-1">Mới</span>
             </a>
           </li>
 
@@ -483,13 +482,6 @@ body {
 
               <li><hr class="dropdown-divider my-2"></li>
 
-              <li>
-                <a class="dropdown-item d-flex align-items-center" href="#">
-                  <i class="bi bi-gear me-2 text-muted"></i>Cài đặt
-                </a>
-              </li>
-
-              <li><hr class="dropdown-divider my-2"></li>
 
               <li>
                 <a class="dropdown-item d-flex align-items-center text-warning" href="{{ url_for('logout') }}">
@@ -555,21 +547,8 @@ body {
 
   <!-- CONTENT -->
   <main>
-  <div class="menu-content container px-4 px-md-5">
       {% block content %}
-      <div class="sp-card p-4">
-        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
-          <div>
-            <h2 class="h6 mb-2 fw-semibold">Xin chào, {{ user.name if user else 'Sinh viên' }}! 👋</h2>
-            <p class="mb-0 text-muted small">Chào mừng bạn đến với Hệ thống quản lý học tập.</p>
-          </div>
-          <a class="btn btn-primary btn-sm d-flex align-items-center" href="{{ url_for('student_dashboard') }}">
-            <i class="bi bi-speedometer2 me-1"></i>Bảng điều khiển
-          </a>
-        </div>
-      </div>
       {% endblock %}
-    </div>
   </main>
 
   <!-- FOOTER -->

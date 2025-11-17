@@ -161,6 +161,7 @@
         font-size: 0.9rem;
     }
 
+    /* THIẾT KẾ MỚI CHO HOẠT ĐỘNG GẦN ĐÂY */
     .tp-activity-list {
         list-style: none;
         padding: 0;
@@ -169,44 +170,130 @@
 
     .tp-activity-item {
         display: flex;
-        align-items: center;
-        padding: 12px 0;
-        border-bottom: 1px solid #f0f0f0;
+        align-items: flex-start;
+        padding: 16px;
+        border-radius: 8px;
+        margin-bottom: 12px;
+        transition: all 0.3s ease;
+        border-left: 4px solid transparent;
     }
 
-    .tp-activity-item:last-child {
-        border-bottom: none;
+    .tp-activity-item.unread {
+        background-color: #f0f7ff;
+        border-left-color: #3498db;
+        box-shadow: 0 2px 8px rgba(52, 152, 219, 0.1);
+    }
+
+    .tp-activity-item.read {
+        background-color: #f9f9f9;
+    }
+
+    .tp-activity-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     }
 
     .tp-activity-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
         margin-right: 15px;
-        font-size: 1rem;
+        font-size: 1.1rem;
+        flex-shrink: 0;
     }
 
     .tp-activity-content {
         flex: 1;
     }
 
-    .tp-activity-content h4 {
-        margin-bottom: 3px;
-        font-size: 0.95rem;
+    .tp-activity-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 6px;
     }
 
-    .tp-activity-content p {
-        color: #7f8c8d;
-        margin-bottom: 0;
+    .tp-activity-title {
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: #2c3e50;
+        margin-bottom: 4px;
+    }
+
+    .tp-activity-description {
+        color: #5a6c7d;
         font-size: 0.85rem;
+        line-height: 1.4;
+        margin-bottom: 8px;
     }
 
     .tp-activity-time {
-        color: #bdc3c7;
+        color: #95a5a6;
         font-size: 0.8rem;
+        display: flex;
+        align-items: center;
+    }
+
+    .tp-activity-time i {
+        margin-right: 5px;
+        font-size: 0.75rem;
+    }
+
+    .tp-activity-badge {
+        background: #e74c3c;
+        color: white;
+        border-radius: 12px;
+        padding: 2px 8px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        margin-left: 8px;
+    }
+
+    .tp-activity-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 8px;
+    }
+
+    .tp-activity-actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    .tp-activity-action {
+        background: none;
+        border: none;
+        color: #7f8c8d;
+        font-size: 0.8rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        transition: color 0.2s;
+    }
+
+    .tp-activity-action i {
+        margin-right: 4px;
+        font-size: 0.75rem;
+    }
+
+    .tp-activity-action:hover {
+        color: #3498db;
+    }
+
+    .tp-no-activities {
+        text-align: center;
+        padding: 30px 20px;
+        color: #95a5a6;
+    }
+
+    .tp-no-activities i {
+        font-size: 2rem;
+        margin-bottom: 10px;
+        opacity: 0.5;
     }
 
     .tp-quick-actions {
@@ -260,18 +347,21 @@
             grid-template-columns: repeat(2, 1fr);
         }
 
-    }
-    .activity-item.unread {
-        background: #f3f8ff;
-        border-left: 4px solid #007bff;
-    }
+        .tp-activity-header {
+            flex-direction: column;
+        }
 
+        .tp-activity-badge {
+            margin-top: 5px;
+            margin-left: 0;
+        }
+    }
 </style>
 
     <div class="tp-welcome-section">
         <div class="tp-welcome-content">
             <div class="tp-welcome-text">
-                <h1>Xin chào, {{ session.get('username', 'TS. Nguyễn Văn A') }}</h1>
+                <h1>Xin chào, {{ teacher.name }}</h1>
                 <p>Chúc bạn một ngày làm việc hiệu quả!</p>
             </div>
             <div class="tp-date-display">
@@ -361,26 +451,81 @@
             </div>
         </div>
 
-
         <div class="col-lg-6">
-            <!-- Recent Activities -->
+            <!-- Recent Activities - THIẾT KẾ MỚI -->
             <div class="tp-recent-activities">
                 <h3 class="tp-section-title">
                     <i class="fas fa-bell"></i> Hoạt động gần đây
+                    {% if activities|selectattr("is_read", "equalto", 0)|list|length > 0 %}
+                    <span class="tp-activity-badge">{{ activities|selectattr("is_read", "equalto", 0)|list|length }} mới</span>
+                    {% endif %}
                 </h3>
-                <ul class="tp-activity-list">
-                    {% for act in activities %}
-                        <div class="activity-item {% if act.is_read == 0 %}unread{% endif %}">
-                            <strong>{{ act.title }}</strong><br>
-                            <span>{{ act.description }}</span><br>
-                            <small>{{ act.time }}</small>
-                        </div>
-                    {% endfor %}
 
+                <ul class="tp-activity-list">
+                    {% if activities %}
+                        {% for act in activities %}
+                        <li class="tp-activity-item {% if act.is_read == 0 %}unread{% else %}read{% endif %}"
+                            data-id="{{ act.id }}">
+                            <div class="tp-activity-icon" style="
+                                {% if act.type == 'don_nghi' %}
+                                    background: rgba(231, 76, 60, 0.1); color: #e74c3c;
+                                {% elif act.type == 'diem_danh' %}
+                                    background: rgba(46, 204, 113, 0.1); color: #2ecc71;
+                                {% elif act.type == 'thong_bao' %}
+                                    background: rgba(52, 152, 219, 0.1); color: #3498db;
+                                {% else %}
+                                    background: rgba(155, 89, 182, 0.1); color: #9b59b6;
+                                {% endif %}
+                            ">
+                                <i class="
+                                    {% if act.type == 'don_nghi' %}
+                                        fas fa-file-medical-alt
+                                    {% elif act.type == 'diem_danh' %}
+                                        fas fa-clipboard-check
+                                    {% elif act.type == 'thong_bao' %}
+                                        fas fa-bullhorn
+                                    {% else %}
+                                        fas fa-info-circle
+                                    {% endif %}
+                                "></i>
+                            </div>
+                            <div class="tp-activity-content">
+                                <div class="tp-activity-header">
+                                    <h4 class="tp-activity-title">{{ act.title }}</h4>
+                                    {% if act.is_read == 0 %}
+                                    <span class="tp-activity-badge">Mới</span>
+                                    {% endif %}
+                                </div>
+                                <p class="tp-activity-description">{{ act.description }}</p>
+                                <div class="tp-activity-footer">
+                                    <span class="tp-activity-time">
+                                        <i class="far fa-clock"></i> {{ act.time }}
+                                    </span>
+                                    <div class="tp-activity-actions">
+                                        {% if act.is_read == 0 %}
+                                        <button class="tp-activity-action" onclick="markAsRead({{ act.id }})">
+                                            <i class="fas fa-check"></i> Đánh dấu đã đọc
+                                        </button>
+                                        {% endif %}
+                                        {% if act.link %}
+                                        <a href="{{ act.link }}" class="tp-activity-action">
+                                            <i class="fas fa-external-link-alt"></i> Xem chi tiết
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    {% else %}
+                        <div class="tp-no-activities">
+                            <i class="far fa-bell-slash"></i>
+                            <p>Không có hoạt động nào gần đây</p>
+                        </div>
+                    {% endif %}
                 </ul>
             </div>
         </div>
-
     </div>
 
     <!-- Quick Actions -->
@@ -403,7 +548,6 @@
         </a>
     </div>
 
-
 <script>
     // Cập nhật ngày tháng hiện tại
     function updateDateTime() {
@@ -416,6 +560,57 @@
 
         document.getElementById('currentDay').textContent = day;
         document.getElementById('currentDate').textContent = monthYear;
+    }
+
+    // Hàm đánh dấu đã đọc
+    function markAsRead(activityId) {
+        // Gửi yêu cầu AJAX để đánh dấu hoạt động là đã đọc
+        fetch(`/mark-activity-read/${activityId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Cập nhật giao diện
+                const activityItem = document.querySelector(`.tp-activity-item[data-id="${activityId}"]`);
+                if (activityItem) {
+                    activityItem.classList.remove('unread');
+                    activityItem.classList.add('read');
+
+                    // Ẩn badge "Mới"
+                    const badge = activityItem.querySelector('.tp-activity-badge');
+                    if (badge) badge.remove();
+
+                    // Cập nhật số lượng hoạt động mới
+                    updateNewActivitiesCount();
+                }
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    // Cập nhật số lượng hoạt động mới
+    function updateNewActivitiesCount() {
+        const newActivities = document.querySelectorAll('.tp-activity-item.unread');
+        const badgeElement = document.querySelector('.tp-section-title .tp-activity-badge');
+
+        if (newActivities.length === 0) {
+            if (badgeElement) badgeElement.remove();
+        } else {
+            if (badgeElement) {
+                badgeElement.textContent = `${newActivities.length} mới`;
+            } else {
+                // Tạo badge mới nếu chưa có
+                const titleElement = document.querySelector('.tp-section-title');
+                const newBadge = document.createElement('span');
+                newBadge.className = 'tp-activity-badge';
+                newBadge.textContent = `${newActivities.length} mới`;
+                titleElement.appendChild(newBadge);
+            }
+        }
     }
 
     // Khởi chạy khi trang được tải
