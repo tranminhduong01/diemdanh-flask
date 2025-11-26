@@ -563,34 +563,39 @@
     }
 
     // Hàm đánh dấu đã đọc
-    function markAsRead(activityId) {
-        // Gửi yêu cầu AJAX để đánh dấu hoạt động là đã đọc
-        fetch(`/mark-activity-read/${activityId}`, {
+    function markAsRead(notiId) {
+        fetch(`/api/notifications/mark_read/${notiId}`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/json'
             }
         })
-        .then(response => response.json())
+        .then(res => res.json())
         .then(data => {
             if (data.success) {
-                // Cập nhật giao diện
-                const activityItem = document.querySelector(`.tp-activity-item[data-id="${activityId}"]`);
-                if (activityItem) {
-                    activityItem.classList.remove('unread');
-                    activityItem.classList.add('read');
+                const item = document.querySelector(`.tp-activity-item[data-id="${notiId}"]`);
+                if (item) {
 
-                    // Ẩn badge "Mới"
-                    const badge = activityItem.querySelector('.tp-activity-badge');
+                    // Xóa class chưa đọc → thêm đã đọc
+                    item.classList.remove("unread");
+                    item.classList.add("read");
+
+                    // Xóa badge MỚI
+                    const badge = item.querySelector(".tp-activity-badge");
                     if (badge) badge.remove();
 
-                    // Cập nhật số lượng hoạt động mới
+                    // Ẩn nút "Đánh dấu đã đọc"
+                    const btn = item.querySelector(".tp-activity-action");
+                    if (btn) btn.remove();
+
+                    // Cập nhật số thông báo mới
                     updateNewActivitiesCount();
                 }
             }
         })
-        .catch(error => console.error('Error:', error));
+        .catch(err => console.error(err));
     }
+
 
     // Cập nhật số lượng hoạt động mới
     function updateNewActivitiesCount() {

@@ -3,6 +3,7 @@
 {% block title %}Thông tin cá nhân{% endblock %}
 
 {% block content %}
+
 {% include "chat_bot.html" %}
 
 <div class="container py-4">
@@ -159,10 +160,17 @@
               <label class="form-label fw-medium text-dark small">Số điện thoại</label>
               <input type="text" name="student-phone" class="form-control form-control-sm" value="{{ student.phone or '' }}">
             </div>
+
             <div class="col-md-6">
               <label class="form-label fw-medium text-dark small">Ngày sinh</label>
               <input type="date" name="student-birthday" class="form-control form-control-sm" value="{{ student.birthday or '' }}">
             </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-medium text-dark small">MSSV</label>
+              <input type="text" name="student-mssv" class="form-control form-control-sm" value="{{ student.mssv or '' }}" placeholder="Nhập mã số sinh viên">
+            </div>
+
             <div class="col-md-6">
               <label class="form-label fw-medium text-dark small">Giới tính</label>
               <select name="student-gender" class="form-select form-select-sm">

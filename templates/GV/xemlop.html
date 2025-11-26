@@ -333,6 +333,7 @@
                                     <td>${st.date}</td>
                                     <td>
                                       <select class="form-select form-select-sm status-in-select" data-id="${st.enrollment_id}" data-session="${sessionId}">
+                                        <option value="none" ${st.status_in === "none" || !st.status_in ? "selected" : ""}>Không xác định</option>
                                         <option value="present" ${st.status_in === "present" ? "selected" : ""}>Có mặt</option>
                                         <option value="late" ${st.status_in === "late" ? "selected" : ""}>Đi trễ</option>
                                         <option value="absent_excused" ${st.status_in === "absent_excused" ? "selected" : ""}>Vắng có phép</option>

@@ -1,5 +1,6 @@
 import mysql.connector
 import base64
+from fer.fer import FER
 from flask import Flask, request, redirect, url_for, flash, session, render_template, jsonify, current_app, send_file
 from openpyxl.workbook import Workbook
 from werkzeug.utils import secure_filename
@@ -1106,11 +1107,46 @@ def ghi_vao_lop(class_id):
         da_ghi_danh_class_name=da_ghi_danh_class_name
     )
 
+@app.route("/api/sv_thong_tin")
+def sv_thong_tin():
+    if "user_id" not in session:
+        return {"error": "not_login"}, 401
 
+    user_id = session["user_id"]
 
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
 
+    # Lấy thông tin cá nhân từ bảng users và student
+    cursor.execute("""
+        SELECT 
+            u.name, 
+            u.email, 
+            s.phone, 
+            s.class AS class_name, 
+            s.major, 
+            s.mssv, 
+            s.school
+        FROM users u
+        LEFT JOIN student s ON u.id = s.user_id
+        WHERE u.id = %s
+    """, (user_id,))
 
+    data = cursor.fetchone()
+    cursor.close()
+    conn.close()
 
+    if not data:
+        return {"status": "not_found"}, 404
+
+    # Kiểm tra các trường bắt buộc
+    required_fields = ["name", "email", "phone", "class_name", "major"]
+    missing = [f for f in required_fields if not data.get(f)]
+
+    if missing:
+        return {"status": "incomplete", "missing_fields": missing}
+
+    return {"status": "ok", "data": data}
 
 
 UPLOAD_FOLDER = "static/uploads"
@@ -1432,7 +1468,7 @@ def update_attendance_status():
         if current["status_in"] == "present":
             diem_vao = 5
         elif current["status_in"] == "late":
-            diem_vao = 3
+            diem_vao = 2
         else:
             diem_vao = 0
 
@@ -1465,6 +1501,24 @@ def update_attendance_status():
 
 
 from datetime import datetime, timedelta, time as dtime
+emotion_detector = FER(mtcnn=True)
+
+def detect_emotion(img):
+    """
+    img: numpy array mặt đã crop
+    return: emotion_label, emotion_score
+    """
+    try:
+        top_emotion = emotion_detector.top_emotion(img)
+        if top_emotion is None:
+            return "unknown", 0.0
+
+        emotion_label, emotion_score = top_emotion
+        return emotion_label, float(emotion_score)
+
+    except Exception as e:
+        print("Lỗi detect_emotion:", e)
+        return "unknown", 0.0
 
 @app.route("/api/diemdanh/<int:session_id>/<string:action>", methods=["POST"])
 def diem_danh(session_id, action):
@@ -1475,7 +1529,6 @@ def diem_danh(session_id, action):
         if action not in ["in", "out"]:
             return jsonify({"success": False, "message": "Action không hợp lệ (chỉ nhận 'in' hoặc 'out')"}), 400
 
-        # ===== Lấy file ảnh =====
         file = request.files.get("image")
         if not file:
             return jsonify({"success": False, "message": "Không tìm thấy ảnh trong request"}), 400
@@ -1487,21 +1540,18 @@ def diem_danh(session_id, action):
 
         file_bytes = file.read()
 
-        # ===== Load ảnh thành numpy array =====
         import face_recognition
         import io
 
         img = face_recognition.load_image_file(io.BytesIO(file_bytes))
 
-        # ===== Lấy tất cả mặt trong ảnh =====
         encodings_in_frame = face_recognition.face_encodings(img)
-
         if len(encodings_in_frame) == 0:
             return jsonify({"success": False, "message": "Không phát hiện khuôn mặt nào trong ảnh"}), 400
 
-        # ====== Lấy thông tin buổi học ======
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
+
         cursor.execute("""
             SELECT s.class_id, s.session_number, s.start_time, c.teacher_id, c.class_name
             FROM sessions s
@@ -1519,7 +1569,6 @@ def diem_danh(session_id, action):
         class_name = session["class_name"]
         session_start_time = session["start_time"]
 
-        # Chuyển timedelta → time
         if isinstance(session_start_time, timedelta):
             sec = session_start_time.total_seconds()
             session_start_time = datetime.strptime(
@@ -1527,7 +1576,6 @@ def diem_danh(session_id, action):
                 "%H:%M:%S"
             ).time()
 
-        # ====== Lấy danh sách sinh viên lớp này ======
         cursor.execute("""
             SELECT e.id AS enrollment_id, e.full_name, e.mssv, e.face_encoding, e.student_id
             FROM enrollments e
@@ -1535,20 +1583,15 @@ def diem_danh(session_id, action):
         """, (class_id,))
         students = cursor.fetchall()
 
-        # ====== Tối ưu: convert toàn bộ face_encoding DB thành vector ======
         db_students = []
         for sv in students:
             if sv.get("face_encoding"):
                 try:
                     enc = np.array(json.loads(sv["face_encoding"]), dtype=float)
-                    db_students.append({
-                        "info": sv,
-                        "encoding": enc
-                    })
+                    db_students.append({"info": sv, "encoding": enc})
                 except:
                     continue
 
-        # ====== Matching nhiều sinh viên ======
         threshold = 0.5
         matched_students = []
 
@@ -1568,7 +1611,6 @@ def diem_danh(session_id, action):
         if len(matched_students) == 0:
             return jsonify({"success": False, "message": "Không khớp với sinh viên nào trong lớp"}), 404
 
-        # ====== Xử lý check-in/check-out cho nhiều sinh viên ======
         today = datetime.today().date()
         now_dt = datetime.now()
         class_start = datetime.combine(today, session_start_time)
@@ -1581,9 +1623,8 @@ def diem_danh(session_id, action):
         for matched in matched_students:
             enrollment_id = matched["enrollment_id"]
 
-            # Lấy record
             cursor.execute("""
-                SELECT id, time_in, time_out, status_in, status_out, score
+                SELECT id, time_in, time_out, status_in, status_out, score, emotion, emotion_score
                 FROM attendance_records
                 WHERE enrollment_id = %s AND session_id = %s
             """, (enrollment_id, session_id))
@@ -1592,51 +1633,57 @@ def diem_danh(session_id, action):
             if not record:
                 continue
 
-            # ====== CHECK-IN ======
             if action == "in":
                 if record["time_in"]:
                     results.append({
                         "student": matched,
                         "message": "Đã check-in trước đó",
-                        "time_in": record["time_in"].strftime("%H:%M:%S")
+                        "time_in": record["time_in"].strftime("%H:%M:%S"),
+                        "emotion": record.get("emotion"),
+                        "emotion_score": float(record.get("emotion_score") or 0)
                     })
                 else:
                     score = 5 if status == "present" else 2
+
+                    # ==========================
+                    # 🔥 PHÂN TÍCH CẢM XÚC FER
+                    # ==========================
+                    emotion_label, emotion_score = detect_emotion(img)
+                    # ==========================
+
                     cursor.execute("""
                         UPDATE attendance_records
-                        SET time_in = %s, status_in = %s, score = %s
-                        WHERE id = %s
-                    """, (now_dt, status, score, record["id"]))
+                        SET time_in=%s, status_in=%s, score=%s,
+                            emotion=%s, emotion_score=%s
+                        WHERE id=%s
+                    """, (now_dt, status, score, emotion_label, emotion_score, record["id"]))
                     conn.commit()
 
-                    # Thông báo
                     add_notification(
                         matched["student_id"],
                         "Điểm danh thành công",
-                        f"Bạn đã check-in vào buổi {session_number} lúc {now_dt.strftime('%H:%M')}."
+                        f"Bạn đã check-in vào buổi {session_number} lúc {now_dt.strftime('%H:%M')}. Cảm xúc: {emotion_label}"
                     )
 
                     if teacher_id:
                         add_notification(
                             teacher_id,
                             "Sinh viên điểm danh",
-                            f"{matched['full_name']} ({matched['mssv']}) đã check-in lúc {now_dt.strftime('%H:%M:%S')}."
+                            f"{matched['full_name']} ({matched['mssv']}) đã check-in lúc {now_dt.strftime('%H:%M:%S')}. Cảm xúc: {emotion_label}"
                         )
 
                     results.append({
                         "student": matched,
                         "message": "Check-in thành công",
                         "time_in": now_dt.strftime("%H:%M:%S"),
-                        "score": score
+                        "score": score,
+                        "emotion": emotion_label,
+                        "emotion_score": emotion_score
                     })
 
-            # ====== CHECK-OUT ======
             elif action == "out":
                 if not record["time_in"]:
-                    results.append({
-                        "student": matched,
-                        "message": "Chưa check-in – không thể check-out"
-                    })
+                    results.append({"student": matched, "message": "Chưa check-in – không thể check-out"})
                 elif record["time_out"]:
                     results.append({
                         "student": matched,
@@ -1646,8 +1693,8 @@ def diem_danh(session_id, action):
                 else:
                     cursor.execute("""
                         UPDATE attendance_records
-                        SET time_out = %s, status_out = %s, score = score + 5
-                        WHERE id = %s
+                        SET time_out=%s, status_out=%s, score = score + 5
+                        WHERE id=%s
                     """, (now_dt, "checked_out", record["id"]))
                     conn.commit()
 
@@ -1670,7 +1717,6 @@ def diem_danh(session_id, action):
                         "time_out": now_dt.strftime("%H:%M:%S")
                     })
 
-        # ===== RETURN =====
         return jsonify({
             "success": True,
             "message": f"Đã xử lý {len(results)} sinh viên",
@@ -1689,10 +1735,29 @@ def diem_danh(session_id, action):
             pass
 
 
+@app.route("/api/emotion_report/<int:session_id>")
+def emotion_report(session_id):
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT emotion, COUNT(*) as count
+        FROM attendance_records
+        WHERE session_id = %s
+        GROUP BY emotion
+    """, (session_id,))
+
+    data = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    return jsonify(data)
 
 
+from datetime import datetime
 
-@app.route("/ds_diemdanh", methods=["GET", "POST"])
+
+@app.route("/ds_diemdanh", methods=["GET"])
 def ds_diemdanh():
     if "role" not in session or session["role"] != "teacher":
         return redirect(url_for("login"))
@@ -1701,18 +1766,17 @@ def ds_diemdanh():
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
 
-    # ✅ Lấy thông tin giáo viên (name, avatar, major)
+    # Thông tin giáo viên
     cursor.execute("""
-        SELECT 
-            u.name, u.avatar, t.major
+        SELECT u.name, u.avatar, t.major
         FROM users u
         LEFT JOIN teacher t ON u.id = t.user_id
         WHERE u.id = %s
     """, (teacher_id,))
     teacher = cursor.fetchone()
 
-    # ✅ Lấy danh sách lớp mà giảng viên phụ trách
-    query = """
+    # Lấy danh sách lớp
+    cursor.execute("""
         SELECT 
             c.id,
             c.class_name,
@@ -1721,34 +1785,85 @@ def ds_diemdanh():
             c.start_time,
             c.end_time,
             c.max_students,
-            c.start_date,
-            c.weeks,
-            c.created_at,
             u.name AS teacher_name
         FROM classes c
         JOIN users u ON c.teacher_id = u.id
         WHERE c.teacher_id = %s
-        ORDER BY c.created_at DESC
-    """
-    cursor.execute(query, (teacher_id,))
+        ORDER BY c.id DESC
+    """, (teacher_id,))
     classes = cursor.fetchall()
+
+    # Thêm danh sách buổi học + format ngày
+    for cls in classes:
+        cursor.execute("""
+            SELECT id, date
+            FROM sessions
+            WHERE class_id = %s
+            ORDER BY date ASC
+        """, (cls["id"],))
+        sessions = cursor.fetchall()
+
+        # Format ngày: "Thu, 20 Nov 2025 00:00:00 GMT" → "20/11/2025"
+        for s in sessions:
+            try:
+                dt = datetime.strptime(s["date"], "%a, %d %b %Y %H:%M:%S GMT")
+                s["date"] = dt.strftime("%d/%m/%Y")
+            except:
+                pass
+
+        cls["sessions"] = sessions or []
 
     conn.close()
 
-    # ✅ Format lại ngày tháng cho dễ đọc
-    for cls in classes:
-        if isinstance(cls.get("start_date"), datetime):
-            cls["start_date"] = cls["start_date"].strftime("%d/%m/%Y")
-        if isinstance(cls.get("created_at"), datetime):
-            cls["created_at"] = cls["created_at"].strftime("%d/%m/%Y %H:%M:%S")
-
-    # ✅ Truyền thêm "teacher" vào để hiển thị avatar + name + chuyên ngành trong menu
     return render_template(
         "GV/DS_Diemdanh.html",
         classes=classes,
         teacher=teacher,
         ten=teacher["name"] if teacher else session.get("username", "Giáo viên")
     )
+
+@app.route('/set_camera_source', methods=['POST'])
+def set_camera():
+    global current_camera_source, cap
+    data = request.json
+    source = data.get("source")
+
+    # Close previous camera
+    if cap:
+        cap.release()
+
+    # Camera ID (0,1,2) → convert to int
+    try:
+        source = int(source)
+    except:
+        pass
+
+    current_camera_source = source
+    cap = cv2.VideoCapture(source)
+
+    return {"status": "ok", "camera": source}
+
+
+
+@app.route("/api/score_report/<int:session_id>")
+def score_report(session_id):
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # Lấy điểm chuyên cần từng sinh viên trong buổi
+    cursor.execute("""
+        SELECT u.name AS student_name, ar.score
+        FROM attendance_records ar
+        JOIN enrollments e ON ar.enrollment_id = e.id
+        JOIN users u ON e.student_id = u.id
+        WHERE ar.session_id = %s
+    """, (session_id,))
+
+    data = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    return jsonify(data)
 
 @app.route("/api/attendance_data/<int:session_id>")
 def get_attendance_data(session_id):
@@ -2352,7 +2467,6 @@ def mark_read(user_id):
     conn.close()
 
     return jsonify({"success": True})
-
 
 
 
@@ -3249,26 +3363,59 @@ def info_canhan():
 
     try:
         if request.method == "POST":
-            # --- File Avatar ---
-            avatar_file = request.files.get("avatar")
-            avatar_path = None
+            # --- Lấy dữ liệu từ form ---
+            name = request.form.get("modal-name")
+            email = request.form.get("modal-email")
+            phone = request.form.get("student-phone")
+            birthday = request.form.get("student-birthday")
+            gender = request.form.get("student-gender")
+            school = request.form.get("student-school")
+            sclass = request.form.get("student-class")
+            course_year = request.form.get("student-course-year")
+            major = request.form.get("student-major")
+            mssv = request.form.get("student-mssv")
 
-            if avatar_file and allowed_file(avatar_file.filename):
-                filename = secure_filename(avatar_file.filename)
-                save_path = os.path.join(app.config["UPLOAD_FOLDER1"], filename)
-                avatar_file.save(save_path)
-                avatar_path = os.path.join("avatars", filename).replace("\\", "/")
+            # --- Update bảng users ---
+            cursor.execute("""
+                UPDATE users
+                SET name=%s, email=%s
+                WHERE id=%s
+            """, (name, email, user_id))
 
-                cursor.execute("UPDATE users SET avatar=%s WHERE id=%s", (avatar_path, user_id))
-                conn.commit()
-                flash("✅ Cập nhật ảnh đại diện thành công!", "success")
+            # --- Kiểm tra student đã tồn tại chưa ---
+            cursor.execute("SELECT student_id FROM student WHERE user_id=%s", (user_id,))
+            student_row = cursor.fetchone()
+
+            if student_row:
+                # UPDATE nếu đã tồn tại
+                cursor.execute("""
+                    UPDATE student
+                    SET phone=%s,
+                        birthday=%s,
+                        gender=%s,
+                        school=%s,
+                        `class`=%s,
+                        course_year=%s,
+                        major=%s,
+                        mssv=%s
+                    WHERE user_id=%s
+                """, (phone, birthday, gender, school, sclass, course_year, major, mssv, user_id))
+            else:
+                # INSERT nếu chưa có
+                cursor.execute("""
+                    INSERT INTO student (user_id, phone, birthday, gender, school, `class`, course_year, major, mssv)
+                    VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                """, (user_id, phone, birthday, gender, school, sclass, course_year, major, mssv))
+
+            conn.commit()
+            flash("Cập nhật thông tin thành công!", "success")
 
         # --- Lấy dữ liệu hiển thị ---
         cursor.execute("SELECT id, name, username, email, avatar FROM users WHERE id=%s", (user_id,))
         user = cursor.fetchone()
 
         cursor.execute("""
-            SELECT phone, birthday, gender, school, class, course_year, major
+            SELECT phone, birthday, gender, school, class, course_year, major, mssv
             FROM student
             WHERE user_id=%s
         """, (user_id,))
@@ -3279,6 +3426,9 @@ def info_canhan():
         conn.close()
 
     return render_template("HS/Info_canhan.html", user=user, student=student)
+
+
+
 
 @app.route('/update_avatar', methods=['POST'])
 def update_avatar():
@@ -4544,9 +4694,6 @@ def ask_ai(user_question, role="student"):
 
     return response.text
 
-
-
-
 # --- Route chat ---
 @app.route("/chat", methods=["GET", "POST"])
 def chat():
@@ -4655,8 +4802,6 @@ def teacher_help_chat():
     conn.close()
 
     return jsonify({"response": ai_reply})
-
-
 
 # 🎟️ Route thêm ticket hỗ trợ
 @app.route("/teacher/help/ticket", methods=["POST"])
@@ -4934,38 +5079,158 @@ def lich_day_gv():
         teacher=teacher
     )
 
+
 # ====================== EMAIL ======================
 # ====================== SEND EMAIL ======================
-
 import smtplib
+from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.header import Header
 from email.utils import formataddr
-def send_email(to_email, subject, content):
+import traceback
+
+def send_email(to_email, subject, html_content):
     sender = "2124802010398@student.tdmu.edu.vn"
-    password = "jtqp bqly zmwm waca"   # App password Gmail
+    password = "jtqp bqly zmwm waca"
+
+    # ✅ Kiểm tra email đầu vào
+    if not to_email:
+        print("❌ Không có email để gửi!")
+        return False
 
     try:
-        # ✅ Tạo email đúng chuẩn UTF-8 (có dấu tiếng Việt)
-        msg = MIMEText(content, "plain", "utf-8")
+        msg = MIMEMultipart("alternative")
         msg["Subject"] = Header(subject, "utf-8")
         msg["From"] = formataddr(("Hệ thống điểm danh", sender))
         msg["To"] = to_email
 
-        # ✅ Gửi mail qua SMTP SSL
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-            server.login(sender, password)
-            server.sendmail(sender, [to_email], msg.as_string().encode("utf-8"))
+        html_part = MIMEText(html_content, "html", "utf-8")
+        msg.attach(html_part)
 
-        print(f"📧 Đã gửi email đến {to_email}")
+        raw_msg = msg.as_bytes()
+
+        print("🔹 Kết nối Gmail SMTP...")
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+            print("🔹 Đăng nhập...")
+            server.login(sender, password)
+            print("🔹 Gửi email...")
+
+            # ✅ Quan trọng: dùng list
+            server.sendmail(sender, [to_email], raw_msg)
+
+        print(f"✅ Đã gửi email đến {to_email}")
 
     except Exception as e:
-        print(f"⚠️ Lỗi khi gửi email đến {to_email}: {e}")
+        print("⚠️ Lỗi khi gửi email:")
+        traceback.print_exc()
+        return False
+
+
+
+
 # ====================== AUTO CHECK ======================
 def auto_check_attendance():
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
     print("🔍 Auto check đang chạy...")
+
+    # ===================== CẢNH BÁO NGHỈ 1 BUỔI BẤT KỲ =====================
+    print("🔔 Kiểm tra nghỉ học từng buổi...")
+
+    cursor.execute("""
+        SELECT 
+            ar.id AS record_id,
+            ar.date,
+            ar.status_in,
+            ar.status_out,
+            ar.time_in,
+            ar.time_out,
+            ar.notified,
+            e.student_id,
+            u.name AS student_name,
+            u.email AS student_email,
+            s.class_id,
+            c.class_name,
+            t.id AS teacher_id,
+            t.email AS teacher_email
+        FROM attendance_records ar
+        JOIN enrollments e ON ar.enrollment_id = e.id
+        JOIN users u ON e.student_id = u.id
+        JOIN sessions s ON ar.session_id = s.id
+        JOIN classes c ON s.class_id = c.id
+        JOIN users t ON c.teacher_id = t.id
+        WHERE ar.status_in IN ('absent_excused', 'absent_unexcused')
+          AND ar.notified = 0
+    """)
+
+    absent_list = cursor.fetchall()
+
+    print("📌 DEBUG absent_list:", absent_list)
+
+    for ab in absent_list:
+
+        print(f"➡ Kiểm tra record {ab['record_id']} | notified={ab['notified']} | status_in={ab['status_in']}")
+
+        if ab["notified"] == 1:
+            print(f"⛔ Bỏ qua record {ab['record_id']} vì notified=1")
+            continue
+
+        print(f"📨 SV: {ab['student_name']} ({ab['student_email']})")
+        print(f"📨 GV: {ab['teacher_email']}")
+
+        date_str = ab["date"].strftime("%d/%m/%Y")
+
+        # ✅ Nội dung gốc vẫn giữ để lưu DB
+        msg_sv = (
+            f"Sinh viên {ab['student_name']} đã nghỉ buổi học ngày {date_str} "
+            f"của lớp {ab['class_name']}. Vui lòng tham gia đầy đủ các buổi tiếp theo."
+        )
+
+        msg_gv = (
+            f"Sinh viên {ab['student_name']} đã nghỉ buổi học ngày {date_str} "
+            f"trong lớp {ab['class_name']}. Đề nghị giảng viên lưu ý."
+        )
+
+        # ✅ Lưu thông báo website
+        cursor.execute("""
+            INSERT INTO notifications(user_id, title, message)
+            VALUES (%s, %s, %s)
+        """, (ab["student_id"], "Thông báo nghỉ học buổi", msg_sv))
+
+        cursor.execute("""
+            INSERT INTO notifications(user_id, title, message)
+            VALUES (%s, %s, %s)
+        """, (ab["teacher_id"], "Sinh viên nghỉ học 1 buổi", msg_gv))
+
+        print("📧 DEBUG: Gửi email HTML...")
+
+        # ✅ ✅ Gửi email HTML mới
+        html_sv = f"""
+            <h3>📢 Thông báo nghỉ học</h3>
+            <p>Xin chào <b>{ab['student_name']}, đây là email được gửi từ hệ thống điểm damh</b>,</p>
+            <p>Bạn đã nghỉ buổi học ngày <b>{date_str}</b> của lớp <b>{ab['class_name']}</b>.</p>
+            <p>Vui lòng tham gia đầy đủ các buổi tiếp theo nhé hoặc có thông tin gfi thắc mắc bạn vui lòng liên hệ giáo viên bộ môn nhé.</p>
+        """
+
+        html_gv = f"""
+            <h3>📢 Thông báo sinh viên nghỉ học</h3>
+            <p>Sinh viên của bạn tên <b>{ab['student_name']}</b> đã nghỉ buổi học ngày <b>{date_str}</b>
+            trong lớp <b>{ab['class_name']}</b>.</p>
+            <p>Vui lòng giáo viên theo dõi tình trạng của sinh viên để nhắc nhở các em đi học đúng buổi nhé.</p>
+        """
+
+        send_email(ab["student_email"], "Thông báo nghỉ học", html_sv)
+        send_email(ab["teacher_email"], "Thông báo sinh viên nghỉ học", html_gv)
+
+        print(f"✅ Đã gửi thông báo cho {ab['student_name']}")
+
+        cursor.execute("UPDATE attendance_records SET notified = 1 WHERE id = %s", (ab["record_id"],))
+
+        print(f"🔒 Record {ab['record_id']} -> notified = 1 ✅")
+
+    # ===================== KIỂM TRA VƯỢT 20% =====================
+
+    print("🔔 Kiểm tra cảnh báo nghỉ quá 20%...")
 
     cursor.execute("""
         SELECT 
@@ -4998,62 +5263,75 @@ def auto_check_attendance():
     for row in data:
         tong_buoi = row["tong_buoi"] or 0
         gioi_han = tong_buoi * 0.2
-        msg = None
+        so_nghi = row["so_buoi_nghi"] or 0
+        msg_html = None
 
-        # ===== Xác định nội dung cảnh báo =====
-        if row["so_buoi_nghi"] > gioi_han:
-            msg = (
-                f"Sinh viên {row['sv_name']} (lớp {row['class_name']}) "
-                f"đã vắng {row['so_buoi_nghi']} buổi học, vượt quá 20% tổng số buổi quy định ({int(gioi_han)} buổi). "
-                "Theo quy định của nhà trường, sinh viên sẽ không đủ điều kiện dự thi học phần này. "
-                "Vui lòng liên hệ giảng viên phụ trách để được hướng dẫn và khắc phục sớm."
-            )
+        # ===== LOGIC CẢNH BÁO =====
+        if so_nghi > gioi_han:
+            msg_html = f"""
+                <div style="font-family: Arial; font-size: 14px; line-height: 1.5;">
+                    <h3 style="color:#d9534f;">🔔 Cảnh báo nghỉ học vượt 20%</h3>
+                    <p>Sinh viên <strong>{row['sv_name']}</strong> thuộc lớp <strong>{row['class_name']}</strong></p>
+                    <p>Đã nghỉ <strong style="color:red;">{so_nghi} buổi</strong>, vượt quá giới hạn 
+                    <strong>20%</strong> tương ứng <strong>{int(gioi_han)} buổi</strong>.</p>
+                    <p style="color:red; font-weight:bold;">➡ Không đủ điều kiện dự thi học phần này.</p>
+                    <hr>
+                    <p style="font-size:12px; color:#777;">Email được gửi tự động từ hệ thống điểm danh.</p>
+                </div>
+            """
 
-        elif row["so_buoi_nghi"] == gioi_han:
-            msg = (
-                f"Sinh viên {row['sv_name']} (lớp {row['class_name']}) "
-                f"đã vắng {int(gioi_han)} buổi học, đạt mức 20% tổng số buổi quy định. "
-                "Đề nghị sinh viên nghiêm túc tham gia đầy đủ các buổi học còn lại "
-                "để tránh bị cấm dự thi học phần này theo quy định của nhà trường."
-            )
+        elif so_nghi == gioi_han and so_nghi != 0:
+            msg_html = f"""
+                <div style="font-family: Arial; font-size: 14px; line-height: 1.5;">
+                    <h3 style="color:#f0ad4e;">⚠ Cảnh báo đạt mức 20%</h3>
+                    <p>Sinh viên <strong>{row['sv_name']}</strong> thuộc lớp <strong>{row['class_name']}</strong></p>
+                    <p>Đã nghỉ <strong>{int(gioi_han)} buổi</strong> (20%).</p>
+                    <p>Vui lòng tham gia đầy đủ các buổi còn lại.</p>
+                    <hr>
+                    <p style="font-size:12px; color:#777;">Email được gửi tự động từ hệ thống điểm danh.</p>
+                </div>
+            """
 
-        # ===== Nếu có cảnh báo thì kiểm tra xem đã gửi chưa =====
-        if msg:
+        if not msg_html:
+            continue
+
+        # ===== CHỐNG GỬI TRÙNG =====
+        cursor.execute("""
+            SELECT COUNT(*) AS cnt 
+            FROM notifications
+            WHERE user_id = %s 
+              AND title = 'Cảnh báo nghỉ học'
+              AND message LIKE %s
+        """, (row["student_id"], f"%{row['class_name']}%"))
+
+        sent_check = cursor.fetchone()
+
+        if sent_check["cnt"] == 0:
+
+            # Lưu thông báo (text thuần trong database)
             cursor.execute("""
-                SELECT COUNT(*) AS cnt 
-                FROM notifications
-                WHERE user_id = %s 
-                  AND title = 'Cảnh báo nghỉ học'
-                  AND message LIKE %s
-            """, (row["student_id"], f"%{row['class_name']}%"))
-            sent_check = cursor.fetchone()
+                INSERT INTO notifications(user_id, title, message)
+                VALUES (%s, %s, %s)
+            """, (row["student_id"], "Cảnh báo nghỉ học", f"Nghỉ {so_nghi} buổi (20%) lớp {row['class_name']}"))
 
-            if sent_check["cnt"] == 0:
-                # 🔔 Gửi thông báo cho sinh viên
-                cursor.execute("""
-                    INSERT INTO notifications(user_id, title, message)
-                    VALUES (%s, %s, %s)
-                """, (row["student_id"], "Cảnh báo nghỉ học", msg))
+            # ===== EMAIL GIẢNG VIÊN =====
+            gv_msg_html = f"""
+                <div style="font-family: Arial; font-size: 14px; line-height: 1.5;">
+                    <h3 style="color:#0275d8;">📢 Thông báo tình trạng học tập</h3>
+                    <p>Sinh viên <strong>{row['sv_name']}</strong> của lớp <strong>{row['class_name']}</strong></p>
+                    <p>Đã nghỉ <strong style="color:red;">{so_nghi} buổi</strong>, vượt quá 20% ({int(gioi_han)} buổi).</p>
+                    <hr>
+                    <p style="font-size:12px; color:#777;">Email được gửi tự động từ hệ thống.</p>
+                </div>
+            """
 
-                # 🔔 Gửi thông báo cho giáo viên
-                gv_msg = (
-                    f"Sinh viên {row['sv_name']} trong lớp {row['class_name']} "
-                    f"đã vắng {row['so_buoi_nghi']} buổi học, vượt quá giới hạn cho phép ({int(gioi_han)} buổi = 20%). "
-                    "Đề nghị giảng viên lưu ý và cập nhật tình trạng học tập của sinh viên trong hệ thống."
-                )
+            # ===== GỬI EMAIL HTML =====
+            send_email(row["sv_email"], "🔔 Cảnh báo nghỉ học", msg_html)
+            send_email(row["gv_email"], "📢 Thông báo sinh viên nghỉ quá 20%", gv_msg_html)
 
-                cursor.execute("""
-                    INSERT INTO notifications(user_id, title, message)
-                    VALUES (%s, %s, %s)
-                """, (row["teacher_id"], "Thông báo sinh viên nghỉ học", gv_msg))
-
-                # 📧 Gửi email
-                send_email(row["sv_email"], "Cảnh báo nghỉ học", msg)
-                send_email(row["gv_email"], "Thông báo sinh viên nghỉ học", gv_msg)
-
-                print(f"📧 Đã gửi cảnh báo cho {row['sv_name']} (lớp {row['class_name']})")
-            else:
-                print(f"⚠️ {row['sv_name']} (lớp {row['class_name']}) đã được gửi cảnh báo trước đó, bỏ qua.")
+            print(f"✅ Đã gửi email HTML cảnh báo 20% cho {row['sv_name']}")
+        else:
+            print(f"⚠️ {row['sv_name']} đã được gửi cảnh báo trước đó, bỏ qua.")
 
     conn.commit()
     cursor.close()
@@ -5149,7 +5427,6 @@ def test_scheduler():
     with app.app_context():
         print("✅ Scheduler đang hoạt động - Test chạy thành công!")
         auto_check_attendance()  # 👉 thêm dòng này để test gửi mail luôn
-
 
 
 # =============================

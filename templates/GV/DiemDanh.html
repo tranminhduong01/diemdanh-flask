@@ -49,7 +49,7 @@
 
         .dashboard {
             display: grid;
-            grid-template-columns: 1fr 1.8fr;
+            grid-template-columns: 2fr 1fr;
             gap: 25px;
             margin-bottom: 25px;
         }
@@ -67,8 +67,13 @@
             height: fit-content;
         }
 
+        .info-panel {
+            height: fit-content;
+        }
+
         .students-panel {
-            max-height: 75vh;
+            grid-column: 1 / -1;
+            max-height: 50vh;
         }
 
         .section-title {
@@ -229,12 +234,12 @@
 
         .mode-controls {
             display: flex;
+            flex-direction: column;
             gap: 10px;
             margin: 15px 0;
         }
 
         .mode-btn {
-            flex: 1;
             padding: 12px 15px;
             border: none;
             border-radius: 8px;
@@ -279,7 +284,7 @@
 
         .students-table-container {
             overflow-x: auto;
-            max-height: 500px;
+            max-height: 400px;
             overflow-y: auto;
             border-radius: 8px;
             flex-grow: 1;
@@ -373,6 +378,46 @@
             font-size: 0.85rem;
         }
 
+        .info-section {
+            margin-bottom: 20px;
+        }
+
+        .info-section:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Style cho phần camera controls */
+        .camera-controls {
+            margin-bottom: 15px;
+        }
+
+        .form-select, .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+
         @media (max-width: 1024px) {
             .dashboard {
                 grid-template-columns: 1fr;
@@ -420,15 +465,29 @@
         </header>
 
         <div class="dashboard">
-            <!-- Phần camera và điều khiển -->
+            <!-- Phần camera -->
             <div class="panel camera-panel">
                 <h2 class="section-title">Camera</h2>
                 <div class="video-container">
                     <video id="video" autoplay playsinline></video>
-                    <canvas id="canvas"></canvas>
+                    <img id="ipVideo" style="display:none; width:100%;">
                 </div>
-
                 <div id="recognition-status">Đang khởi động hệ thống...</div>
+            </div>
+
+            <!-- Phần thông tin điểm danh -->
+            <div class="panel info-panel">
+                <h2 class="section-title">Thông tin điểm danh</h2>
+
+                <!-- Phần điều khiển camera đã được di chuyển lên đây -->
+                <div class="camera-controls">
+                    <select id="cameraSelect" class="form-select">
+                        <option value="default">Camera mặc định</option>
+                    </select>
+
+                    <input id="ipCameraInput" class="form-control" placeholder="http://IP:PORT/video">
+                    <button id="btnUseIP" class="btn btn-primary">Dùng camera IP</button>
+                </div>
 
                 <!-- Phần hiển thị thông tin người được nhận diện -->
                 <div id="recognition-result" class="recognition-result">
@@ -460,27 +519,32 @@
                     </div>
                 </div>
 
-                <div class="stats">
-                    <div class="stat-item">
-                        <div class="stat-value" id="total-students">0</div>
-                        <div class="stat-label">Tổng SV</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="present-count">0</div>
-                        <div class="stat-label">Có mặt</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="absent-count">0</div>
-                        <div class="stat-label">Vắng mặt</div>
+                <div class="info-section">
+                    <h3 class="section-title">Thống kê</h3>
+                    <div class="stats">
+                        <div class="stat-item">
+                            <div class="stat-value" id="total-students">0</div>
+                            <div class="stat-label">Tổng SV</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="present-count">0</div>
+                            <div class="stat-label">Có mặt</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="absent-count">0</div>
+                            <div class="stat-label">Vắng mặt</div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="mode-controls">
-                    <button id="checkin-btn" class="mode-btn">✅ Điểm danh vào</button>
-                    <button id="checkout-btn" class="mode-btn">🚪 Điểm danh ra</button>
+                <div class="info-section">
+                    <h3 class="section-title">Điều khiển</h3>
+                    <div class="mode-controls">
+                        <button id="checkin-btn" class="mode-btn">✅ Điểm danh vào</button>
+                        <button id="checkout-btn" class="mode-btn">🚪 Điểm danh ra</button>
+                    </div>
+                    <p id="mode-status">Chế độ hiện tại: Điểm danh vào</p>
                 </div>
-
-                <p id="mode-status">Chế độ hiện tại: Điểm danh vào</p>
             </div>
 
             <!-- Phần danh sách sinh viên -->
@@ -518,266 +582,270 @@
     </div>
 
     <script>
-        const video = document.getElementById("video");
-        const canvas = document.getElementById("canvas");
-        const statusText = document.getElementById("recognition-status");
-        const studentsTableBody = document.getElementById("students-table-body");
-        const totalStudentsEl = document.getElementById("total-students");
-        const presentCountEl = document.getElementById("present-count");
-        const absentCountEl = document.getElementById("absent-count");
-        const modeStatus = document.getElementById("mode-status");
+    const video = document.getElementById("video");
+    const ipVideo = document.getElementById("ipVideo");
+    const statusText = document.getElementById("recognition-status");
+    const studentsTableBody = document.getElementById("students-table-body");
+    const totalStudentsEl = document.getElementById("total-students");
+    const presentCountEl = document.getElementById("present-count");
+    const absentCountEl = document.getElementById("absent-count");
+    const modeStatus = document.getElementById("mode-status");
 
-        // Phần hiển thị kết quả nhận diện
-        const recognitionResult = document.getElementById("recognition-result");
-        const recognitionMSSV = document.getElementById("recognition-mssv");
-        const recognitionName = document.getElementById("recognition-name");
-        const recognitionTime = document.getElementById("recognition-time");
-        const recognitionStatusText = document.getElementById("recognition-status-text");
-        const recognitionAvatar = document.getElementById("recognition-avatar");
+    const recognitionResult = document.getElementById("recognition-result");
+    const recognitionMSSV = document.getElementById("recognition-mssv");
+    const recognitionName = document.getElementById("recognition-name");
+    const recognitionTime = document.getElementById("recognition-time");
+    const recognitionStatusText = document.getElementById("recognition-status-text");
+    const recognitionAvatar = document.getElementById("recognition-avatar");
 
-        // 👉 Dữ liệu từ Flask - GIỮ NGUYÊN
-        const sessionId = {{ buoi_hoc.session_id }};
-        const students = {{ students | tojson }};
+    const sessionId = {{ buoi_hoc.session_id }};
+    const students = {{ students | tojson }};
 
-        let mode = "in"; // chế độ điểm danh
+    let mode = "in"; // chế độ điểm danh
+    let currentStream = null;
+    let ipInterval = null;
 
-        // Render danh sách sinh viên - GIỮ NGUYÊN HÀM CỦA BẠN
-        function renderStudents() {
-            studentsTableBody.innerHTML = "";
-            students.forEach(s => {
-                const row = document.createElement("tr");
+    // =============================
+    // RENDER DANH SÁCH SINH VIÊN
+    // =============================
+    function renderStudents() {
+        studentsTableBody.innerHTML = "";
+        students.forEach(s => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${s.mssv}</td>
+                <td>${s.full_name}</td>
+                <td>${formatDate(s.time_in)}</td>
+                <td>${getStatusInHTML(s.status_in)}</td>
+                <td>${formatDate(s.time_out)}</td>
+                <td>${getStatusOutHTML(s.status_out)}</td>
+                <td>${s.score || 0}</td>
+            `;
+            studentsTableBody.appendChild(row);
+        });
+        updateStats();
+    }
 
-                row.innerHTML = `
-                    <td>${s.mssv}</td>
-                    <td>${s.full_name}</td>
-                    <td>${formatDate(s.time_in)}</td>
-                    <td>
-                        ${getStatusInHTML(s.status_in)}
-                    </td>
-                    <td>${formatDate(s.time_out)}</td>
-                    <td>
-                        ${getStatusOutHTML(s.status_out)}
-                    </td>
-                    <td>${s.score}</td>
-                `;
-                studentsTableBody.appendChild(row);
-            });
+    function formatDate(datetime) {
+        if (!datetime) return '-';
+        const d = new Date(datetime);
+        return d.toLocaleString('vi-VN', { hour12: false });
+    }
 
-            updateStats();
+    function getStatusInHTML(status) {
+        switch(status){
+            case 'present': return '<span class="status-present">✅ Có mặt</span>';
+            case 'late': return '<span class="status-late">⏰ Trễ</span>';
+            case 'absent_excused': return '<span class="status-absent">🟡 Nghỉ có phép</span>';
+            case 'absent_unexcused': return '<span class="status-absent">🔴 Nghỉ không phép</span>';
+            default: return '<span class="status-absent">❌ Chưa điểm danh</span>';
         }
+    }
 
-        function formatDate(datetime) {
-            if (!datetime) return '-';
-            const d = new Date(datetime);
-            return d.toLocaleString('vi-VN', { hour12: false });
+    function getStatusOutHTML(status) {
+        switch(status){
+            case 'checked_out': return '<span class="status-present">🚪 Đã ra</span>';
+            default: return '<span class="status-absent">⏳ Chưa ra</span>';
         }
+    }
 
+    function updateStats() {
+        const total = students.length;
+        const present = students.filter(s =>
+            s.status_in === 'present' || s.status_in === 'late' ||
+            s.status_out === 'checked_out'
+        ).length;
+        const absent = total - present;
+        totalStudentsEl.textContent = total;
+        presentCountEl.textContent = present;
+        absentCountEl.textContent = absent;
+    }
 
-        // Tạo HTML cho trạng thái vào
-        function getStatusInHTML(status) {
-            switch(status) {
-                case 'present':
-                    return '<span class="status-present">✅ Có mặt</span>';
-                case 'late':
-                    return '<span class="status-late">⏰ Trễ</span>';
-                case 'absent_excused':
-                    return '<span class="status-absent">🟡 Nghỉ có phép</span>';
-                case 'absent_unexcused':
-                    return '<span class="status-absent">🔴 Nghỉ không phép</span>';
-                default:
-                    return '<span class="status-absent">❌ Chưa điểm danh</span>';
-            }
-        }
+    function showRecognitionResult(student, mode) {
+        recognitionMSSV.textContent = student.mssv;
+        recognitionName.textContent = student.full_name;
+        recognitionTime.textContent = new Date().toLocaleString('vi-VN', { hour12: false });
+        recognitionStatusText.textContent = mode === "in" ? 'Điểm danh vào' : 'Điểm danh ra';
+        recognitionAvatar.textContent = student.full_name.split(' ').map(n=>n[0]).join('').toUpperCase();
+        recognitionResult.style.display = 'block';
+        setTimeout(()=>{ recognitionResult.style.display='none'; },5000);
+    }
 
-        // Tạo HTML cho trạng thái ra
-        function getStatusOutHTML(status) {
-            switch(status) {
-                case 'checked_out':
-                    return '<span class="status-present">🚪 Đã ra</span>';
-                default:
-                    return '<span class="status-absent">⏳ Chưa ra</span>';
-            }
-        }
+    // =============================
+    // CAMERA: Laptop/USB + IP
+    // =============================
+    const cameraSelect = document.getElementById("cameraSelect");
+    const ipInput = document.getElementById("ipCameraInput");
+    const btnUseIP = document.getElementById("btnUseIP");
 
-        // Cập nhật thống kê - GIỮ NGUYÊN LOGIC CỦA BẠN
-        function updateStats() {
-            const total = students.length;
-            const present = students.filter(s =>
-                s.status_in === 'present' || s.status_in === 'late' ||
-                s.status_out === 'checked_out'
-            ).length;
-            const absent = total - present;
-
-            totalStudentsEl.textContent = total;
-            presentCountEl.textContent = present;
-            absentCountEl.textContent = absent;
-        }
-
-        // Hiển thị thông tin người được nhận diện
-        function showRecognitionResult(student, mode) {
-            recognitionMSSV.textContent = student.mssv;
-            recognitionName.textContent = student.full_name;
-            recognitionTime.textContent = new Date().toLocaleString('vi-VN', { hour12: false });
-
-            const status = mode === "in" ?
-                (student.status_in === 'late' ? 'Điểm danh vào (trễ)' : 'Điểm danh vào') :
-                'Điểm danh ra';
-            recognitionStatusText.textContent = status;
-
-            // Tạo avatar từ tên (lấy chữ cái đầu)
-            const initials = student.full_name
-                .split(' ')
-                .map(name => name[0])
-                .join('')
-                .toUpperCase();
-            recognitionAvatar.textContent = initials;
-
-            // Hiển thị kết quả với hiệu ứng
-            recognitionResult.style.display = 'block';
-
-            // Tự động ẩn sau 5 giây
-            setTimeout(() => {
-                recognitionResult.style.display = 'none';
-            }, 5000);
-        }
-
-        // Bật camera - GIỮ NGUYÊN
-        async function initCamera() {
-            try {
-                statusText.textContent = "Đang khởi động camera...";
-                statusText.className = "status-waiting";
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                video.srcObject = stream;
-                statusText.textContent = "Camera đã bật, đang nhận diện...";
-                statusText.className = "status-recognizing";
-                startAutoCapture();
-            } catch (err) {
-                console.error("Camera error:", err);
-                statusText.textContent = "Không thể mở camera: " + err.message;
-                statusText.className = "status-error";
-            }
-        }
-
-        // Chụp frame - GIỮ NGUYÊN
-        function captureFrame() {
-            const ctx = canvas.getContext("2d");
-            if (video.videoWidth === 0 || video.videoHeight === 0) return null;
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            return new Promise(resolve => {
-                canvas.toBlob(blob => {
-                    if (!blob || blob.size < 5000) resolve(null);
-                    else resolve(blob);
-                }, "image/jpeg", 0.9);
-            });
-        }
-
-        // Gửi frame nhận diện - CẬP NHẬT: thêm hiển thị kết quả
-        async function sendFrameToServer() {
-            const blob = await captureFrame();
-            if (!blob) return;
-
-            const formData = new FormData();
-            formData.append("image", blob);
-            formData.append("mode", mode);
-
-            try {
-            const res = await fetch(`/api/diemdanh/${sessionId}/${mode}`, {
-                method: "POST",
-                body: formData
-            });
-            const data = await res.json();
-
-            if (data.success) {
-                statusText.textContent = data.message;
-                statusText.className = "status-success";
-
-                // Xử lý tất cả sinh viên trả về
-                if (Array.isArray(data.results)) {
-                    data.results.forEach(item => {
-                        const stu = item.student;
-                        updateStudentStatus(
-                            stu.enrollment_id,
-                            mode === "in" ? "present" : "checked_out",
-                            stu.full_name
-                        );
-
-                        // HIỂN THỊ THÔNG TIN NGƯỜI ĐƯỢC NHẬN DIỆN
-                        showRecognitionResult(stu, mode);
-                    });
+    async function loadCameraDevices(){
+        try{
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const cameras = devices.filter(d => d.kind === "videoinput");
+            cameras.forEach((cam,index)=>{
+                if(!Array.from(cameraSelect.options).find(opt=>opt.value===cam.deviceId)){
+                    const opt=document.createElement("option");
+                    opt.value=cam.deviceId;
+                    opt.textContent=cam.label || `Camera ${index+1}`;
+                    cameraSelect.appendChild(opt);
                 }
+            });
+        }catch(e){
+            console.error(e);
+        }
+    }
 
+    async function startNormalCamera(deviceId = null){
+        stopIPCamera();
+        if(currentStream) currentStream.getTracks().forEach(t => t.stop());
+
+        const constraints = { video: deviceId ? { deviceId:{ exact: deviceId }} : true };
+
+        try{
+            currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+            video.srcObject = currentStream;
+
+            video.style.display = "block";
+            ipVideo.style.display = "none";
+
+            statusText.textContent = "Đang dùng camera máy / USB...";
+        }catch(err){
+            console.error(err);
+            statusText.textContent = "Không bật được camera!";
+        }
+    }
+
+    /*  FIXED: start IP Camera - tối ưu cho IP Webcam */
+    function startIPCamera(url) {
+        stopNormalCamera();      // stop cam laptop
+        stopIPCamera();          // xóa interval cũ
+
+        if (!url.startsWith("http")) {
+            alert("URL IP không hợp lệ!");
+            return;
+        }
+
+        // Tự động thêm /shot.jpg nếu người dùng không nhập đúng
+        if (!url.includes("shot.jpg") && !url.includes("shot.jpg")) {
+            if (url.endsWith("/")) {
+                url = url + "shot.jpg";
             } else {
-                statusText.textContent = "❌ " + (data.message || "Lỗi điểm danh");
-                statusText.className = "status-error";
-            }
-        } catch (err) {
-            console.error("API error:", err);
-            statusText.textContent = "Không thể kết nối server.";
-            statusText.className = "status-error";
-        }
-
-        }
-
-        // Cập nhật trạng thái sinh viên sau khi nhận diện - GIỮ NGUYÊN
-        function updateStudentStatus(enrollmentId, status, name) {
-            // Tìm và cập nhật sinh viên trong danh sách
-            const student = students.find(s => s.enrollment_id === enrollmentId);
-            if (student) {
-                if (mode === "in") {
-                    student.status_in = "present";
-                    student.time_in = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
-                } else {
-                    student.status_out = "checked_out";
-                    student.time_out = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
-                }
-                renderStudents();
+                url = url + "/shot.jpg";
             }
         }
 
-        function startAutoCapture() {
-            setInterval(sendFrameToServer, 4000);
+
+        video.style.display = "none";
+        ipVideo.style.display = "block";
+
+        // Load ảnh snapshot 1 lần mỗi 1 giây (IP Webcam hoạt động tốt ở 800–1500ms)
+        ipInterval = setInterval(() => {
+            ipVideo.src = url + "?t=" + Date.now();   // tránh cache
+        }, 1000);
+
+        statusText.textContent = "Đang dùng camera IP (IP Webcam)...";
+    }
+
+    function stopNormalCamera() {
+        if (currentStream) {
+            currentStream.getTracks().forEach(t => t.stop());
+            currentStream = null;
         }
+    }
 
-        // Xử lý nút - GIỮ NGUYÊN
-        document.getElementById("checkin-btn").addEventListener("click", () => {
-            mode = "in";
-            modeStatus.textContent = "Chế độ hiện tại: Điểm danh vào";
-            modeStatus.style.color = "#2ecc71";
+    function stopIPCamera(){
+        if (ipInterval){
+            clearInterval(ipInterval);
+            ipInterval = null;
+        }
+    }
+
+    cameraSelect.addEventListener("change", () => {
+        startNormalCamera(
+            cameraSelect.value === "default" ? null : cameraSelect.value
+        );
+    });
+
+    btnUseIP.addEventListener("click", () => {
+        startIPCamera(ipInput.value.trim());
+    });
+
+
+    // =============================
+    // ĐIỂM DANH
+    // =============================
+    async function captureFrame(){
+        const canvas=document.createElement("canvas");
+        if(video.videoWidth===0 || video.videoHeight===0) return null;
+        canvas.width=video.videoWidth; canvas.height=video.videoHeight;
+        const ctx=canvas.getContext("2d");
+        ctx.drawImage(video,0,0,canvas.width,canvas.height);
+        return new Promise(resolve=>{
+            canvas.toBlob(blob=>{ if(!blob||blob.size<5000) resolve(null); else resolve(blob); },"image/jpeg",0.9);
         });
+    }
 
-        document.getElementById("checkout-btn").addEventListener("click", () => {
-            mode = "out";
-            modeStatus.textContent = "Chế độ hiện tại: Điểm danh ra";
-            modeStatus.style.color = "#e74c3c";
-        });
+    async function sendFrameToServer(){
+        const blob=await captureFrame();
+        if(!blob) return;
+        const formData=new FormData();
+        formData.append("image",blob);
+        formData.append("mode",mode);
+        try{
+            const res = await fetch(`/api/diemdanh/${sessionId}/${mode}`,{method:"POST",body:formData});
+            const data = await res.json();
+            if(data.success && Array.isArray(data.results)){
+                data.results.forEach(item=>{
+                    const stu = item.student;
+                    updateStudentStatus(stu.enrollment_id,mode==="in"?"present":"checked_out",stu.full_name);
+                    showRecognitionResult(stu,mode);
+                });
+                statusText.textContent=data.message;
+            }else{
+                statusText.textContent="❌ "+(data.message||"Lỗi điểm danh");
+            }
+        }catch(err){ console.error(err); statusText.textContent="Không thể kết nối server."; }
+    }
 
-        document.getElementById("back-btn").addEventListener("click", () => {
-            window.history.back();
-        });
+    function updateStudentStatus(enrollmentId,status,name){
+        const student=students.find(s=>s.enrollment_id===enrollmentId);
+        if(student){
+            if(mode==="in"){ student.status_in="present"; student.time_in=new Date().toLocaleTimeString(); }
+            else{ student.status_out="checked_out"; student.time_out=new Date().toLocaleTimeString(); }
+            renderStudents();
+        }
+    }
 
-        document.getElementById("save-attendance").addEventListener("click", () => {
-            alert("Đã lưu điểm danh thành công!");
-        });
+    function startAutoCapture(){ setInterval(sendFrameToServer,4000); }
 
-        // Khởi tạo
+    // =============================
+    // NÚT CHỌN CHẾ ĐỘ
+    // =============================
+    document.getElementById("checkin-btn").addEventListener("click",()=>{ mode="in"; modeStatus.textContent="Chế độ: Điểm danh vào"; });
+    document.getElementById("checkout-btn").addEventListener("click",()=>{ mode="out"; modeStatus.textContent="Chế độ: Điểm danh ra"; });
+
+    // =============================
+    // KHỞI TẠO
+    // =============================
+    document.addEventListener("DOMContentLoaded",()=>{
         renderStudents();
-        initCamera();
-        // 🔁 Tự động cập nhật danh sách sinh viên mỗi 5s (không reload trang)
-        setInterval(async () => {
-            try {
-                const res = await fetch(`/api/attendance_data/${sessionId}`);
-                const newData = await res.json();
-
-                // Cập nhật dữ liệu mới vào biến students
-                students.splice(0, students.length, ...newData);
+        loadCameraDevices().then(()=>startNormalCamera());
+        startAutoCapture();
+        // Tự động cập nhật dữ liệu sinh viên mỗi 5s
+        setInterval(async()=>{
+            try{
+                const res=await fetch(`/api/attendance_data/${sessionId}`);
+                const newData=await res.json();
+                students.splice(0,students.length,...newData);
                 renderStudents();
-            } catch (err) {
-                console.error("Lỗi khi tải lại danh sách:", err);
-            }
-        }, 5000);
+            }catch(err){ console.error(err); }
+        },5000);
+    });
+    document.getElementById("back-btn").addEventListener("click", () => {
+        window.history.back(); // quay lại trang trước
+    });
 
-    </script>
+</script>
+
 </body>
 </html>

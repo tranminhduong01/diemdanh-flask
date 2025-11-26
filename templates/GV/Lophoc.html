@@ -206,14 +206,13 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 20px;
+        margin-bottom: 15px;
     }
 
     .section-title {
         font-size: 18px;
         font-weight: 600;
         color: var(--text-primary);
-        margin: 0;
     }
 
     .btn {
@@ -320,57 +319,60 @@
         margin-top: auto;
     }
 
-    .class-btn {
+    .class-actions {
+        display: flex;
+        gap: 10px;
+        width: 100%;
+    }
+
+    .class-actions .gv-btn {
         flex: 1;
+        justify-content: center;
+        min-height: 40px;
+        white-space: nowrap;
+        font-size: 13px;
+    }
+
+    .gv-btn {
         padding: 8px 12px;
         border-radius: 5px;
-        font-size: 12px;
+        border: 1px solid #3498db;
         font-weight: 500;
-        transition: all 0.2s ease;
-        border: 1px solid var(--border-color);
-        background: white;
-        color: var(--text-primary);
+        transition: var(--transition);
         cursor: pointer;
-        text-align: center;
-        text-decoration: none;
-        display: flex;
+        display: inline-flex;
         align-items: center;
-        justify-content: center;
-        gap: 5px;
+        gap: 6px;
+        text-decoration: none;
+        font-size: 13px;
+        font-family: inherit;
     }
 
-    .class-btn:hover {
-        background: var(--light-gray);
-    }
-
-    .edit-btn:hover {
-        border-color: var(--primary-color);
-        color: var(--primary-color);
-        background: var(--primary-light);
-    }
-
-    .deleteClassBtn {
-        flex: 1;
-        padding: 8px 12px;
-        border-radius: 5px;
-        font-size: 12px;
-        font-weight: 500;
-        transition: all 0.2s ease;
-        border: 1px solid var(--accent-color);
+    .gv-btn-primary {
         background: white;
-        color: var(--accent-color);
-        cursor: pointer;
-        text-align: center;
-        text-decoration: none;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 5px;
+        color: #2c3e50;
+        border-color: #D1D5DB;
     }
 
-    .deleteClassBtn:hover {
-        background: var(--accent-color);
+    .gv-btn-primary:hover {
+        background: #3498db;
+        transform: translateY(-1px);
         color: white;
+        box-shadow: var(--shadow);
+    }
+
+    .gv-btn-danger {
+        background: white;
+        color: #e74c3c;
+        border-color: #e74c3c;
+    }
+
+    .gv-btn-danger:hover {
+        background: #e74c3c;
+        color: white;
+        border-color: #e74c3c;
+        transform: translateY(-1px);
+        box-shadow: var(--shadow);
     }
 
     .modal-content {
@@ -528,10 +530,10 @@
                     </div>
                 </div>
                 <div class="class-actions">
-                    <button class="class-btn edit-btn">
+                    <button class="gv-btn gv-btn-primary edit-btn">
                         <i class="fas fa-edit"></i> Sửa
                     </button>
-                    <button class="class-btn delete-btn">
+                    <button class="gv-btn gv-btn-danger delete-btn">
                         <i class="fas fa-trash"></i> Xóa
                     </button>
                 </div>
@@ -948,6 +950,5 @@
 
     });
 </script>
-
 
 {% endblock %}

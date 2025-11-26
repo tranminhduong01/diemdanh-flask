@@ -165,7 +165,8 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 20px;
+        margin-bottom: 27px;
+        margin-top: 5px;
     }
 
     .section-title {
@@ -199,6 +200,20 @@
         background: #3498db;
         transform: translateY(-1px);
         color: white;
+        box-shadow: var(--shadow);
+    }
+
+    .gv-btn-success {
+        background: white;
+        color: #2c3e50;
+        border-color: #D1D5DB;
+    }
+
+    .gv-btn-success:hover {
+        background: #27ae60;
+        color: white;
+        border-color: #27ae60;
+        transform: translateY(-1px);
         box-shadow: var(--shadow);
     }
 
@@ -323,9 +338,17 @@
         border-top: 1px solid var(--border-color);
     }
 
-    .gv-view-class-btn {
+    .gv-class-actions {
+        display: flex;
+        gap: 10px;
         width: 100%;
+    }
+
+    .gv-class-actions .gv-btn {
+        flex: 1;
         justify-content: center;
+        min-height: 40px;
+        white-space: nowrap;
     }
 
     .gv-table-container {
@@ -583,6 +606,10 @@
         .gv-footer-actions .gv-btn {
             flex: 1;
         }
+
+        .gv-class-actions {
+            flex-direction: column;
+        }
     }
 
     @media (max-width: 480px) {
@@ -625,11 +652,13 @@
                         <h3 class="gv-class-title">{{ c.class_name }}</h3>
                         <p class="gv-class-teacher">{{ c.teacher_name }}</p>                    </div>
                     <div class="gv-class-body">
-
-
                         <div class="gv-class-detail">
                             <i class="fas fa-map-marker-alt"></i>
                             <span>{{ c.room or 'Chưa cập nhật' }}</span>
+                        </div>
+                        <div class="gv-class-detail">
+                            <i class="fas fa-users"></i>
+                        <span>{{ c.max_students or 0 }} sinh viên</span>
                         </div>
                         <div class="gv-class-detail">
                             <i class="fas fa-clock"></i>
@@ -640,15 +669,16 @@
                                 {% endif %}
                             </span>
                         </div>
-                        <div class="gv-class-detail">
-                            <i class="fas fa-users"></i>
-                        <span>{{ c.max_students or 0 }} sinh viên</span>
-                        </div>
                     </div>
                     <div class="gv-class-footer">
-                        <button class="gv-btn gv-btn-primary gv-view-class-btn" style="width: 100%; justify-content: center;">
-                            <i class="fas fa-eye"></i> Xem chi tiết
-                        </button>
+                        <div class="gv-class-actions">
+                            <button class="gv-btn gv-btn-primary gv-view-class-btn">
+                                <i class="fas fa-eye"></i> Xem chi tiết
+                            </button>
+                            <a href="/xemlop/{{ c.id }}" class="gv-btn gv-btn-success">
+                                <i class="fas fa-users"></i> Xem lớp
+                            </a>
+                        </div>
                     </div>
                 </div>
                 {% endfor %}
@@ -768,6 +798,7 @@
         </div>
 </div>
 
+
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -820,9 +851,9 @@
                             <tr data-id="${sv.enrollment_id}">
                                 <td>
                                     <div class="gv-student-info">
-                                        <img src="${sv.face_image_url || '/static/images/default-avatar.png'}"
+                                        <img src="${sv.face_image_url || '/static/avatars/img.png'}"
                                              class="gv-student-avatar"
-                                             onerror="this.src='/static/images/default-avatar.png'">
+                                             onerror="this.src='/static/avatars/img.png'">
                                         <div>
                                             <div class="gv-student-name">${sv.full_name}</div>
                                             <div class="gv-student-id">${sv.mssv}</div>
@@ -856,7 +887,7 @@
                             const raw = e.currentTarget.getAttribute("data-student");
                             const student = JSON.parse(decodeURIComponent(raw));
 
-                            document.getElementById("gvEditStudentId").value = student.enrollment_id;
+                            document.getElementById("gvEditStudentId").value = student.id;
                             document.getElementById("gvEditFullName").value = student.full_name || "";
                             document.getElementById("gvEditMSSV").value = student.mssv || "";
                             document.getElementById("gvEditEmail").value = student.email || "";
@@ -1015,5 +1046,4 @@
         window.location.href = `/chat_gv/${teacher_id}?sv=${id_sv}`;
     }
 </script>
-
 {% endblock %}

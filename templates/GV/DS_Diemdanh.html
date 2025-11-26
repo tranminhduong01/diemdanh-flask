@@ -188,8 +188,19 @@
     .teacher-class-card-footer {
         padding: 16px;
         border-top: 1px solid var(--gray-300);
+    }
+
+    .teacher-class-actions {
         display: flex;
         gap: 10px;
+        width: 100%;
+    }
+
+    .teacher-class-actions .teacher-btn {
+        flex: 1;
+        justify-content: center;
+        min-height: 40px;
+        white-space: nowrap;
     }
 
     .teacher-btn {
@@ -228,19 +239,16 @@
 
     .teacher-btn-success {
         background: white;
-        color: ##2c3e50;
+        color: #2c3e50;
         border-color: #D1D5DB;
     }
 
     .teacher-btn-success:hover {
-        background: #3498db;
+        background: #27ae60;
         color: white;
-        border-color: #3498db;
-    }
-
-    .teacher-view-class-btn {
-        width: 100%;
-        justify-content: center;
+        border-color: #27ae60;
+        transform: translateY(-1px);
+        box-shadow: var(--box-shadow);
     }
 
     .teacher-modal-content {
@@ -317,7 +325,7 @@
             padding: 16px;
         }
 
-        .teacher-class-card-footer {
+        .teacher-class-actions {
             flex-direction: column;
         }
     }
@@ -342,7 +350,8 @@
             <div class="teacher-class-card" data-class-id="{{ cls.id }}" data-class-name="{{ cls.class_name }}">
                 <div class="teacher-class-card-header">
                     <h3 class="teacher-class-title">{{ cls.class_name }}</h3>
-                    <p class="teacher-class-teacher">{{ cls.teacher_name }}</p>                </div>
+                    <p class="teacher-class-teacher">{{ cls.teacher_name }}</p>
+                </div>
                 <div class="teacher-class-card-body">
                     <div class="teacher-class-details">
                         <div class="teacher-class-detail-item">
@@ -363,18 +372,23 @@
                     </div>
                 </div>
                 <div class="teacher-class-card-footer">
-                    <button class="teacher-btn teacher-btn-primary teacher-view-sessions-btn" style="flex: 1;">
-                        <i class="fas fa-calendar-alt"></i> Xem buổi học
-                    </button>
-                    <a href="/xemlop/{{ cls.id }}" class="teacher-btn teacher-btn-success" style="flex: 1;">
-                        <i class="fas fa-eye"></i> Xem lớp
-                    </a>
+                    <div class="teacher-class-actions">
+                        <button class="teacher-btn teacher-btn-primary teacher-view-sessions-btn">
+                            <i class="fas fa-calendar-alt"></i> Xem buổi học
+                        </button>
+                        <button class="teacher-btn teacher-btn-success teacher-view-emotion-btn"
+                                data-class-id="{{ cls.id }}"
+                                data-sessions='{{ cls.sessions | tojson }}'>
+                            <i class="fas fa-chart-bar"></i> Biểu đồ
+                        </button>
+                    </div>
                 </div>
             </div>
             {% endfor %}
         </div>
     </div>
 </div>
+
 
 <!-- Modal hiển thị buổi học -->
 <div class="modal fade" id="sessionsModal" tabindex="-1" aria-labelledby="sessionsModalLabel" aria-hidden="true">
@@ -387,6 +401,44 @@
       <div class="modal-body teacher-modal-body">
         <div id="sessionsModalContent">
           <p class="text-center text-muted">Đang tải dữ liệu...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Sửa phần modal -->
+<div class="modal fade" id="emotionModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Thống kê sinh viên</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label for="sessionSelect" class="form-label">Chọn buổi học</label>
+          <select id="sessionSelect" class="form-select"></select>
+        </div>
+
+        <div class="d-flex gap-4 flex-wrap">
+          <div style="flex: 1; min-width: 300px;">
+            <h6>Cảm xúc sinh viên</h6>
+            <canvas id="emotionChart"></canvas>
+          </div>
+
+          <div style="flex: 1; min-width: 300px;">
+            <h6>Điểm chuyên cần</h6>
+            <canvas id="scoreChart"></canvas>
+          </div>
+        </div>
+
+        <!-- SỬA LỖI CHÍNH TẢ VÀ THÊM HIỂN THỊ -->
+        <div class="mt-3 p-3 rounded" id="adviceBox"
+             style="background:#f8f9fa; border-left:4px solid #007bff; display:none;">
+          <h5>📌 Nhận xét & Gợi ý</h5>
+          <p id="adviceText" style="margin:0;"></p>
         </div>
       </div>
     </div>
@@ -458,6 +510,213 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 });
+</script>
+<!-- JS -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+let emotionChart = null;
+let scoreChart = null;
+
+// ⭐ Hàm format ngày chuẩn Việt Nam
+function formatDateVN(dateStr) {
+    const d = new Date(dateStr);
+    if (isNaN(d)) return dateStr;
+    return d.toLocaleDateString("vi-VN");
+}
+
+document.querySelectorAll(".teacher-view-emotion-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+        const sessions = JSON.parse(btn.getAttribute("data-sessions"));
+        if (!sessions || sessions.length === 0)
+            return alert("Lớp chưa có buổi học!");
+
+        const sessionSelect = document.getElementById("sessionSelect");
+        sessionSelect.innerHTML = "";
+
+        sessions.forEach((s, idx) => {
+            const option = document.createElement("option");
+            option.value = s.id;
+            option.text = `Buổi ${idx + 1} - ${formatDateVN(s.date)}`;
+            if (idx === 0) option.selected = true;
+            sessionSelect.appendChild(option);
+        });
+
+        const modal = new bootstrap.Modal(document.getElementById('emotionModal'));
+        modal.show();
+
+        // Ẩn adviceBox khi mới mở modal
+        document.getElementById("adviceBox").style.display = 'none';
+        drawCharts(sessionSelect.value);
+    });
+});
+
+document.getElementById("sessionSelect").addEventListener("change", e => {
+    // Ẩn adviceBox khi đang tải dữ liệu mới
+    document.getElementById("adviceBox").style.display = 'none';
+    drawCharts(e.target.value);
+});
+
+// ⭐ Hàm vẽ chart và phân tích
+function drawCharts(sessionId) {
+    let emotionData = [];
+    let scoreData = [];
+
+    // Cảm xúc sinh viên
+    fetch(`/api/emotion_report/${sessionId}`)
+    .then(res => res.json())
+    .then(data => {
+        emotionData = data;
+
+        // Tính tổng số cảm xúc
+        const total = data.reduce((sum, d) => sum + d.count, 0);
+
+        // Tạo labels: emotion + %
+        const labels = data.map(d => {
+            const percent = ((d.count / total) * 100).toFixed(1);
+            return `${d.emotion} (${percent}%)`;
+        });
+
+        // Lấy values
+        const values = data.map(d => d.count);
+
+        const ctx = document.getElementById('emotionChart');
+        if (emotionChart) emotionChart.destroy();
+
+        emotionChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: [
+                        '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0',
+                        '#9966FF', '#FF9F40', '#00A36C'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom' },
+                    title: {
+                        display: true,
+                        text: 'Phân bố cảm xúc sinh viên (%)'
+                    }
+                }
+            }
+        });
+
+        if (scoreData.length) analyzeAndGiveAdvice(emotionData, scoreData);
+    })
+    .catch(err => console.error("Lỗi khi tải dữ liệu cảm xúc:", err));
+
+
+    // Điểm chuyên cần
+    fetch(`/api/score_report/${sessionId}`)
+    .then(res => res.json())
+    .then(data => {
+
+        // Gom nhóm theo điểm
+        const scoreCount = {};
+        data.forEach(d => {
+            const score = d.score;
+            scoreCount[score] = (scoreCount[score] || 0) + 1;
+        });
+
+        // Tạo labels (mức điểm)
+        const labels = Object.keys(scoreCount);
+
+        // Số lượng sinh viên theo từng điểm
+        const values = Object.values(scoreCount);
+
+        // Tính tổng để ra %
+        const total = values.reduce((a, b) => a + b, 0);
+
+        // Tạo label có phần trăm (7 điểm = 30%)
+        const percentLabels = labels.map((score, i) => {
+            const percent = ((values[i] / total) * 100).toFixed(1);
+            return `${score} điểm (${percent}%)`;
+        });
+
+        const ctx = document.getElementById('scoreChart');
+        if (scoreChart) scoreChart.destroy();
+
+        scoreChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: percentLabels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: [
+                        '#36A2EB', '#FF6384', '#FFCE56', '#4BC0C0',
+                        '#9966FF', '#FF9F40', '#C9CBCF', '#00A36C'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom' },
+                    title: {
+                        display: true,
+                        text: 'Phân bố điểm chuyên cần sinh viên'
+                    }
+                }
+            }
+        });
+
+        scoreData = data;
+
+        if (emotionData.length) analyzeAndGiveAdvice(emotionData, scoreData);
+    })
+    .catch(err => console.error("Lỗi khi tải dữ liệu điểm:", err));
+}
+
+// ⭐ Hàm phân tích và đưa ra lời khuyên
+function analyzeAndGiveAdvice(emotions, scores) {
+    let advice = "";
+
+    const total = emotions.reduce((sum, e) => sum + e.count, 0);
+    const positive = emotions.filter(e => ["happy", "surprise", "neutral"].includes(e.emotion))
+                             .reduce((sum, e) => sum + e.count, 0);
+    const negative = emotions.filter(e => ["sad", "angry", "fear", "disgust"].includes(e.emotion))
+                             .reduce((sum, e) => sum + e.count, 0);
+
+    const posRate = Math.round((positive / total) * 100);
+    const negRate = Math.round((negative / total) * 100);
+
+    // Phân tích cảm xúc
+    if (posRate >= 70) {
+        advice += `😊 <b>Tâm lý sinh viên ổn định</b> (${posRate}% cảm xúc tích cực). `;
+        advice += "Hôm nay sinh viên có tâm trạng vui vẻ, hứng khởi. Giảng viên có thể đẩy nhanh phương pháp giảng dạy nhé ::)).";
+    } else if (negRate >= 40) {
+        advice += `⚠️ <b>Nhiều cảm xúc tiêu cực</b> (${negRate}%). `;
+        advice += "Hôm nay sinh viên có vẻ mệt mỏi, mất tập trung. Giảng viên nên thêm nhiều hoạt động thú vị để sinh viên có tinh thần học tập nhé ::)).";
+    } else {
+        advice += `😐 Tâm lý sinh viên ở mức trung bình. `;
+        advice += "Hôm nay sinh viên tâm trạng ở mức trung bình. Giảng viên có thể giảng dạy bình thường, thường xuyên chú ý tâm trạng sinh viên để tăng hiệu quả giảng dạy nhé.. ";
+    }
+
+    // Phân tích điểm chuyên cần - SỬA LỖI TÍNH TOÁN
+    const avgScore = scores.length > 0
+        ? Math.round(scores.reduce((sum, e) => sum + e.score, 0) / scores.length)
+        : 0;
+
+    advice += "<br><br>";
+
+    if (avgScore >= 8) {
+        advice += `📘 <b>Chuyên cần tốt</b> (${avgScore}/10). Giảng viên nên động viên các giữ tốt tinh thần chuyên cẩn này nhé.`;
+    } else if (avgScore >= 5) {
+        advice += `📙 <b>Chuyên cần trung bình</b> (${avgScore}/10). Giảng viên nên nhắc nhở sinh viên đi học đúng giờ :).`;
+    } else {
+        advice += `📕 <b>Chuyên cần thấp</b> (${avgScore}/10). Giảng viên nên nhắc nhở các sinh viên nghỉ học. Chú ý số buổi nghỉ học tránh nghỉ quá quy định cấm thi nha:)).`;
+    }
+
+    // HIỂN THỊ PHẦN NHẬN XÉT
+    document.getElementById("adviceText").innerHTML = advice;
+    document.getElementById("adviceBox").style.display = 'block';
+}
+
 </script>
 
 {% endblock %}

@@ -13,12 +13,17 @@
       <button type="button" class="btn btn-back" onclick="goBack()">
         <i class="fas fa-arrow-left me-2"></i>Trở về
       </button>
+      <!-- Nút điền thông tin cá nhân -->
+      <div class="mb-4 text-end">
+        <button type="button" class="btn btn-info" onclick="dienThongTinCaNhan()">
+          <i class="fas fa-user-edit me-1"></i>Điền thông tin cá nhân
+        </button>
+      </div>
     </div>
 
     <div class="form-card">
       <form method="POST" enctype="multipart/form-data" action="{{ url_for('luu_ghidanh', class_id=lop.id) }}">
         <h4 class="section-title"><i class="fas fa-user-graduate me-2"></i>Thông tin cá nhân</h4>
-
         <div class="row">
           <div class="col-md-6 mb-3">
             <label class="form-label required-field">Họ và tên</label>
@@ -203,6 +208,47 @@
         });
     }
 
+    function dienThongTinCaNhan() {
+      fetch("/api/sv_thong_tin")
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === "incomplete") {
+            Swal.fire({
+              icon: 'warning',
+              title: 'Thiếu thông tin',
+              text: 'Bạn chưa cập nhật đầy đủ thông tin cá nhân!',
+              confirmButtonText: 'OK'
+            });
+            return;
+          }
+
+          let info = data.data;
+
+          document.querySelector('input[name="full_name"]').value = info.name;
+          document.querySelector('input[name="mssv"]').value = info.mssv || ''; // nếu MSSV bạn lưu ở course_year
+          document.querySelector('input[name="lop"]').value = info.class_name;
+          document.querySelector('input[name="major"]').value = info.major;
+          document.querySelector('input[name="phone"]').value = info.phone;
+          document.querySelector('input[name="email"]').value = info.email;
+
+          Swal.fire({
+            icon: 'success',
+            title: 'Đã tự động điền!',
+            text: 'Thông tin cá nhân đã được điền vào form.',
+            timer: 1800,
+            showConfirmButton: false
+          });
+        })
+        .catch(err => {
+          console.error(err);
+          Swal.fire({
+            icon: 'error',
+            title: 'Lỗi',
+            text: 'Không thể lấy thông tin sinh viên!'
+          });
+        });
+    }
+
     function resetCameraUI() {
       document.querySelector('[onclick="openCamera()"]').classList.remove('d-none');
       video.style.display = "none";
@@ -215,6 +261,8 @@
         stream.getTracks().forEach(track => track.stop());
       }
     });
+
+
   </script>
   {% if da_ghi_danh %}
 <script>
