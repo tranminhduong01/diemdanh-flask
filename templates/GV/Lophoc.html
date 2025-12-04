@@ -286,7 +286,7 @@
     }
 
     .class-teacher {
-        font-size: 13px;
+        font-size: 14px;
         color: var(--text-secondary);
         margin: 0;
     }
@@ -612,9 +612,52 @@
                         <i class="fas fa-save me-1"></i> Lưu
                     </button>
                 </div>
+               <style>
+                    .timetable-note {
+                        font-size: 16px;
+                        line-height: 1.6;
+                        background: #f8f9fa;
+                        border-left: 4px solid #0d6efd;
+                        padding: 12px 15px;
+                        border-radius: 6px;
+                        display: inline-block;
+                        margin-top: 12px;
+                    }
+                    .timetable-row {
+                        font-weight: 500;
+                        margin-bottom: 4px;
+                    }
+                </style>
+
+                <div class="timetable-note">
+                    <div class="fw-bold mb-1" style="font-size: 18px;">
+                        📌 Bảng giờ theo tiết
+                    </div>
+
+                    <!-- Hàng 1 -->
+                    <div class="timetable-row">
+                        1) 07:00–07:55 &nbsp;•&nbsp;
+                        2) 08:00–08:55 &nbsp;•&nbsp;
+                        3) 09:00–09:55 &nbsp;•&nbsp;
+                        4) 10:00–10:55 &nbsp;•&nbsp;
+                        5) 11:00–11:55
+                    </div>
+
+                    <!-- Hàng 2 -->
+                    <div class="timetable-row">
+                        6) 12:30–13:25 &nbsp;•&nbsp;
+                        7) 13:30–14:25 &nbsp;•&nbsp;
+                        8) 14:30–15:25 &nbsp;•&nbsp;
+                        9) 15:30–16:25 &nbsp;•&nbsp;
+                        10) 16:30–17:25
+                    </div>
+                </div>
+
+
             </form>
         </div>
     </div>
+
 </div>
 
 <!-- Edit Class Modal -->

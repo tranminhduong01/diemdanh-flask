@@ -89,12 +89,13 @@
 <div class="modal fade" id="updateAvatarModal" tabindex="-1" aria-labelledby="updateAvatarModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content border-0 shadow-lg">
-      <form method="POST" action="{{ url_for('info_canhan') }}" enctype="multipart/form-data">
+        <form method="POST" action="{{ url_for('update_avatar') }}" enctype="multipart/form-data">
         <div class="modal-header border-0 pb-0">
           <h5 class="modal-title fw-bold text-dark">Cập nhật ảnh đại diện</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
         </div>
         <div class="modal-body text-center py-4">
+
           <!-- Avatar preview lớn và tròn đẹp -->
           <img id="avatarPreview" src="{{ url_for('static', filename=user.avatar.replace('static/', '')) if user.avatar else '' }}"
                class="rounded-circle shadow-sm border border-4 border-light mb-4 mx-auto d-block"

@@ -30,12 +30,12 @@
 
     .chat-container-wrapper {
         display: flex;
-        height: calc(100vh - 140px);
+        height: calc(100vh - 50px);
         background: white;
         border-radius: var(--border-radius);
         box-shadow: var(--box-shadow);
         overflow: hidden;
-        margin: 20px;
+        margin: 5px;
     }
 
     /* Sidebar: danh sách sinh viên */
@@ -572,21 +572,10 @@
                 <div class="student-name">{{ sv.name }}</div>
                 <div class="student-lastmsg" id="lastMsg-{{ sv.id }}">
                     {% if sv.last_message %}
-                        {{ sv.last_message }}
+                        {{ sv.last_message[:20] }}{% if sv.last_message|length > 20 %}...{% endif %}
+                        <span class="last-time">{{ sv.last_time.strftime('%H:%M') if sv.last_time else '' }}</span>
                     {% else %}
                         Chưa có tin nhắn
-                    {% endif %}
-                </div>
-            </div>
-            <div class="student-meta">
-                <div class="student-time" id="lastTime-{{ sv.id }}">
-                    {% if sv.last_time %}
-                        {{ sv.last_time.strftime('%H:%M') if sv.last_time is string else sv.last_time }}
-                    {% endif %}
-                </div>
-                <div class="student-unread" id="unread-{{ sv.id }}">
-                    {% if sv.unread_count and sv.unread_count > 0 %}
-                        <span class="badge">{{ sv.unread_count }}</span>
                     {% endif %}
                 </div>
             </div>

@@ -2355,41 +2355,62 @@ def chat_sinh_vien():
     user_id = session["user_id"]
     user_role = session.get("role")
 
-    # ✅ Auto redirect nếu là teacher
     if user_role == "teacher":
         return redirect(f"/chat_gv/{user_id}")
 
-    # ✅ Chỉ cho phép student
     if user_role != "student":
         return "Bạn không có quyền truy cập trang này", 403
 
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
 
-    # ✅ Lấy tên sinh viên đang đăng nhập
-    cursor.execute("SELECT name FROM users WHERE id = %s", (user_id,))
+    # Lấy tên sinh viên
+    cursor.execute("SELECT name FROM users WHERE id=%s", (user_id,))
     user = cursor.fetchone()
 
-    # ✅ Lấy danh sách giảng viên đã từng nhắn tin
+    # 🔥 Lấy full danh sách GIÁO VIÊN + tin nhắn cuối cùng
     cursor.execute("""
-        SELECT DISTINCT u.id, u.name, CONCAT('/static/', u.avatar) AS avatar
+        SELECT 
+            u.id,
+            u.name,
+            CONCAT('/static/', u.avatar) AS avatar,
+            (
+                SELECT noi_dung FROM messages 
+                WHERE (nguoi_gui_id = u.id AND nguoi_nhan_id = %s)
+                   OR (nguoi_nhan_id = u.id AND nguoi_gui_id = %s)
+                ORDER BY thoi_gian DESC LIMIT 1
+            ) AS last_message,
+            (
+                SELECT thoi_gian FROM messages 
+                WHERE (nguoi_gui_id = u.id AND nguoi_nhan_id = %s)
+                   OR (nguoi_nhan_id = u.id AND nguoi_gui_id = %s)
+                ORDER BY thoi_gian DESC LIMIT 1
+            ) AS last_time
         FROM users u
-        JOIN messages m 
-          ON (m.nguoi_gui_id = u.id AND m.nguoi_nhan_id = %s)
-          OR (m.nguoi_nhan_id = u.id AND m.nguoi_gui_id = %s)
-        WHERE u.role = 'teacher' AND u.id != %s
-    """, (user_id, user_id, user_id))
+        WHERE u.role = 'teacher'
+    """, (user_id, user_id, user_id, user_id))
+
     danh_sach_giang_vien = cursor.fetchall()
 
     cursor.close()
     conn.close()
 
+    # 🔥 Format thời gian sang HH:MM
+    for gv in danh_sach_giang_vien:
+        if gv["last_time"]:
+            dt = gv["last_time"]
+            gv["last_time_fmt"] = dt.strftime("%H:%M")
+        else:
+            gv["last_time_fmt"] = ""
+
     return render_template(
         "HS/Chat.html",
         danh_sach_giang_vien=danh_sach_giang_vien,
         user_id=user_id,
-        user_name=user["name"] if user else "Sinh viên"
+        user_name=user["name"]
     )
+
+
 
 def get_user_from_db(user_id):
     conn = get_connection()
@@ -2535,15 +2556,28 @@ def chat_gv(giang_vien_id):
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
 
-    # ✅ Lấy danh sách sinh viên đã từng nhắn tin
+    # ✅ Lấy danh sách sinh viên đã từng nhắn tin + tin nhắn cuối cùng + thời gian cuối cùng
     cursor.execute("""
-        SELECT DISTINCT u.id, u.name, u.avatar
+        SELECT u.id, u.name, u.avatar, m.noi_dung AS last_message, m.thoi_gian AS last_time
         FROM users u
-        JOIN messages m 
-          ON (m.nguoi_gui_id = u.id AND m.nguoi_nhan_id = %s)
-          OR (m.nguoi_nhan_id = u.id AND m.nguoi_gui_id = %s)
+        JOIN (
+            SELECT 
+                CASE 
+                    WHEN nguoi_gui_id = %s THEN nguoi_nhan_id
+                    ELSE nguoi_gui_id
+                END AS student_id,
+                MAX(thoi_gian) AS last_time
+            FROM messages
+            WHERE nguoi_gui_id = %s OR nguoi_nhan_id = %s
+            GROUP BY student_id
+        ) lm ON u.id = lm.student_id
+        LEFT JOIN messages m 
+            ON ((m.nguoi_gui_id = %s AND m.nguoi_nhan_id = u.id)
+             OR (m.nguoi_nhan_id = %s AND m.nguoi_gui_id = u.id))
+             AND m.thoi_gian = lm.last_time
         WHERE u.role = 'student'
-    """, (giang_vien_id, giang_vien_id))
+        ORDER BY lm.last_time DESC
+    """, (giang_vien_id, giang_vien_id, giang_vien_id, giang_vien_id, giang_vien_id))
     danh_sach_sinh_vien = cursor.fetchall()
 
     # ✅ Nhận ID sinh viên từ URL (sv=xxx)
@@ -3432,6 +3466,11 @@ def info_canhan():
 
 @app.route('/update_avatar', methods=['POST'])
 def update_avatar():
+    user_id = session.get("user_id")
+    if not user_id:
+        flash("Bạn cần đăng nhập!", "warning")
+        return redirect(url_for("login"))
+
     file = request.files.get('avatar')
     if not file:
         flash('Vui lòng chọn ảnh!', 'warning')
@@ -3441,12 +3480,19 @@ def update_avatar():
     filepath = os.path.join('static/avatars', filename)
     file.save(filepath)
 
-    # Giả sử có biến session['user_id']
+    conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("UPDATE users SET avatar=%s WHERE id=%s", (f'uploads/{filename}', session['user_id']))
+
+    cursor.execute("UPDATE users SET avatar=%s WHERE id=%s",
+                   (f'avatars/{filename}', user_id))
     conn.commit()
+
+    cursor.close()
+    conn.close()
+
     flash('Cập nhật ảnh đại diện thành công!', 'success')
     return redirect(request.referrer)
+
 
 def send_otp_email(to_email, otp_code):
     sender = "2124802010398@student.tdmu.edu.vn"
@@ -4004,7 +4050,7 @@ def update_news(id):
     filename = None
     if image and image.filename != "":
         filename = secure_filename(image.filename)
-        image.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+        image.save(os.path.join(app.config["UPLOAD_FOLDER_NEWS"], filename))
 
     conn = get_connection()
     cursor = conn.cursor()
@@ -4931,44 +4977,102 @@ def mark_notification_read(noti_id):
 
     return jsonify({"success": True})
 
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+
 
 def tinh_tiet(start_time_str, end_time_str):
+    """Hàm tính tiết học dựa trên thời gian bắt đầu và kết thúc"""
     tiet_times = [
-        ("07:00", "07:55"),
-        ("08:00", "08:55"),
-        ("09:00", "09:55"),
-        ("10:00", "10:55"),
-        ("11:00", "11:55"),
-        ("12:30", "13:25"),
-        ("13:30", "14:25"),
-        ("14:30", "15:25"),
-        ("15:30", "16:25"),
-        ("16:30", "17:25"),
+        ("07:00", "07:50"),
+        ("07:55", "08:45"),
+        ("08:50", "09:40"),
+        ("09:45", "10:35"),
+        ("10:40", "11:30"),
+        ("12:30", "13:20"),
+        ("13:25", "14:15"),
+        ("14:20", "15:10"),
+        ("15:15", "16:05"),
+        ("16:10", "17:00"),
     ]
 
     def to_minutes(t):
-        dt = datetime.strptime(t.strip().replace("::", ":").rstrip(":"), "%H:%M")
-        return dt.hour * 60 + dt.minute
+        """Chuyển thời gian HH:MM thành số phút"""
+        try:
+            if isinstance(t, str):
+                dt = datetime.strptime(t.strip(), "%H:%M")
+            else:
+                # Nếu là time object
+                dt = datetime.combine(date.today(), t)
+            return dt.hour * 60 + dt.minute
+        except Exception as e:
+            logging.error(f"Lỗi chuyển đổi thời gian: {t}, lỗi: {e}")
+            return 0
 
     start_m = to_minutes(start_time_str)
     end_m = to_minutes(end_time_str)
 
-    tiet_bat_dau = tiet_ket_thuc = None
+    logging.debug(f"Thời gian: {start_time_str} -> {end_time_str}")
+    logging.debug(f"Phút: {start_m} -> {end_m}")
 
+    tiet_bat_dau = None
+    tiet_ket_thuc = None
+
+    # Tìm tiết bắt đầu
     for i, (bd, kt) in enumerate(tiet_times, start=1):
         bd_m = to_minutes(bd)
         kt_m = to_minutes(kt)
-        if tiet_bat_dau is None and start_m >= bd_m - 5 and start_m <= kt_m:
+
+        # Kiểm tra xem thời gian bắt đầu có nằm trong khoảng tiết này không
+        if bd_m <= start_m <= kt_m:
             tiet_bat_dau = i
-        if end_m > bd_m and end_m <= kt_m + 5:
+            break
+        # Hoặc nếu thời gian bắt đầu gần với đầu tiết (cho phép lệch 5 phút)
+        elif start_m >= (bd_m - 5) and start_m < bd_m:
+            tiet_bat_dau = i
+            break
+
+    # Tìm tiết kết thúc
+    for i, (bd, kt) in enumerate(tiet_times, start=1):
+        bd_m = to_minutes(bd)
+        kt_m = to_minutes(kt)
+
+        # Kiểm tra xem thời gian kết thúc có nằm trong khoảng tiết này không
+        if bd_m <= end_m <= kt_m:
             tiet_ket_thuc = i
+            break
+        # Hoặc nếu thời gian kết thúc gần với cuối tiết (cho phép lệch 5 phút)
+        elif end_m > kt_m and end_m <= (kt_m + 5):
+            tiet_ket_thuc = i
+            break
 
-    # Nếu không khớp chính xác, tìm tiết gần nhất
+    # Nếu không tìm thấy, sử dụng logic dự phòng
     if tiet_bat_dau is None:
-        tiet_bat_dau = next((i for i, (bd, kt) in enumerate(tiet_times, 1) if start_m < to_minutes(kt)), 1)
-    if tiet_ket_thuc is None:
-        tiet_ket_thuc = next((i for i, (bd, kt) in reversed(list(enumerate(tiet_times, 1))) if end_m > to_minutes(bd)), len(tiet_times))
+        # Tìm tiết có thời gian bắt đầu gần nhất
+        for i, (bd, kt) in enumerate(tiet_times, start=1):
+            bd_m = to_minutes(bd)
+            if start_m < bd_m:
+                tiet_bat_dau = max(1, i - 1)
+                break
+        if tiet_bat_dau is None:
+            tiet_bat_dau = len(tiet_times)
 
+    if tiet_ket_thuc is None:
+        # Tìm tiết có thời gian kết thúc gần nhất
+        for i, (bd, kt) in enumerate(tiet_times, start=1):
+            kt_m = to_minutes(kt)
+            if end_m <= kt_m:
+                tiet_ket_thuc = i
+                break
+        if tiet_ket_thuc is None:
+            tiet_ket_thuc = len(tiet_times)
+
+    # Đảm bảo tiết bắt đầu <= tiết kết thúc
+    if tiet_bat_dau > tiet_ket_thuc:
+        tiet_bat_dau = tiet_ket_thuc
+
+    logging.debug(f"Kết quả tính tiết: {tiet_bat_dau} -> {tiet_ket_thuc}")
     return tiet_bat_dau, tiet_ket_thuc
 
 
@@ -4980,20 +5084,28 @@ def lich_day_gv():
     teacher_id = session['user_id']
     week_offset = int(request.args.get("week_offset", 0))
     today = date.today()
+
+    # Tính tuần từ thứ 2 đến chủ nhật
     start_of_week = today - timedelta(days=today.weekday()) + timedelta(weeks=week_offset)
     end_of_week = start_of_week + timedelta(days=6)
 
+    logging.debug(f"Tuần hiện tại: {start_of_week} đến {end_of_week}")
+    logging.debug(f"Teacher ID: {teacher_id}")
+
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
+
+    # Truy vấn lấy tất cả lớp học của giáo viên
     cursor.execute("""
         SELECT 
+            c.id,
             c.class_name,
             c.room,
-            c.day_of_week,
             c.start_date,
             c.weeks,
             c.start_time,
             c.end_time,
+            c.day_of_week,
             u.name,
             u.avatar,
             t.major
@@ -5001,12 +5113,15 @@ def lich_day_gv():
         JOIN users u ON c.teacher_id = u.id
         JOIN teacher t ON t.user_id = u.id
         WHERE c.teacher_id = %s
+        ORDER BY c.start_date, c.start_time
     """, (teacher_id,))
+
     classes = cursor.fetchall()
     cursor.close()
     conn.close()
 
-    # Nếu có dữ liệu thì lấy thông tin giáo viên từ dòng đầu tiên
+    logging.debug(f"Số lớp học tìm thấy: {len(classes)}")
+
     if classes:
         teacher = {
             "name": classes[0]["name"],
@@ -5020,55 +5135,109 @@ def lich_day_gv():
             "major": None
         }
 
-    # Khởi tạo khung thời khóa biểu
-    schedule = { 'Thứ 2': [], 'Thứ 3': [], 'Thứ 4': [],
-                 'Thứ 5': [], 'Thứ 6': [], 'Thứ 7': [], 'Chủ Nhật': [] }
+    # Khởi tạo schedule
+    schedule = {
+        'Thứ 2': [], 'Thứ 3': [], 'Thứ 4': [],
+        'Thứ 5': [], 'Thứ 6': [], 'Thứ 7': [], 'Chủ Nhật': []
+    }
 
-    # === Đưa dữ liệu lớp học vào từng thứ ===
+    thu_map = {
+        0: 'Thứ 2',
+        1: 'Thứ 3',
+        2: 'Thứ 4',
+        3: 'Thứ 5',
+        4: 'Thứ 6',
+        5: 'Thứ 7',
+        6: 'Chủ Nhật'
+    }
+
     for lop in classes:
-        start_time = str(lop["start_time"])[:5]
-        end_time = str(lop["end_time"])[:5]
+        start_time = lop["start_time"]
+        end_time = lop["end_time"]
         start_date = lop["start_date"]
 
-        for i in range(lop["weeks"]):
-            buoi_date = start_date + timedelta(weeks=i)
-            if not (start_of_week <= buoi_date <= end_of_week):
-                continue
+        # Kiểm tra kiểu dữ liệu của start_time và end_time
+        if isinstance(start_time, timedelta):
+            start_time_str = str(start_time)
+        else:
+            start_time_str = str(start_time)
 
-            tiet_bd, tiet_kt = tinh_tiet(start_time, end_time)
-            thu = lop["day_of_week"].strip().capitalize()
-            if thu not in schedule:
-                continue
+        if isinstance(end_time, timedelta):
+            end_time_str = str(end_time)
+        else:
+            end_time_str = str(end_time)
 
-            schedule[thu].append({
-                "class_name": lop["class_name"],
-                "room": lop["room"],
-                "session_start": start_time,
-                "session_end": end_time,
-                "tiet_bat_dau": tiet_bd,
-                "tiet_ket_thuc": tiet_kt,
-            })
+        # Chỉ lấy phần HH:MM
+        if ':' in start_time_str:
+            start_time_str = start_time_str.split(':')[:2]
+            start_time_str = f"{start_time_str[0]}:{start_time_str[1]}"
 
-    # === Gộp các tiết liền nhau cùng lớp ===
+        if ':' in end_time_str:
+            end_time_str = end_time_str.split(':')[:2]
+            end_time_str = f"{end_time_str[0]}:{end_time_str[1]}"
+
+        logging.debug(f"Xử lý lớp: {lop['class_name']}")
+        logging.debug(f"Thời gian: {start_time_str} - {end_time_str}")
+        logging.debug(f"Ngày bắt đầu: {start_date}")
+        logging.debug(f"Số tuần: {lop['weeks']}")
+
+        # Tính tiết học
+        tiet_bd, tiet_kt = tinh_tiet(start_time_str, end_time_str)
+        logging.debug(f"Tiết học: {tiet_bd} - {tiet_kt}")
+
+        # Duyệt qua các tuần
+        for week in range(lop["weeks"]):
+            buoi_date = start_date + timedelta(weeks=week)
+
+            # Kiểm tra xem buổi học có trong tuần hiện tại không
+            if start_of_week <= buoi_date <= end_of_week:
+                # Lấy thứ của ngày học
+                weekday = buoi_date.weekday()
+                thu = thu_map[weekday]
+
+                logging.debug(f"  Tuần {week}: {buoi_date} - {thu}")
+
+                schedule[thu].append({
+                    "class_name": lop["class_name"],
+                    "room": lop["room"],
+                    "session_start": start_time_str,
+                    "session_end": end_time_str,
+                    "tiet_bat_dau": tiet_bd,
+                    "tiet_ket_thuc": tiet_kt,
+                    "ngay_hoc": buoi_date.strftime("%d/%m/%Y")
+                })
+
+    # Gộp các tiết liền nhau cùng lớp (nếu cần)
     for thu, buoi_list in schedule.items():
         if not buoi_list:
             continue
 
-        buoi_list.sort(key=lambda x: x["tiet_bat_dau"])  # sắp xếp theo tiết
-
+        buoi_list.sort(key=lambda x: x["tiet_bat_dau"])
         merged = []
-        current = buoi_list[0]
 
-        for b in buoi_list[1:]:
-            if b["class_name"] == current["class_name"] and b["tiet_bat_dau"] == current["tiet_ket_thuc"] + 1:
-                current["tiet_ket_thuc"] = b["tiet_ket_thuc"]
-                current["session_end"] = b["session_end"]
+        for b in buoi_list:
+            if not merged:
+                merged.append(b)
             else:
-                merged.append(current)
-                current = b
+                last = merged[-1]
+                # Kiểm tra nếu cùng lớp và tiết liền nhau
+                if (b["class_name"] == last["class_name"] and
+                        b["ngay_hoc"] == last["ngay_hoc"] and
+                        b["tiet_bat_dau"] == last["tiet_ket_thuc"] + 1):
+                    last["tiet_ket_thuc"] = b["tiet_ket_thuc"]
+                    last["session_end"] = b["session_end"]
+                else:
+                    merged.append(b)
 
-        merged.append(current)
         schedule[thu] = merged
+
+    # Debug: In ra schedule để kiểm tra
+    for thu, buoi_list in schedule.items():
+        if buoi_list:
+            logging.debug(f"{thu}: {len(buoi_list)} buổi học")
+            for buoi in buoi_list:
+                logging.debug(
+                    f"  - {buoi['class_name']} ({buoi['room']}): Tiết {buoi['tiet_bat_dau']}-{buoi['tiet_ket_thuc']}")
 
     return render_template(
         'GV/lich_day_gv.html',

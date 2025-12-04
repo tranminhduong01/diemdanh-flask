@@ -27,8 +27,13 @@
           <div class="status {% if loop.index % 2 == 0 %}online{% endif %}"></div>
         </div>
         <div class="info">
-          <h4>{{ gv.name }}</h4>
-          <p>Chào bạn! Tôi có thể giúp gì?</p>
+            <h4>{{ gv.name }}</h4>
+            <p>
+                {{ (gv.last_message[:20] ~ '...') if gv.last_message else "Chưa có tin nhắn" }}
+                {% if gv.last_time_fmt %}
+                    - {{ gv.last_time_fmt }}
+                {% endif %}
+            </p>
         </div>
       </div>
       {% else %}

@@ -267,7 +267,7 @@
     .gv-class-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: var(--space-md);
+        gap: 16px;
     }
 
     .gv-class-card {
@@ -304,25 +304,25 @@
         font-size: var(--font-size-md);
         font-weight: 600;
         color: var(--text-primary);
-        margin: 0 0 var(--space-xs) 0;
+        margin: 0 0 6px 0;
         line-height: 1.3;
     }
 
     .gv-class-teacher {
-        font-size: var(--font-size-sm);
+        font-size: 14px;
         color: var(--text-secondary);
         margin: 0;
     }
 
     .gv-class-body {
-        padding: var(--space-md);
+        padding: 16px;
     }
 
     .gv-class-detail {
         display: flex;
         align-items: center;
-        gap: var(--space-sm);
-        margin-bottom: var(--space-sm);
+        gap: 8px;
+        margin-bottom: 10px;
         font-size: 14px;
         color: var(--text-secondary);
     }
@@ -334,7 +334,7 @@
     }
 
     .gv-class-footer {
-        padding: var(--space-md);
+        padding:  16px;
         border-top: 1px solid var(--border-color);
     }
 
@@ -661,12 +661,9 @@
                         <span>{{ c.max_students or 0 }} sinh viên</span>
                         </div>
                         <div class="gv-class-detail">
-                            <i class="fas fa-clock"></i>
+                            <i class="fas fa-calendar"></i>
                             <span>
-                                {{ c.day_of_week or '' }}
-                                {% if c.start_time and c.end_time %}
-                                - {{ c.start_time }}–{{ c.end_time }}
-                                {% endif %}
+                                {{ c.day_of_week }}, {{ c.start_time }} - {{ c.end_time }}
                             </span>
                         </div>
                     </div>

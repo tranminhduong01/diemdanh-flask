@@ -351,13 +351,9 @@
       <thead>
         <tr>
           <th>Tiết</th>
-          <th>Thứ 2</th>
-          <th>Thứ 3</th>
-          <th>Thứ 4</th>
-          <th>Thứ 5</th>
-          <th>Thứ 6</th>
-          <th>Thứ 7</th>
-          <th>Chủ Nhật</th>
+          {% for thu in ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ Nhật'] %}
+          <th>{{ thu }}</th>
+          {% endfor %}
         </tr>
       </thead>
       <tbody>
@@ -365,22 +361,20 @@
         <tr>
           <td class="time-slot">Tiết {{ tiet }}</td>
 
-          {% for thu_index in range(7) %}
-          {% set thu_list = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ Nhật'] %}
-          {% set thu = thu_list[thu_index] %}
+          {% for thu in ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ Nhật'] %}
           <td>
             {% set found_class = false %}
             {% if schedule and schedule[thu] %}
               {% for buoi in schedule[thu] %}
-                {% if buoi.tiet_bat_dau <= tiet and buoi.tiet_ket_thuc >= tiet %}
+                {% if buoi['tiet_bat_dau'] <= tiet and buoi['tiet_ket_thuc'] >= tiet %}
                   {% if not found_class %}
                     {% set found_class = true %}
-                    <div class="class-cell" title="{{ buoi.class_name }} - {{ buoi.room }} - {{ buoi.session_start }} - {{ buoi.session_end }}">
-                      <div class="class-name">{{ buoi.class_name }}</div>
+                    <div class="class-cell" title="{{ buoi['class_name'] }} - {{ buoi['room'] }} - {{ buoi['session_start'] }} - {{ buoi['session_end'] }}">
+                      <div class="class-name">{{ buoi['class_name'] }}</div>
                       <div class="class-details">
-                        <span class="class-room">{{ buoi.room }}</span>
+                        <span class="class-room">{{ buoi['room'] }}</span>
                       </div>
-                      <div class="class-time">{{ buoi.session_start }} - {{ buoi.session_end }}</div>
+                      <div class="class-time">{{ buoi['session_start'] }} - {{ buoi['session_end'] }}</div>
                     </div>
                   {% endif %}
                 {% endif %}
@@ -408,10 +402,10 @@
             {% for buoi in schedule[thu] %}
               <div class="session-item">
                 <div class="session-time">
-                  Tiết {{ buoi.tiet_bat_dau }}-{{ buoi.tiet_ket_thuc }} ({{ buoi.session_start }} - {{ buoi.session_end }})
+                  Tiết {{ buoi['tiet_bat_dau'] }}-{{ buoi['tiet_ket_thuc'] }} ({{ buoi['session_start'] }} - {{ buoi['session_end'] }})
                 </div>
-                <div class="session-class">{{ buoi.class_name }}</div>
-                <div class="session-room">Phòng: {{ buoi.room }}</div>
+                <div class="session-class">{{ buoi['class_name'] }}</div>
+                <div class="session-room">Phòng: {{ buoi['room'] }}</div>
               </div>
             {% endfor %}
           </div>
@@ -441,8 +435,9 @@
 
     // Highlight cells for current day
     for (let i = currentDayIndex; i < dayCells.length; i += 7) {
-      dayCells[i].classList.add('current-day');
+      dayCells[i + 1].classList.add('current-day'); // +1 vì cột đầu là Tiết
     }
   });
 </script>
+
 {% endblock %}
